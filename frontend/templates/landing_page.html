@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../static/css/output.css">
+    <link rel="stylesheet" href="../../static/css/output.css">
+    </script>
+    <title>NoQ</title>
+    <script>
+        tailwind.config={
+        theme:{
+        screens: {
+     
+      sm: '640px', 
+      md: '768px',   
+      lg: '1024px',  
+      xl: '1280px',  
+      '2xl': '1536px', 
+    },
+ 
+            extend:{
+                screens:{
+                    
+                     xs: {min:'480px',max:'640px'},  
+                     '3xl': '1920px' 
+            },
+                colors:{
+                    
+                }
+            }
+            
+            }
+        }
+    </script>
+
+</head>
+<body>
+    <header>
+     <nav class="flex justify-between items-center max-w-screen mx-auto py-4 px-8 bg-gray-300">
+            <p>NoQ</p>
+            <ul class="flex gap-4 md:flex hidden justify-center items-center">
+                <li><a href="#services">services</a></li>
+                <li><a href="#how-it-works">How it works</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul> 
+             <ul class=" sidebar fixed flex gap-4 bg-transparent p-4 top-[64px] right-0 h-full w-full md:hidden hidden">
+                <li><a href="#services">services</a></li>
+                <li><a href="#how-it-works">How it works</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul> 
+            <div class="md:flex hidden justify-end gap-4">
+                <button class="bg-blue-500 text-white py-2 px-4 rounded">Login</button>
+                <button class="bg-green-500 text-white py-2 px-4 rounded">Get a token</button>
+        </div>
+        <div onclick="toggleSidebar()" class="bar cursor-pointer md:hidden flex justify-end gap-4">
+            <i class="bar fa-solid fa-bars fa-lg"></i>
+        </div>
+       </nav>
+    </header>
+    <div class="hero max-w-screen mx-auto py-4 px-8 h-[70vh] grid sm:grid-cols-2 justify-center items-center gap-4 bg-[#EEEDFE]">
+        <div>
+        <h1 class="font-bold text-3xl py-5 text-[#6C4AB7]">Welcome to NoQ</h1>
+        <p class="text-3xl text-[#6C4AB7]">Queue smarter , not longer</p>
+        <p class="text-xl py-2 text-[#6C4AB7]">Book your spot online, track your turn in real time, and walk in only when you're called. No more waiting in line.</p>
+        <div class="flex gap-4 py-4">
+        <button class="bg-green-500 text-white py-2 px-4 rounded">Get a token</button> <br>
+        <button class="bg-purple-500 text-white py-2 px-4 rounded">Check queue status</button>
+        </div>
+        </div>
+        <div class="ticket-box bg-red-500 p-4 rounded-lg width-[300px] h-[300px] flex justify-center items-center">
+            <!-- ticket box -->
+        </div>
+
+    </div> 
+   <div class="services" id="services">
+        <h1>Our Services</h1>
+        <div class="grid grid-cols-3 gap-4">
+            <div class="service-card">
+                <h2>Service 1</h2>
+                <p>Description of Service 1</p>
+            </div>
+            <div class="service-card">
+                <h2>Service 2</h2>
+                <p>Description of Service 2</p>
+            </div>
+            <div class="service-card">
+                <h2>Service 3</h2>
+                <p>Description of Service 3</p>
+            </div>
+        </div>
+    </div>
+    <div class="how-it-works grid 
+    gap-4" id="how-it-works">
+        <h1>How It Works</h1>
+        <div class="grid grid-cols-4 gap-4">
+            <div class="step-card">
+                <h2>Step 1</h2>
+                <p>Description of Step 1</p>
+            </div>
+            <div class="step-card">
+                <h2>Step 2</h2>
+                <p>Description of Step 2</p>
+            </div>
+            <div class="step-card">
+                <h2>Step 3</h2>
+                <p>Description of Step 3</p>
+            </div>
+            <div class="step-card">
+                <h2>Step 4</h2>
+                <p>Description of Step 4</p>
+            </div>
+        </div>
+    </div>
+    <script src="../../static/js/jj.js"></script>
+    <footer>
+        <p>&copy; 2026 NoQ. All rights reserved.</p>
+    </footer>
+</body>
+</html>

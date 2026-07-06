@@ -1,0 +1,5 @@
+package-lock.json
+package.json
+requirements.txt
+*.pyc
+node_modules/

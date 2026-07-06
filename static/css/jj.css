@@ -1,0 +1,16 @@
+.sidebar{
+    position: fixed;
+    top: 60px;
+    flex-direction: column;
+    align-items: center;
+    background-color:rgba(58, 52, 52, 0.8);
+    top: 58px;
+    font-size: 2rem;
+    color: white;
+    cursor: pointer;
+}
+*{  
+    margin: 0px;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}

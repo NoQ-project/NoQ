@@ -1,0 +1,44 @@
+
+.login-box{
+color:black;
+background: rgba(100, 38, 38, 0.2);
+
+}
+body{
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-image: url(../images/logincover.jpg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh;
+}
+.login-box{
+  background: rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
+  box-shadow: 0 15px 25px rgba(0,0,0,.5);
+  border-radius: 10px;
+  color: #fff;
+}
+.login-box p{
+  margin: 0 0 10px;
+  padding: 0;
+  font-weight: bold;
+  font-size: 20px;
+}
+label{
+  display: flex;
+  flex-direction: row;
+  margin: 0 0 10px;
+  padding: 0;
+  font-size: 20px;
+}
+input{
+  width: 100%;
+  margin-bottom: 20px;
+  height: 40px;
+  font-size: 16px
+}

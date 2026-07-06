@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOQ_Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link rel="stylesheet" href="../../static/css/output.css">
+    <link rel="stylesheet" href="../../static/css/login.css">
+  
+     <script>
+        tailwind.config={
+        theme:{
+        screens: {
+     
+      sm: '640px', 
+      md: '768px',   
+      lg: '1024px',  
+      xl: '1280px',  
+      '2xl': '1536px', 
+    },
+ 
+            extend:{
+                screens:{
+                    
+                     xs: {min:'480px',max:'640px'},  
+                     '3xl': '1920px' 
+            },
+                colors:{
+                    
+                }
+            }
+            
+            }
+        }
+    </script>
+</head>
+<body>
+ <div class="login-box bg-transparent p-10 rounded shadow-md text-center mx-auto md:w-[800px]  h-[700px] ">
+
+   <h1 class="text-3xl font-bold py-4 ">NOQ Login Page (logo)</h1>
+   <p>skip the wait , not the queue</p>
+   <p>sign in to your account.</p>
+   <p > new here? </p> 
+   <p><a class="text-blue-500 hover:text-blue-700" href="#">create an account ?</a></p> 
+
+
+    <form action="login.php " method="post">
+        <label for="username">Username:</label>
+        <input class="border border-black-100
+        rounded py-2 px-4 " type="text" id="username" name="username" required placeholder="Enter your username"><br><br>
+        
+        <label for="password">Password:</label>
+        <input class="border border-black-100 rounded py-2 px-4 " type="password" id="password" name="password" required placeholder="Enter your password"><br><br>
+        
+        <button class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded" type="submit">Login</button>
+    </form>
+    <div> 
+        <p> or continue with google <i class="fa-brands fa-google"></i></p>
+    </div>
+</div>
+    
+</body>`
+</html>

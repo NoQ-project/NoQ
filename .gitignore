@@ -3,3 +3,5 @@ package.json
 requirements.txt
 *.pyc
 node_modules/
+
+.env

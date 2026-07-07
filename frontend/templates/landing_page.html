@@ -43,15 +43,15 @@
             <ul class="gap-4 md:flex hidden justify-center items-center">
                 <li><a href="#services">services</a></li>
                 <li><a href="#how-it-works">How it works</a></li>
-                <li><a href="#about">About</a></li>
+                <li><a href="#home">Home</a></li>
                 <li><a href="#contact">Contact</a></li>
-            </ul> 
-             <ul class=" sidebar fixed flex  flex-col gap-4 bg-transparent p-4 top-[64px] right-0 h-full w-full md:hidden hidden">
+            </ul>
+            <ul class=" sidebar fixed flex  flex-col gap-4 bg-transparent p-4  right-0 h-full w-full md:hidden hidden">
                 <li><a href="#services">services</a></li>
                 <li><a href="#how-it-works">How it works</a></li>
-                <li><a href="#about">About</a></li>
+                <li><a href="#home">Home</a></li>
                 <li><a href="#contact">Contact</a></li>
-            </ul> 
+            </ul>  
             <div class="md:flex hidden justify-end gap-4">
                 <button class="bg-blue-500 text-white py-2 px-4 rounded">Login</button>
                 <button class="bg-green-500 text-white py-2 px-4 rounded">Get a token</button>
@@ -61,7 +61,7 @@
         </div>
        </nav>
     </header>
-    <div class="hero max-w-screen mx-auto py-4 px-8 h-[70vh] grid sm:grid-cols-2 justify-center items-center gap-4 bg-[#EEEDFE]">
+    <div class="hero max-w-screen mx-auto py-4 px-8 h-[70vh] grid sm:grid-cols-2 justify-center items-center gap-4 bg-[#EEEDFE]" id="home">
         <div>
         <h1 class="font-bold text-3xl py-5 text-[#6C4AB7]">Welcome to NoQ</h1>
         <p class="text-3xl text-[#6C4AB7]">Queue smarter , not longer</p>
@@ -76,7 +76,7 @@
         </div>
 
     </div> 
-   <div class="services grid gap-4 max-w-screen mx-auto " id="how-it-works">
+   <div class="services grid gap-4 max-w-screen mx-auto scroll-mt-[56px]" id="services">
         <p class=" text-[#6C4AB7]">avialable servises 
         </p>
 
@@ -87,56 +87,64 @@
                 <p>Choose a service</p>
                 <p>Pick the service you need and see real-time wait times before you book.</p>
             </div>
-            <div class="step-card">
-                 <p class="step">2</p>
+            <div class="service-card">
+                 <p class="service-image">2</p>
                   <p>Get your token</p>
                 <p>
                     Receive a digital token instantly via SMS or on screen. No printing needed
                 </p>
             </div>
-            <div class="step-card">
-                <p class="step">3</p>
+            <div class="service-card">
+                <p class="service-image">3</p>
                 <p> Track your turn </p>
                 <p>Monitor your position live from anywhere. Get notified as your turn approaches.</p>
             </div>
-            <div class="step-card">
-                 <p class="step">4</p>
+            <div class="service-card">
+                 <p class="service-image">4</p>
                 <p>Walk in & be served </p>
                 <p>Arrive when it's your turn. Head straight to the counter — no waiting around.</p>
             </div>
         </div>
     </div>
     <div class="how-it-works grid gap-4 max-w-screen mx-auto " id="how-it-works">
-        <p class=" text-[#6C4AB7]">How It Works
+        <p class=" text-[#6C4AB7] font-bold">How It Works
         </p>
 
         <div class="grid grid-cols-1 sm:grid-cols-2  gap-4">
-
             <div class="step-card">
                 <p class="step"> 1</p>
-                <p>Choose a service</p>
+               <div class="py-5"> <p class="font-bold">Choose a service</p>
                 <p>Pick the service you need and see real-time wait times before you book.</p>
+            </div>
             </div>
             <div class="step-card">
                  <p class="step">2</p>
-                  <p>Get your token</p>
+                 <div class="py-5"> <p class="font-bold">Get your token</p>
                 <p>
                     Receive a digital token instantly via SMS or on screen. No printing needed
                 </p>
             </div>
+            </div>
             <div class="step-card">
                 <p class="step">3</p>
-                <p> Track your turn </p>
+                <div class="py-5">
+                <p class="font-bold"> Track your turn </p>
                 <p>Monitor your position live from anywhere. Get notified as your turn approaches.</p>
+                </div>
             </div>
             <div class="step-card">
                  <p class="step">4</p>
-                <p>Walk in & be served </p>
-                <p>Arrive when it's your turn. Head straight to the counter — no waiting around.</p>
+             <div class="py-5"> 
+                <p class="font-bold">Walk in & be served </p>
+                <p>Arrive when it's your turn. Head straight to the counter — no waiting around.</p></div>
             </div>
         </div>
-    </div>
+         <button class="bg-green-500 text-white py-2 px-4 rounded">Get a token</button>
+        </div>
     <script src="../../static/js/landing_page.js"></script>
+    <div class="contact" id="contact">
+        
+    </div>
     <footer>
         <p>&copy; 2026 NoQ. All rights reserved.</p>
     </footer>

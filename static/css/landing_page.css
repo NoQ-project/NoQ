@@ -1,6 +1,6 @@
 .sidebar{
     position: fixed;
-    top: 60px;
+    top: 0px;
     align-items: center;
     background-color:rgba(58, 52, 52, 0.8);
     top: 58px;
@@ -26,6 +26,29 @@
 .step p{
     width: 25%;
 }
+
 .how-it-works{
     margin: 50px;
+    font-size: 24px;
+}
+.service-image{
+    background-color: aquamarine;
+    width: 100px;
+    height: 40px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.services{
+     margin: 50px;
+     font-size: 24px;
+}
+header{
+    position: sticky;
+    top: 0;
+}
+.contact{
+    height: 20vh;
+    background: #000;
 }

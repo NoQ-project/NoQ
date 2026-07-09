@@ -61,18 +61,40 @@
         </div>
        </nav>
     </header>
-    <div class="hero max-w-screen mx-auto py-4 px-8 h-[70vh] grid sm:grid-cols-2 justify-center items-center gap-4 bg-[#EEEDFE]" id="home">
+    <div class="hero max-w-screen mx-auto py-4 px-8 h-[70vh] grid-cols-[70%_auto] grid sm:grid-cols-2 justify-between items-center gap-4 bg-[#EEEDFE]" id="home">
         <div>
         <h1 class="font-bold text-3xl py-5 text-[#6C4AB7]">Welcome to NoQ</h1>
         <p class="text-3xl text-[#6C4AB7]">Queue smarter , not longer</p>
-        <p class="text-xl py-2 text-[#6C4AB7]">Book your spot online, track your turn in real time, and walk in only when you're called. No more waiting in line.</p>
+        <p class="text-xl py-2 text-[#6C4AB7] w-[400px]">Book your spot online, track your turn in real time, and walk in only when you're called. No more waiting in line.</p>
         <div class="flex gap-4 py-4">
         <button class="bg-green-500 text-white py-2 px-4 rounded">Get a token</button> <br>
         <button class="bg-purple-500 text-white py-2 px-4 rounded">Check queue status</button>
         </div>
         </div>
-        <div class="ticket-box bg-red-500 p-4 rounded-lg width-[300px] h-[300px] flex justify-center items-center">
+        <div class="ticket-box p-4 " id="ticket-box">
             <!-- ticket box -->
+            <div class="flex flex-cols-[60%_auto] items-start justify-between">
+               <div class=""> 
+                <p>city,bank kathmandu</p></div>
+               <div> 
+                <p class="">live</p></div>
+            </div>
+            <div>
+                <p>Now serving</p>
+                <p>B-039</p>
+                <p>general Banking - counter 3</p>
+            </div>
+            <div class="grid grid-cols-3">
+                <p>22</p>
+                <p>~14 min</p>
+                <p>4</p>
+                <p>In queue</p>
+                <p>avg wait</p>
+                <p>counter open</p>
+            </div>
+            <div class="button-track">
+                <button>Enter a token number to track</button>
+            </div>
         </div>
 
     </div> 
@@ -142,8 +164,11 @@
          <button class="bg-green-500 text-white py-2 px-4 rounded">Get a token</button>
         </div>
     <script src="../../static/js/landing_page.js"></script>
-    <div class="contact" id="contact">
-        
+    <div class="contact md:flex justify-between" id="contact">
+       <div>hi</div>
+       <div>hi</div>
+       <div>hi</div>
+       <div>hi</div> 
     </div>
     <footer>
         <p>&copy; 2026 NoQ. All rights reserved.</p>

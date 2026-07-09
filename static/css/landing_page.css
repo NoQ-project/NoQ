@@ -50,5 +50,15 @@ header{
 }
 .contact{
     height: 20vh;
-    background: #000;
+   
+}
+#ticket-box{
+    border-width: 2px;
+    border-color: rgb(153, 153, 233);
+}
+.button-track{
+    display: flex;
+    justify-content: center;
+    border-width: 2px;
+    border-color: rgb(153, 153, 233);
 }

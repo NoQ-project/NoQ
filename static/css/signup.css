@@ -1,0 +1,164 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url(../images/logincover.jpg) no-repeat center center/cover;
+    color: #ffffff;
+    overflow: hidden; 
+}
+
+/* Card Container */
+.container {
+    width: 90%;
+    max-width: 420px; 
+    background: rgba(30, 41, 59, 0.75); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 24px 28px; 
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Typography Hierarchy */
+.logo-area h1 {
+    font-size: 1.6rem; 
+    font-weight: 700;
+    margin-bottom: 2px;
+    color: #ffffff;
+}
+
+.tagline {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #cbd5e1; 
+}
+
+.form-area h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.switch-page {
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+    color: #94a3b8;
+}
+
+.switch-page a {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.switch-page a:hover {
+    text-decoration: underline;
+}
+
+/* Form Fields */
+.input-group {
+    text-align: left;
+    margin-bottom: 10px; 
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.8rem; 
+    margin-bottom: 4px;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 9px 12px; 
+    background: rgba(15, 23, 42, 0.4); 
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.input-group input::placeholder {
+    color: #94a3b8;
+}
+
+.input-group input:focus {
+    border-color: #3b82f6;
+    background: rgba(15, 23, 42, 0.6);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Buttons and Dividers */
+.btn-primary {
+    width: 100%;
+    padding: 10px;
+    background-color: #3b82f6;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 5px;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #2563eb;
+}
+
+.divider {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.divider span {
+    padding: 0 10px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.btn-google {
+    width: 100%;
+    padding: 9px;
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.btn-google:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}

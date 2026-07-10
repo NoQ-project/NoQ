@@ -7,38 +7,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <link rel="stylesheet" href="../../static/css/output.css">
     <link rel="stylesheet" href="../../static/css/login.css">
-  
-     <script>
-        tailwind.config={
-        theme:{
-        screens: {
-     
-      sm: '640px', 
-      md: '768px',   
-      lg: '1024px',  
-      xl: '1280px',  
-      '2xl': '1536px', 
-    },
- 
-            extend:{
-                screens:{
-                    
-                     xs: {min:'480px',max:'640px'},  
-                     '3xl': '1920px' 
-            },
-                colors:{
-                    
-                }
-            }
-            
-            }
-        }
-    </script>
+
 </head>
 <body>
- <div class="login-box bg-transparent p-10 rounded shadow-md text-center mx-auto md:w-[800px]  h-[700px] ">
+ <div class="login-container rounded shadow-md text-center mx-auto ">
 
-   <h1 class="text-3xl font-bold py-4 ">NOQ Login Page (logo)</h1>
+   <h1 class="py-2">NOQ Login Page (logo)</h1>
    <p>skip the wait , not the queue</p>
    <p>sign in to your account.</p>
    <p > new here? </p> 
@@ -53,12 +27,14 @@
         <label for="password">Password:</label>
         <input class="border border-black-100 rounded py-2 px-4 " type="password" id="password" name="password" required placeholder="Enter your password"><br><br>
         
-        <button class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded" type="submit">Login</button>
+        <button class="login-btn bg-blue-500 hover:bg-blue-700 rounded" type="submit">Login</button>
     </form>
-    <div> 
-        <p> or continue with google <i class="fa-brands fa-google"></i></p>
+    <div class="divider">
+        <span>or continue with</span>
     </div>
-</div>
-    
+     <button type="button" class="btn-google"> 
+        <i class="fab fa-google"></i> Google
+    </button>
+</div>    
 </body>`
 </html>

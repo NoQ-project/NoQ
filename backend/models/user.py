@@ -1,18 +1,10 @@
 from sqlalchemy import Column, String, Boolean, DateTime, Enum
 from sqlalchemy.sql import func
 from database import Base
-import enum
-
-
-class UserRole(enum.Enum):
-    USER = "user"
-    INSTITUTION = "institution"
-    ADMIN = "admin"
-
 
 class User(Base):
     __tablename__ = "users"
-
+    
     id = Column(String(36), primary_key=True)
 
     full_name = Column(
@@ -38,12 +30,7 @@ class User(Base):
         nullable=False
     )
 
-    role = Column(
-        Enum(UserRole),
-        default=UserRole.USER,
-        nullable=False
-    )
-
+    
     
     created_at = Column(
         DateTime,

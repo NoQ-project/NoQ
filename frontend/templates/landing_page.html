@@ -26,8 +26,12 @@
                 <li><a href="#contact">Contact</a></li>
             </ul>  
             <div class="md:flex hidden justify-end gap-4">
-                <button class="bg-blue-500 text-white py-2 px-4 rounded">Login</button>
+                <a href="login.html">
+                    <button class="bg-blue-500 text-white py-2 px-4 rounded">Login</button>
+                </a> 
+                <a href="login.html">
                 <button class="bg-green-500 text-white py-2 px-4 rounded">Get a token</button>
+                </a>
         </div>
         <div onclick="toggleSidebar()" class="bar cursor-pointer md:hidden flex justify-end gap-4">
             <i class="bar fa-solid fa-bars fa-lg"></i>
@@ -140,15 +144,37 @@
                 <p>Arrive when it's your turn. Head straight to the counter — no waiting around.</p></div>
             </div>
         </div>
-         <button class="bg-green-500 text-white py-2 px-4 rounded">Get a token</button>
+            <a href="login.html" target="_blank">
+                <button class="bg-green-500 text-white py-2 px-4 rounded">Get a token</button>
+            </a>
         </div>
     <script src="../../static/js/landing_page.js"></script>
-    <div class="contact md:flex justify-between services max-w-screen mx-auto scroll-mt-[56px]" id="contact">
-       <div>hi</div>
-       <div>hi</div>
-       <div>hi</div>
-       <div>hi</div> 
-    </div>
+    <div  id="contact" class="contact grid sm:grid-cols-2 ">
+        <div class="contact-text">
+            <p class="font-bold">Contact us<p>
+            <p>Have questions or need help? Reach out to our support team — we're here to assist with bookings, queue setup, or any issues you run into.</p>
+            <div>
+
+            </div>
+        </div>
+        <div class="contact-form">
+         <form action="" method="post">
+            <div>
+             <label for="userame">Username</label>
+             <input type="text" name="userame" id="">
+             </div>
+              <div>
+             <label for="email"Email>Email</label>
+             <input type="email" name="email">
+              </div>
+              <div>
+             <label for="area">message:</label>
+                <textarea name="area" id="" cols="30" placeholder="enter your message"></textarea>
+             </div>
+         </form>
+        </div>
+     </div>
+        
     <footer>
         <p>&copy; 2026 NoQ. All rights reserved.</p>
     </footer>

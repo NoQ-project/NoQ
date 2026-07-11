@@ -13,6 +13,9 @@
     box-sizing: border-box;
     scroll-behavior: smooth;
 }
+* p{
+    font-size: 24px;
+}
 .step{
     background-color: aquamarine;
     width: 100px;
@@ -63,5 +66,44 @@ header{
     border-color: rgb(153, 153, 233);
 }
 .contact{
+    gap: 10px;
+    scroll-margin-top: 24px;
+    font-size: 20px;
+    height: 100%;
     margin: 50px;
 }
+.contact-form{
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    height: 100%;
+    margin: 20px;
+    padding: 20px;
+    color:black;
+    background: rgba(30, 41, 59, 0.75);
+    box-sizing: border-box;
+    box-shadow: 0 15px 25px rgba(0,0,0,.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 10px;
+    color: #fff;
+}
+.contact-form label{
+    padding: 8px;
+}
+.contact-form input{
+    background-color: azure;
+    border: 1px;
+    border-color: black;
+    width: 90%;
+    margin: 10px;
+    padding: 6px;
+    border-radius: 4px;
+}
+.contact-form textarea{
+    background-color: azure;
+    width: 90%;
+    margin: 10px;
+    padding: 6px;
+}
+

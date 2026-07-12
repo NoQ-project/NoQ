@@ -1,9 +1,8 @@
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from database import Base
+from backend.app.database import Base
 import uuid
-
 
 class Queue(Base):
     __tablename__ = "queues"
@@ -13,58 +12,47 @@ class Queue(Base):
         primary_key=True,
         default=lambda: str(uuid.uuid4())
     )
-
     institution_id = Column(
         String(36),
         ForeignKey("institutions.id"),
         nullable=False
     )
-
     name = Column(
         String(100),
         nullable=False
     )
-
     description = Column(
         Text,
         nullable=True
     )
-
     daily_limit = Column(
         Integer,
         nullable=False
     )
-
     avg_service_time = Column(
         Integer,
         default=10
     )
     # average time in minutes
-
     is_active = Column(
         Boolean,
         default=True
     )
-
     created_at = Column(
         DateTime,
         server_default=func.now()
     )
-
     updated_at = Column(
         DateTime,
         server_default=func.now(),
         onupdate=func.now()
     )
 
-
     # Relationships
-
     institution = relationship(
         "Institution",
         back_populates="queues"
     )
-
     tokens = relationship(
         "Token",
         back_populates="queue",

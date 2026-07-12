@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Boolean, DateTime, Enum
 from sqlalchemy.sql import func
-from database import Base
+from backend.app.database import Base
 import enum
 
 class User(Base):
@@ -9,13 +9,11 @@ class User(Base):
         USER = "user"
         INSTITUTION = "institution"
         ADMIN = "admin"
-
     role = Column(
             Enum(UserRole),
             default=UserRole.USER,
             nullable=False
         )
-
     password_hash = Column(
             String(255),
             nullable=False

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from database import Base, engine
-from models import *
+from backend.app.database import Base, engine
+from backend.app.models import *
 
 app = FastAPI(title="NoQ API")
 print("Known tables:", Base.metadata.tables.keys())

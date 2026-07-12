@@ -43,9 +43,11 @@ def login_user(body:LoginSchema, db:Session):
     if not user:
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Invalid Email")
     
-    if not verify_password(body.password, user.hash_password):
+    if not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Invalid Password")
     
     exp_time = datetime.now()+ timedelta(minutes=settings.EXP_TIME)
 
-    token = jwt.encode({"id":user.id,"exp":exp_time, "role": UserModel.role.value}, settings.SECRET_KEY, settings.ALGORITHM)
+    token = jwt.encode({"id":user.id,"exp":exp_time, "role": user.role.value}, settings.SECRET_KEY, settings.ALGORITHM)
+
+    return {"token": token}

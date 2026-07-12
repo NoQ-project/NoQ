@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from backend.app.database import Base
+from backend.app.utils.database import Base
 import uuid
 
 class Queue(Base):

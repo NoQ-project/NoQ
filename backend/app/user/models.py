@@ -1,11 +1,11 @@
-from sqlalchemy import Column, String, Boolean, DateTime, Enum
+from sqlalchemy import Column, Integer, String, Boolean, DateTime 
 from sqlalchemy.sql import func
-from backend.app.database import Base
+from backend.app.utils.database import Base
 
 class User(Base):
     __tablename__ = "users"
     
-    id = Column(String(36), primary_key=True)
+    id = Column(Integer , primary_key=True)
     full_name = Column(
         String(100),
         nullable=False
@@ -17,7 +17,7 @@ class User(Base):
         index=True
     )
     phone = Column(
-        String(20),
+        String(10),
         unique=True,
         nullable=True
     )

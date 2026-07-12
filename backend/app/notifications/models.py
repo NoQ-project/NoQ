@@ -9,7 +9,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from backend.app.database import Base
+from backend.app.utils.database import Base
 import enum
 import uuid
 

@@ -53,20 +53,5 @@ def login_user(body:LoginSchema, db:Session):
     
     return {"token": token}
     
-def get_current_user(request: Request, db: Session = Depends(get_db)):
-    try:
-        token = request.headers.get("authorization")
-        if not token:
-            raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= "You are unauthorized")
-        
-        token = token.split(" ")[-1]
-        data = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM )
-        user_id = data.get("id")
-        user= db.query(UserModel).filter(UserModel.id == user_id).first()
-        if not user:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail= "You are unauthorized")
-    except InvalidTokenError:
-            raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= "You are unauthorized")
     
-    return user        
                 

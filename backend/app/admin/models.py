@@ -4,7 +4,7 @@ from backend.app.utils.database import Base
 import uuid
 
 
-class AuditLog(Base):
+class Review(Base):
 
     __tablename__ = "audit_logs"
 

@@ -6,6 +6,7 @@ from backend.app.auth import controller
 from backend.app.utils.database import get_db
 from backend.app.auth.dependencies import get_current_user
 from backend.app.auth.dependencies import require_role 
+from backend.app.auth.dependencies import get_owned_token
 
 auth_routes = APIRouter(prefix="/auth") 
 
@@ -31,3 +32,17 @@ def profile(
 ):
     return current_user
 
+@auth_routes.get("/{booking_id}")
+    
+def get_token(
+    token_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    token = get_owned_token(
+        token_id=token_id,
+        db=db,
+        current_user=current_user,
+    )
+
+    return token

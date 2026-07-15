@@ -24,3 +24,6 @@ class LoginSchema(BaseModel):
 class VerifyEmailSchema(BaseModel):
     email: EmailStr
     otp: str
+
+class EmailSchema(BaseModel):
+    email: EmailStr

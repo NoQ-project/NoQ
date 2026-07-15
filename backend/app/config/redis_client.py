@@ -14,9 +14,6 @@ redis_client = Redis(
     decode_responses=True
 )
 
-# def generate_otp():
-#     return f"{secrets.randbelow(1000000):06d}"
-
 def save_pending_registration(body, hashed_password):
     registration_data = {
         "first_name": body.FirstName,
@@ -31,15 +28,7 @@ def save_pending_registration(body, hashed_password):
         900, 
         json.dumps(registration_data)
     )
-   
-    # otp = generate_otp()
-    # redis_client.setex(
-    #     f"verify_email:{body.email}",
-    #     300,
-    #     otp
-    # )
-    # return registration_data
-
+ 
 def verify_registration(body):
 
     value = redis_client.get(f"register:{body.email}")
@@ -62,27 +51,27 @@ def verify_registration(body):
 
 async def store_and_send_otp(email: str, bg_tasks: BackgroundTasks):
     otp = f"{secrets.randbelow(1000000):06d}"
-    await redis.setex(
+    redis_client.setex(
         f"otp:{email}",
         300,
         otp
     )
     bg_tasks.add_task(send_verification_email, email, otp)
 
-async def start_cooldown(key:str, seconds:int):
-    await redis.setx(key, seconds,"1")
+def start_cooldown(key:str, seconds:int):
+    redis_client.setex(key, seconds,"1")
 
-async def check_cooldown(key:str):
-    ttl = await redis.ttl(key)
+def check_cooldown(key:str):
+    ttl = redis_client.ttl(key)
     if ttl > 0:
         raise HTTPException(status_code=429, detail= f"Please wait for {ttl} seconds" )
 
-async def check_rate_limit(key: str, limit: int, window: int):
-    count = await redis.incr(key)
+def check_rate_limit(key: str, limit: int, window: int):
+    count = redis_client.incr(key)
     if count == 1:
-        await redis.expire(key, window)
+        redis_client.expire(key, window)
     if count > limit:
-        ttl = await redis.ttl(key)
+        ttl = redis_client.ttl(key)
         raise HTTPException(
             status_code=429,
             detail=f"Too many requests. Try again in {ttl} seconds."

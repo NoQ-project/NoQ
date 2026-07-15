@@ -53,8 +53,3 @@ class Institution(Base):
         back_populates="institution",
         cascade="all, delete"
     )
-    staff = relationship(
-        "InstitutionStaff",
-        back_populates="institution",
-        cascade="all, delete"
-    )

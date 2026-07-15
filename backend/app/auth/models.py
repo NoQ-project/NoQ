@@ -24,4 +24,6 @@ class UserModel(Base):
     password_hash = Column(
             String(255),
             nullable=False
-        )
+    )
+    is_verified = Column(Boolean)
+        

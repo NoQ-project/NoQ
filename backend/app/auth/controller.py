@@ -1,33 +1,42 @@
-from backend.app.auth.schemas import  RegisterSchema, LoginSchema
+from backend.app.auth.schemas import  RegisterSchema, LoginSchema, VerifyEmailSchema
 from sqlalchemy.orm import Session
 from backend.app.auth.models import UserModel
-from fastapi import HTTPException,Request , status, Depends
+from fastapi import HTTPException,Request , status, Depends, BackgroundTasks
 from pwdlib import PasswordHash
 from datetime import datetime, timedelta
 from backend.app.utils.settings import settings
 import jwt
 from jwt.exceptions import InvalidTokenError
 from backend.app.utils.database import get_db
+import redis
+from redis import Redis
+import secrets
+from backend.app.utils.mail import send_verification_email
+from backend.app.config.redis_client import save_pending_registration, verify_registration
+
 
 password_hash = PasswordHash.recommended()
 def get_password_hash(password):
     return password_hash.hash(password)
 
 
-def register(body: RegisterSchema, db: Session):
+def register(body: RegisterSchema, bg_tasks:BackgroundTasks, db: Session):
     is_user = db.query(UserModel).filter(UserModel.email == body.email).first()
-
     if is_user:
         raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail="email already exists")
-    
     hash_password= get_password_hash(body.password)
+    otp = save_pending_registration(body, hash_password)
+    bg_tasks.add_task(send_verification_email, body.email, otp)
+    return {"message": "verify the email now"}
 
+def verify_register(body:VerifyEmailSchema, db: Session):
+    data=verify_registration(body)
     new_user = UserModel(
-        FirstName= body.FirstName,
-        LastName = body.LastName,
-        email = body.email,
-        password_hash= hash_password,
-        role = body.role
+        FirstName=data["first_name"],
+        LastName=data["last_name"],
+        email=data["email"],
+        password_hash=data["hash_password"],
+        role=data["role"]
     )
     db.add(new_user)
     db.commit()
@@ -54,4 +63,3 @@ def login_user(body:LoginSchema, db:Session):
     return {"token": token}
     
     
-                

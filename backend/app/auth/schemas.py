@@ -20,3 +20,7 @@ class UserResponseSchema(BaseModel):
 class LoginSchema(BaseModel): 
     email: EmailStr
     password: str
+
+class VerifyEmailSchema(BaseModel):
+    email: EmailStr
+    otp: str

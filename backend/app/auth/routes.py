@@ -60,3 +60,6 @@ def reset_password(body:ResetPasswordSchema, db:Session = Depends(get_db)):
 def refresh_token(response: Response, request: Request, db: Session = Depends(get_db)):
     return controller.refresh_token(request, response, db)
 
+@auth_routes.post("/logout", status_code=status.HTTP_200_OK)
+def logout(request: Request, response: Response, db: Session = Depends(get_db)):
+    return controller.logout(request, response, db)

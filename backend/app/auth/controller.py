@@ -141,3 +141,18 @@ def refresh_token(request: Request, response: Response, db: Session
     return {
         "message": "Access token refreshed"
     }
+
+def logout(request: Request, response: Response, db: Session):
+    
+    refresh_token = request.cookies.get("refresh_token")
+    if refresh_token:
+        stored_token = db.query(RefreshTokenModel).filter(
+            RefreshTokenModel.token == refresh_token
+        ).first()
+
+        if stored_token:
+            stored_token.revoked = True
+            db.commit()
+    response.delete_cookie(key="access_token")
+    response.delete_cookie(key="refresh_token")
+    return {"message": "Logged out successfully"}

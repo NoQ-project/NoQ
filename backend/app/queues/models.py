@@ -10,7 +10,7 @@ class Queue(Base):
     id = Column(Integer, 
                primary_key=True)
     institution_id = Column(
-        String(36),
+        Integer,
         ForeignKey("institutions.id"),
         nullable=False
     )

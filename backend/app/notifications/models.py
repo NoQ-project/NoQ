@@ -12,8 +12,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from backend.app.utils.database import Base
 import enum
-import uuid
-
 class NotificationType(enum.Enum):
     IN_APP = "in_app"
     EMAIL = "email"
@@ -31,12 +29,12 @@ class Notification(Base):
     id = Column(Integer, 
                primary_key=True)
     user_id = Column(
-        String(36),
+        Integer,
         ForeignKey("users.id"),
         nullable=False
     )
     token_id = Column(
-        String(36),
+        Integer,
         ForeignKey("tokens.id"),
         nullable=True
     )

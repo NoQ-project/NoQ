@@ -25,7 +25,7 @@ class Token(Base):
     id = Column(Integer, 
                primary_key=True)
     user_id = Column(
-        String(36),
+        Integer,
         ForeignKey("users.id"),
         nullable=False
     )

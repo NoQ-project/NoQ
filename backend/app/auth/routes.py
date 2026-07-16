@@ -19,7 +19,7 @@ def register(body:RegisterSchema,bg_tasks:BackgroundTasks,db:Session= Depends(ge
 def verify_register(body: VerifyEmailSchema, db:Session=Depends(get_db)):
     return controller.verify_register(body,db)
 
-@auth_routes.post("/resend_registration_otp", status_code=status.HTTP_200_OK)
+@auth_routes.post("/resend_otp", status_code=status.HTTP_200_OK)
 async def resend_otp(body:EmailSchema, bg_tasks:BackgroundTasks):
     return await controller.resend_otp(body, bg_tasks)
 
@@ -27,6 +27,3 @@ async def resend_otp(body:EmailSchema, bg_tasks:BackgroundTasks):
 def login(body: LoginSchema, db:Session = Depends(get_db)):
     return controller.login_user(body, db)
 
-@auth_routes.post("/reset_password", status_code=status.HTTP_201_CREATED)
-def reset_password(body: EmailSchema, db:Session=Depends(get_db), bg_tasks=BackgroundTasks):
-    return controller.reset_password(body, db)

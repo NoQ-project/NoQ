@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Boolean, DateTime, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from database import Base
+from backend.app.utils.database import Base
 import uuid
 
 
@@ -13,61 +13,43 @@ class Institution(Base):
         primary_key=True,
         default=lambda: str(uuid.uuid4())
     )
-
     name = Column(
         String(200),
         nullable=False
     )
-
     description = Column(
         Text,
         nullable=True
     )
-
     address = Column(
         Text,
         nullable=False
     )
-
     phone = Column(
         String(20),
         nullable=True
     )
-
     email = Column(
         String(255),
         unique=True,
         nullable=True
     )
-
     website = Column(
         String(255),
         nullable=True
     )
-
-
     created_at = Column(
         DateTime,
         server_default=func.now()
     )
-
     updated_at = Column(
         DateTime,
         server_default=func.now(),
         onupdate=func.now()
     )
-
-
     # Relationships
-
     queues = relationship(
         "Queue",
-        back_populates="institution",
-        cascade="all, delete"
-    )
-
-    staff = relationship(
-        "InstitutionStaff",
         back_populates="institution",
         cascade="all, delete"
     )

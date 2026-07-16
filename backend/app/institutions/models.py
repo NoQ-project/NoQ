@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, DateTime, Text,Integer
+from sqlalchemy import Column, String, Boolean, DateTime, Text,Integer, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from backend.app.utils.database import Base
@@ -10,6 +10,11 @@ class Institution(Base):
 
     id = Column(Integer, 
                primary_key=True)
+    auth_id = Column(
+       Integer,
+        ForeignKey("usertable.id"),
+        nullable=False
+    )
     name = Column(
         String(200),
         nullable=False

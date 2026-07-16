@@ -39,7 +39,7 @@ class RefreshTokenModel(Base):
     )
     user_id = Column(
         Integer,
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey("usertable.id", ondelete="CASCADE"),
         nullable=False
     )
     token = Column(

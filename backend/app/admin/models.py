@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey
+from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Integer
 from sqlalchemy.sql import func
 from backend.app.utils.database import Base
 import uuid
@@ -13,9 +13,9 @@ class Review(Base):
         primary_key=True,
         default=lambda: str(uuid.uuid4())
     )
-    admin_id = Column(
-        String(36),
-        ForeignKey("users.id"),
+    auth_id = Column(
+       Integer,
+        ForeignKey("usertable.id"),
         nullable=False
     )
     action = Column(

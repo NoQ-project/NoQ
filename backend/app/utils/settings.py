@@ -6,7 +6,8 @@ class Settings(BaseSettings):
     DB_CONNECTION:str
     SECRET_KEY: str
     ALGORITHM: str
-    EXP_TIME: int
+    ACCESS_TOKEN_EXP_TIME: int
+    REFRESH_TOKEN_EXP_TIME: int
     REDIS_HOST: str
     REDIS_PORT: int
     REDIS_DB: int

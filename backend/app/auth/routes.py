@@ -30,7 +30,7 @@ def login(body: LoginSchema, response: Response, db:Session = Depends(get_db)):
         key="access_token",
         value=tokens["access_token"],
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
         max_age=15 * 60
     )
@@ -38,7 +38,7 @@ def login(body: LoginSchema, response: Response, db:Session = Depends(get_db)):
         key="refresh_token",
         value=tokens["refresh_token"],
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
         max_age=30 * 24 * 60 * 60
     )

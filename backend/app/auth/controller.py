@@ -71,14 +71,20 @@ def login_user(body:LoginSchema, db:Session):
         token=refresh_token,
         expires_at=datetime.now(timezone.utc) + timedelta(days=30)
     )
+    db.add(refresh_token_data)
+    db.commit()
     return {"access_token": access_token,
             "refresh_token": refresh_token}
     
-def request_reset_password(body:EmailSchema, db:Session, bg_tasks: BackgroundTasks):
+def request_reset_password(body:EmailSchema, bg_tasks: BackgroundTasks ,db:Session):
     is_user = db.query(UserModel).filter(UserModel.email == body.email).first()
     if not is_user:
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Email doesnot exist")
-    store_and_send_otp("reset_password", body.email, bg_tasks)
+    check_cooldown(f"cooldown:resend_reset_password_otp:{body.email}")
+    check_rate_limit(f"rate_limit:resend_reset_password_otp:{body.email}", 5, 60)
+    store_and_send_otp("reset_password",  bg_tasks ,body.email)
+    start_cooldown(f"cooldown:reset_password_otp:{body.email}", 120)
+    return {"message":"Password reset OTP has been sent in email"}
 
 def verify_reset_password(body: VerifyEmailSchema):
     stored_otp= redis_client.get(f"reset_password_otp:{body.email}")
@@ -88,7 +94,7 @@ def verify_reset_password(body: VerifyEmailSchema):
         raise HTTPException(status_code=401, detail="Incorrect OTP")
     redis_client.delete(f"reset_password_otp:{body.email}")
     verified_user("reset_password", body.email)
-
+    return {"message":"user verified, now, can reset password"}
 
 def reset_password(body:ResetPasswordSchema, db:Session):
     user = db.query(UserModel).filter(UserModel.email == body.email).first()
@@ -122,7 +128,8 @@ def refresh_token(request: Request, response: Response, db: Session
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token revoked"
         )
-    if stored_token.expires_at < datetime.now(timezone.utc):
+    expires_at = stored_token.expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token expired"
@@ -143,7 +150,7 @@ def refresh_token(request: Request, response: Response, db: Session
     }
 
 def logout(request: Request, response: Response, db: Session):
-    
+
     refresh_token = request.cookies.get("refresh_token")
     if refresh_token:
         stored_token = db.query(RefreshTokenModel).filter(

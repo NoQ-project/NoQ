@@ -30,7 +30,7 @@ class Token(Base):
         nullable=False
     )
     queue_id = Column(
-        String(36),
+        Integer,
         ForeignKey("queues.id"),
         nullable=False
     )

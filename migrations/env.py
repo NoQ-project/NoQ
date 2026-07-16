@@ -3,7 +3,13 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from backend.app.utils.settings import settings
-from backend.app.auth.models import UserModel
+from backend.app.auth.models import UserModel, RefreshTokenModel
+from backend.app.admin.models import Review
+from backend.app.institutions.models import Institution
+from backend.app.queues.models import Queue
+from backend.app.notifications.models import Notification
+from backend.app.tokens.models import Token
+from backend.app.user.models import User
 from backend.app.utils.database import Base
 
 

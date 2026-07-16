@@ -48,7 +48,7 @@ def verify_registration(body):
 
     return registration_data
 
-def store_and_send_otp(purpose: str , email: EmailStr, bg_tasks: BackgroundTasks):
+def store_and_send_otp(purpose: str,  bg_tasks: BackgroundTasks ,email: EmailStr):
     otp = f"{secrets.randbelow(1000000):06d}"
     redis_client.setex(
         f"{purpose}_otp:{email}",
@@ -58,7 +58,7 @@ def store_and_send_otp(purpose: str , email: EmailStr, bg_tasks: BackgroundTasks
     bg_tasks.add_task(send_verification_email, email, otp)
 
 def verified_user(purpose:str, email:EmailStr):
-    redis_client.set(f"{purpose}_verified:{email}",300 ,"true")
+    redis_client.set(f"{purpose}_verified:{email}","true" ,300 )
 
 def start_cooldown(key:str, seconds:int):
     redis_client.setex(key, seconds,"1")

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime 
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from backend.app.utils.database import Base
 
@@ -8,6 +8,11 @@ class User(Base):
     id = Column(Integer , primary_key=True)
     full_name = Column(
         String(100),
+        nullable=False
+    )
+    auth_id = Column(
+       Integer,
+        ForeignKey("usertable.id"),
         nullable=False
     )
     email = Column(

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Request, BackgroundTasks, HTTPException
+from fastapi import APIRouter, Depends, status, Request, BackgroundTasks, HTTPException, Response
 from sqlalchemy.orm import Session
 from backend.app.auth import controller
 from backend.app.auth.models import UserRole
@@ -24,8 +24,17 @@ def resend_otp(body:EmailSchema, bg_tasks:BackgroundTasks):
     return controller.resend_otp(body, bg_tasks)
 
 @auth_routes.post("/login",status_code=status.HTTP_200_OK)
-def login(body: LoginSchema, db:Session = Depends(get_db)):
-    return controller.login_user(body, db)
+def login(body: LoginSchema, response: Response, db:Session = Depends(get_db)):
+    token= controller.login_user(body, db)
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=15 * 60
+    )
+    return {"message": "Login successful"}
 
 @auth_routes.post("/request_reset_password", status_code=status.HTTP_200_OK)
 def request_reset_password(body:EmailSchema,  bg_tasks:BackgroundTasks,db:Session = Depends(get_db)):

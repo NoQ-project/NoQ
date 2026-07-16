@@ -15,7 +15,7 @@ from backend.app.institutions.models import Institution
 
 def get_current_user(request: Request, db: Session = Depends(get_db)):
     try:
-        token = request.headers.get("authorization")
+        token = request.cookies.get("access_token")
         if not token:
             raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= "You are unauthorized")
         

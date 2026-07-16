@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, status, Request, BackgroundTasks, HTTPException
+from fastapi import APIRouter, Depends, status, Request, BackgroundTasks, HTTPException, Response
 from sqlalchemy.orm import Session
 from backend.app.auth import controller
 from backend.app.auth.models import UserRole
-from backend.app.auth.schemas import UserResponseSchema, RegisterSchema, LoginSchema, VerifyEmailSchema, EmailSchema
+from backend.app.auth.schemas import UserResponseSchema, RegisterSchema, LoginSchema, VerifyEmailSchema, EmailSchema, ResetPasswordSchema
 from backend.app.utils.database import get_db
 from backend.app.auth.dependencies import get_current_user
 from backend.app.auth.dependencies import require_role 
@@ -20,10 +20,43 @@ def verify_register(body: VerifyEmailSchema, db:Session=Depends(get_db)):
     return controller.verify_register(body,db)
 
 @auth_routes.post("/resend_otp", status_code=status.HTTP_200_OK)
-async def resend_otp(body:EmailSchema, bg_tasks:BackgroundTasks):
-    return await controller.resend_otp(body, bg_tasks)
+def resend_otp(body:EmailSchema, bg_tasks:BackgroundTasks):
+    return controller.resend_otp(body, bg_tasks)
 
 @auth_routes.post("/login",status_code=status.HTTP_200_OK)
-def login(body: LoginSchema, db:Session = Depends(get_db)):
-    return controller.login_user(body, db)
+def login(body: LoginSchema, response: Response, db:Session = Depends(get_db)):
+    tokens = controller.login_user(body, db)
+    response.set_cookie(
+        key="access_token",
+        value=tokens["access_token"],
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=15 * 60
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=tokens["refresh_token"],
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=30 * 24 * 60 * 60
+    )
+    return {"message": "Login successful"}
+
+@auth_routes.post("/request_reset_password", status_code=status.HTTP_200_OK)
+def request_reset_password(body:EmailSchema,  bg_tasks:BackgroundTasks,db:Session = Depends(get_db)):
+    return controller.request_reset_password(body, bg_tasks, db)
+
+@auth_routes.post("/verify_reset_password", status_code=status.HTTP_200_OK)
+def verify_reset_password(body:VerifyEmailSchema):
+    return controller.verify_reset_password(body)
+
+@auth_routes.post("/reset_password", status_code=status.HTTP_200_OK)
+def reset_password(body:ResetPasswordSchema, db:Session = Depends(get_db)):
+    return controller.reset_password(body, db)
+
+@auth_routes.post("/refresh", status_code=status.HTTP_200_OK)
+def refresh_token(response: Response, request: Request, db: Session = Depends(get_db)):
+    return controller.refresh_token(request, response, db)
 

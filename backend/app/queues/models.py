@@ -8,7 +8,7 @@ class Queue(Base):
     __tablename__ = "queues"
 
     id = Column(Integer, 
-               primary_key=True)
+            primary_key=True)
     institution_id = Column(
         Integer,
         ForeignKey("institutions.id"),

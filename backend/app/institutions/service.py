@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -59,3 +60,5 @@ class InstitutionService:
             )
 
         return institution
+=======
+>>>>>>> f4c3dca878710c3027b416ba91e7275d45219b3f

@@ -22,6 +22,7 @@ class TokenStatus(enum.Enum):
 class Token(Base):
     __tablename__ = "tokens"
 
+<<<<<<< HEAD:backend/app/tokens_backup/models.py
     id = Column(
         Integer,
         primary_key=True
@@ -30,6 +31,13 @@ class Token(Base):
     user_id = Column(
         Integer,
         ForeignKey("usertable.id"),
+=======
+    id = Column(Integer, 
+               primary_key=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+>>>>>>> f4c3dca878710c3027b416ba91e7275d45219b3f:backend/app/tokens/models.py
         nullable=False
     )
 

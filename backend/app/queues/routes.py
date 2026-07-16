@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import List
@@ -43,3 +44,5 @@ def get_queue_details(
         queue_id=queue_id,
         db=db
     )
+=======
+>>>>>>> f4c3dca878710c3027b416ba91e7275d45219b3f

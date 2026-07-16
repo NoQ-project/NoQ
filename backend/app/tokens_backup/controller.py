@@ -1,3 +1,4 @@
+<<<<<<< HEAD:backend/app/tokens_backup/controller.py
 from sqlalchemy.orm import Session
 
 from backend.app.tokens_backup import service
@@ -38,3 +39,5 @@ def get_token_details(
         user_id=user_id,
         db=db
     )
+=======
+>>>>>>> f4c3dca878710c3027b416ba91e7275d45219b3f:backend/app/tokens/controller.py

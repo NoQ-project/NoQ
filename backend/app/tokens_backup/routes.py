@@ -1,3 +1,4 @@
+<<<<<<< HEAD:backend/app/tokens_backup/routes.py
 from typing import List
 
 from fastapi import APIRouter, Depends, status
@@ -64,3 +65,5 @@ def get_token_details(
         user_id=1,
         db=db
     )
+=======
+>>>>>>> f4c3dca878710c3027b416ba91e7275d45219b3f:backend/app/tokens/routes.py

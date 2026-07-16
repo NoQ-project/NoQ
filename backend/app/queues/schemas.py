@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
@@ -27,3 +28,5 @@ class QueueDetailSchema(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+=======
+>>>>>>> f4c3dca878710c3027b416ba91e7275d45219b3f

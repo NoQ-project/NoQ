@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import "../assets/css/login.css";
-import "../assets/css/signup.css";
+import "../../assets/css/login.css";
+import "../../assets/css/signup.css";
 
 function NoqLogin({ isOpen, onClose, initialView = "login" }) {
   const [isSignupView, setIsSignupView] = useState(false);

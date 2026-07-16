@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
@@ -37,3 +38,5 @@ def get_queue_by_id(
         )
 
     return queue
+=======
+>>>>>>> f4c3dca878710c3027b416ba91e7275d45219b3f

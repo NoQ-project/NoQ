@@ -1,7 +1,7 @@
 import "../assets/css/landing_page.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import NoqLogin from "./Login";
+import NoqLogin from "../components/auth/Login";
 import { useState } from "react";
 
 function LandingPage() {

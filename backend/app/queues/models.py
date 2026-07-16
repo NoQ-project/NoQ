@@ -7,13 +7,10 @@ import uuid
 class Queue(Base):
     __tablename__ = "queues"
 
-    id = Column(
-        String(36),
-        primary_key=True,
-        default=lambda: str(uuid.uuid4())
-    )
+    id = Column(Integer, 
+               primary_key=True)
     institution_id = Column(
-        String(36),
+        Integer,
         ForeignKey("institutions.id"),
         nullable=False
     )

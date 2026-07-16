@@ -5,14 +5,13 @@ from sqlalchemy import (
     DateTime,
     Boolean,
     Enum,
-    ForeignKey
+    ForeignKey,
+    Integer
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from backend.app.utils.database import Base
 import enum
-import uuid
-
 class NotificationType(enum.Enum):
     IN_APP = "in_app"
     EMAIL = "email"
@@ -27,18 +26,15 @@ class NotificationStatus(enum.Enum):
 class Notification(Base):
     __tablename__ = "notifications"
 
-    id = Column(
-        String(36),
-        primary_key=True,
-        default=lambda: str(uuid.uuid4())
-    )
+    id = Column(Integer, 
+               primary_key=True)
     user_id = Column(
-        String(36),
+        Integer,
         ForeignKey("users.id"),
         nullable=False
     )
     token_id = Column(
-        String(36),
+        Integer,
         ForeignKey("tokens.id"),
         nullable=True
     )

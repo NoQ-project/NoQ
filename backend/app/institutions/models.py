@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, DateTime, Text
+from sqlalchemy import Column, String, Boolean, DateTime, Text,Integer
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from backend.app.utils.database import Base
@@ -8,11 +8,8 @@ import uuid
 class Institution(Base):
     __tablename__ = "institutions"
 
-    id = Column(
-        String(36),
-        primary_key=True,
-        default=lambda: str(uuid.uuid4())
-    )
+    id = Column(Integer, 
+               primary_key=True)
     name = Column(
         String(200),
         nullable=False

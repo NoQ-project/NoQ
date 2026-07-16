@@ -42,7 +42,7 @@ def verify_registration(body):
         raise HTTPException(status_code=400,detail="OTP expired.")
     if  body.otp != stored_otp:
         raise HTTPException(status_code=401, detail="Incorrect OTP")
-    
+    redis_client.delete(f"register_otp:{body.email}")
     registration_data = json.loads(value)
     redis_client.delete(f"register:{body.email}")
 

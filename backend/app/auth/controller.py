@@ -30,6 +30,7 @@ def register(body: RegisterSchema, bg_tasks:BackgroundTasks, db: Session):
 
 def verify_register(body:VerifyEmailSchema, db: Session):
     data=verify_registration(body)
+    
     new_user = UserModel(
         FirstName=data["first_name"],
         LastName=data["last_name"],
@@ -63,7 +64,7 @@ def login_user(body:LoginSchema, db:Session):
 
     exp_time = datetime.now()+ timedelta(minutes=settings.EXP_TIME)
     token = jwt.encode({"id":user.id,"exp":exp_time}, settings.SECRET_KEY, settings.ALGORITHM)
-    return {"token": token}
+    return {"access_token": token}
     
 def request_reset_password(body:EmailSchema, db:Session, bg_tasks: BackgroundTasks):
     is_user = db.query(UserModel).filter(UserModel.email == body.email).first()

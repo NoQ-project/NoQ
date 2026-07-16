@@ -25,10 +25,10 @@ def resend_otp(body:EmailSchema, bg_tasks:BackgroundTasks):
 
 @auth_routes.post("/login",status_code=status.HTTP_200_OK)
 def login(body: LoginSchema, response: Response, db:Session = Depends(get_db)):
-    token= controller.login_user(body, db)
+    access_token= controller.login_user(body, db)
     response.set_cookie(
         key="access_token",
-        value=token,
+        value=access_token,
         httponly=True,
         secure=True,
         samesite="lax",

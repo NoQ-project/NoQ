@@ -1,13 +1,24 @@
 import "../assets/css/landing_page.css";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import NoqLogin from "./Login";
+import { useState } from "react";
 
 function LandingPage() {
+  const [showLogin, setShowLogin] = useState(false);
+  const [initialAuthView, setInitialAuthView] = useState("login");
+
+  const openAuth = (view) => {
+    setInitialAuthView(view);
+    setShowLogin(true);
+  };
+
   return (
     <>
-    <Navbar />
+      <Navbar onLoginClick={() => openAuth("login")} />
 
       <div
-        className="hero max-w-7xl mx-auto py-4 px-8 h-[70vh] grid sm:grid-cols-2 items-center gap-10 bg-[#EEEDFE]"
+        className="hero w-full mx-auto py-4 px-8 h-[70vh] grid sm:grid-cols-2 items-center gap-10 bg-[#EEEDFE]"
         id="home"
       >
         <div>
@@ -25,11 +36,17 @@ function LandingPage() {
           </p>
 
           <div className="flex gap-4 py-4">
-            <button className="bg-green-500 text-white py-2 px-4 rounded">
+            <button 
+              className="bg-green-500 text-white py-2 px-4 rounded cursor-pointer"
+              onClick={() => openAuth("signup")}
+            >
               Get a Token
             </button>
 
-            <button className="bg-purple-500 text-white py-2 px-4 rounded">
+            <button 
+              className="bg-purple-500 text-white py-2 px-4 rounded cursor-pointer"
+              onClick={() => openAuth("login")}
+            >
               Check Queue Status
             </button>
           </div>
@@ -58,11 +75,12 @@ function LandingPage() {
           </div>
 
           <div className="button-track">
-            <button>Enter a token number to track</button>
+            <button onClick={() => openAuth("login")}>
+              Enter a token number to track
+            </button>
           </div>
         </div>
       </div>
-            {/* ================= Services ================= */}
 
       <div
         className="services grid gap-4 w-full mx-auto scroll-mt-[56px]"
@@ -71,7 +89,6 @@ function LandingPage() {
         <p className="text-[#6C4AB7]">Available Services</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
           <div className="service-card">
             <p className="service-image">1</p>
             <p>Choose a service</p>
@@ -107,11 +124,8 @@ function LandingPage() {
               waiting around.
             </p>
           </div>
-
         </div>
       </div>
-
-      {/* ================= How It Works ================= */}
 
       <div
         className="how-it-works grid gap-4 w-full mx-auto"
@@ -122,13 +136,10 @@ function LandingPage() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
           <div className="step-card">
             <p className="step">1</p>
-
             <div className="py-5">
               <p className="font-bold">Choose a service</p>
-
               <p>
                 Pick the service you need and see real-time wait times before
                 you book.
@@ -138,10 +149,8 @@ function LandingPage() {
 
           <div className="step-card">
             <p className="step">2</p>
-
             <div className="py-5">
               <p className="font-bold">Get your token</p>
-
               <p>
                 Receive a digital token instantly via SMS or on screen. No
                 printing needed.
@@ -151,10 +160,8 @@ function LandingPage() {
 
           <div className="step-card">
             <p className="step">3</p>
-
             <div className="py-5">
               <p className="font-bold">Track your turn</p>
-
               <p>
                 Monitor your position live from anywhere. Get notified as your
                 turn approaches.
@@ -164,31 +171,27 @@ function LandingPage() {
 
           <div className="step-card">
             <p className="step">4</p>
-
             <div className="py-5">
               <p className="font-bold">Walk in &amp; be served</p>
-
               <p>
                 Arrive when it's your turn. Head straight to the counter — no
                 waiting around.
               </p>
             </div>
           </div>
-
         </div>
 
-        <a href="/login">
-          <button className="bg-green-500 text-white py-2 px-4 rounded">
-            Get a Token
-          </button>
-        </a>
+        <button 
+          className="bg-green-500 text-white py-2 px-4 rounded max-w-max cursor-pointer"
+          onClick={() => openAuth("signup")}
+        >
+          Get a Token
+        </button>
       </div>
-            {/* ================= Contact ================= */}
-
+           
       <div id="contact" className="contact grid sm:grid-cols-2">
         <div className="contact-text">
           <p className="font-bold">Contact us</p>
-
           <p>
             Have questions or need help? Reach out to our support team — we're
             here to assist with bookings, queue setup, or any issues you run
@@ -197,11 +200,9 @@ function LandingPage() {
         </div>
 
         <div className="contact-form">
-          <form>
-
+          <form onSubmit={(e) => e.preventDefault()}>
             <div>
               <label htmlFor="username">Username</label>
-
               <input
                 type="text"
                 id="username"
@@ -211,9 +212,8 @@ function LandingPage() {
 
             <div>
               <label htmlFor="email">Email</label>
-
               <input
-                type="email"
+                type="type"
                 id="email"
                 name="email"
               />
@@ -221,7 +221,6 @@ function LandingPage() {
 
             <div>
               <label htmlFor="message">Message</label>
-
               <textarea
                 id="message"
                 name="message"
@@ -229,18 +228,19 @@ function LandingPage() {
                 rows="5"
                 placeholder="Enter your message"
               ></textarea>
+              <button className="send bg-green-400 rounded shadow-md cursor-pointer">Send</button>
             </div>
-
           </form>
         </div>
       </div>
 
-      {/* ================= Footer ================= */}
-
-      <footer className="text-center py-5">
-        <p>&copy; 2026 NoQ. All rights reserved.</p>
-      </footer>
-
+      <Footer />
+      
+      <NoqLogin 
+        isOpen={showLogin} 
+        onClose={() => setShowLogin(false)} 
+        initialView={initialAuthView}
+      />
     </>
   );
 }

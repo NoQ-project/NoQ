@@ -1,7 +1,7 @@
 function Footer() {
   return (
-    <footer className="fixed bottom-0 text-center w-full py-2 bg-gray-200">
-      <p>
+    <footer className="text-center w-full py-6 bg-gray-200 mt-auto border-t border-gray-300">
+      <p className="text-gray-600 text-sm">
         © 2026 NoQ. All rights reserved.
       </p>
     </footer>

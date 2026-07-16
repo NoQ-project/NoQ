@@ -1,5 +1,6 @@
+import React from "react";
 
-function Navbar() {
+function Navbar({onLoginClick}) {
   return (
    <header>
      <nav className="flex justify-between items-center w-full mx-auto py-4 px-8 bg-gray-300">
@@ -17,14 +18,15 @@ function Navbar() {
                 <li><a href="#contact">Contact</a></li>
             </ul>  
             <div className="md:flex hidden justify-end gap-4">
-                <a href="login.html">
-                    <button class="bg-blue-500 text-white py-2 px-4 rounded">Login</button>
-                </a> 
-                <a href="login.html">
-                <button className="bg-green-500 text-white py-2 px-4 rounded">Get a token</button>
-                </a>
+                
+                    <button class="bg-blue-500 text-white py-2 px-4 rounded"
+                    onClick={onLoginClick}>Login</button>
+            
+                <button className="bg-green-500 text-white py-2 px-4 rounded"
+               onClick={onLoginClick}>Get a token</button>
+             
         </div>
-        <div onClick="toggleSidebar()" class="bar cursor-pointer md:hidden flex justify-end gap-4">
+        <div onClick={()=>alert("sidebar trigered")} class="bar cursor-pointer md:hidden flex justify-end gap-4">
             <i className="bar fa-solid fa-bars fa-lg"></i>
         </div>
        </nav>

@@ -1,3 +1,8 @@
+*{  
+    margin: 0px;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}
 h1{
     color: #6C4AB7;
 }
@@ -11,11 +16,7 @@ h1{
     color: white;
     cursor: pointer;
 }
-*{  
-    margin: 0px;
-    box-sizing: border-box;
-    scroll-behavior: smooth;
-}
+
 * p{
     font-size: 24px;
 }
@@ -41,7 +42,7 @@ h1{
     background-color: aquamarine;
     width: 100px;
     height: 40px;
-    padding: 20px;
+    padding: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -55,7 +56,7 @@ header{
     top: 0;
 }
 .contact{
-    height: 20vh;
+   height: fit-content;
 }
 .contact input,textarea{
     color: black;
@@ -74,14 +75,14 @@ header{
     gap: 10px;
     scroll-margin-top: 24px;
     font-size: 20px;
-    height: 100%;
+    height: fit-content;
     margin: 50px;
 }
 .contact-form{
     display: flex;
     flex-direction: column;
     border-radius: 8px;
-    height: 100%;
+    height: fit-content;
     margin: 20px;
     padding: 20px;
     color:black;
@@ -92,6 +93,7 @@ header{
     -webkit-backdrop-filter: blur(12px);
     border-radius: 10px;
     color: #fff;
+    
 }
 .contact-form label{
     padding: 8px;
@@ -111,4 +113,7 @@ header{
     margin: 10px;
     padding: 6px;
 }
-
+.send{
+    padding: 8px;
+    margin: 10px;
+}

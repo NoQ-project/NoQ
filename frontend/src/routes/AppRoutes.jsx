@@ -4,6 +4,7 @@ import { QueueProvider } from '../context/QueueContext';
 import LandingPage from '../pages/LandingPage';
 import NoqLogin from '../components/auth/Login'; 
 import UserPanel from '../pages/UserPanel';
+import AdminApp from '../pages/Admin';
 import OrgPanel from '../pages/OrgPanel';
 function AppRoutes() {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -26,6 +27,7 @@ function AppRoutes() {
              <Route path="/" element={<LandingPage />} />
              <Route path="/user/*" element={<UserPanel />} />
              <Route path="/org/*" element={<OrgPanel />} />
+             <Route path="/admin/*" element={<AdminApp />}/>
             </Routes>
         </QueueProvider>
       <NoqLogin 

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import '../assets/css/Admin.css'
 import {
   LayoutDashboard,
   ListOrdered,
@@ -36,7 +37,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import "./admin.css";
+
 
 /* ---------------------------------------------------------------
    NoQ — Admin Console

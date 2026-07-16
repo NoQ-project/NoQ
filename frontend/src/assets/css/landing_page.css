@@ -1,0 +1,119 @@
+*{  
+    margin: 0px;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}
+h1{
+    color: #6C4AB7;
+}
+.sidebar{
+    position: fixed;
+    top: 0px;
+    align-items: center;
+    background-color:rgba(58, 52, 52, 0.8);
+    top: 58px;
+    font-size: 2rem;
+    color: white;
+    cursor: pointer;
+}
+
+* p{
+    font-size: 24px;
+}
+.step{
+    background-color: aquamarine;
+    width: 100px;
+    height: 40px;
+    padding: 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.step p{
+    width: 25%;
+}
+
+.how-it-works{
+    padding: 20px;
+    font-size: 24px;
+}
+.service-image{
+    background-color: aquamarine;
+    width: 100px;
+    height: 40px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.services{
+    padding: 20px;
+     font-size: 24px;
+}
+header{
+    position: sticky;
+    top: 0;
+}
+.contact{
+   height: fit-content;
+}
+.contact input,textarea{
+    color: black;
+}
+#ticket-box{
+    border-width: 2px;
+    border-color: rgb(153, 153, 233);
+}
+.button-track{
+    display: flex;
+    justify-content: center;
+    border-width: 2px;
+    border-color: rgb(153, 153, 233);
+}
+.contact{
+    gap: 10px;
+    scroll-margin-top: 24px;
+    font-size: 20px;
+    height: fit-content;
+    margin: 50px;
+}
+.contact-form{
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    height: fit-content;
+    margin: 20px;
+    padding: 20px;
+    color:black;
+    background: rgba(30, 41, 59, 0.75);
+    box-sizing: border-box;
+    box-shadow: 0 15px 25px rgba(0,0,0,.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 10px;
+    color: #fff;
+    
+}
+.contact-form label{
+    padding: 8px;
+}
+.contact-form input{
+    background-color: azure;
+    border: 1px;
+    border-color: black;
+    width: 90%;
+    margin: 10px;
+    padding: 6px;
+    border-radius: 4px;
+}
+.contact-form textarea{
+    background-color: azure;
+    width: 90%;
+    margin: 10px;
+    padding: 6px;
+}
+.send{
+    padding: 8px;
+    margin: 10px;
+}

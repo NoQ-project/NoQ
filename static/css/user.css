@@ -1,0 +1,32 @@
+*{  
+    margin: 0px;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}
+.profile{
+    height: 50px;
+    width: 50px;
+    border-radius: 50px;
+    background-color: #7ed82f;
+}
+nav ul{
+    justify-content: space-around;
+    padding: 15px 0;
+    font-size: 20px;
+}
+.nav-end{
+    display: flex;
+    margin: 0px;
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    padding: 15px 0;
+    justify-content: space-around;
+    gap: 4px;
+}
+.nav-end a {
+    font-size: 13px; 
+    text-decoration: none;
+    display: block;
+}

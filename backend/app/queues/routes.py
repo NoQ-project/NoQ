@@ -21,7 +21,7 @@ queue_routes = APIRouter(
     status_code=status.HTTP_200_OK
 )
 def get_queues(
-    institution_id: str,
+    institution_id: int,
     db: Session = Depends(get_db)
 ):
     return controller.get_institution_queues(
@@ -36,7 +36,7 @@ def get_queues(
     status_code=status.HTTP_200_OK
 )
 def get_queue_details(
-    queue_id: str,
+    queue_id: int,
     db: Session = Depends(get_db)
 ):
     return controller.get_queue_details(

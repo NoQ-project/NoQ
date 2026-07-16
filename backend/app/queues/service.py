@@ -5,7 +5,7 @@ from backend.app.queues.models import Queue
 
 
 def get_queues_by_institution(
-    institution_id: str,
+    institution_id: int,
     db: Session
 ):
     queues = (
@@ -21,7 +21,7 @@ def get_queues_by_institution(
 
 
 def get_queue_by_id(
-    queue_id: str,
+    queue_id: int,
     db: Session
 ):
     queue = (

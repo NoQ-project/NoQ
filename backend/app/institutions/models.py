@@ -8,8 +8,11 @@ import uuid
 class Institution(Base):
     __tablename__ = "institutions"
 
-    id = Column(Integer, 
-               primary_key=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+)   
     name = Column(
         String(200),
         nullable=False

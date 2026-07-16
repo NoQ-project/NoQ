@@ -3,7 +3,7 @@ from typing import Optional
 
 
 class InstitutionResponse(BaseModel):
-    id: str
+    id: int
     name: str
     description: Optional[str] = None
     address: str

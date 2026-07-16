@@ -3,14 +3,13 @@ from typing import List
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from backend.app.tokens import controller
-from backend.app.tokens.schemas import (
+from backend.app.tokens_backup import controller
+from backend.app.tokens_backup.schemas import (
     BookTokenSchema,
     TokenResponseSchema,
     TokenDetailSchema,
 )
 from backend.app.utils.database import get_db
-from backend.app.auth.dependencies import get_current_user
 
 token_routes = APIRouter(
     prefix="/tokens",
@@ -25,12 +24,12 @@ token_routes = APIRouter(
 )
 def book_token(
     body: BookTokenSchema,
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
+    # Temporary Testing (User ID = 1)
     return controller.book_token(
         queue_id=body.queue_id,
-        user_id=current_user.id,
+        user_id=1,
         db=db
     )
 
@@ -41,11 +40,11 @@ def book_token(
     status_code=status.HTTP_200_OK
 )
 def get_my_tokens(
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
+    # Temporary Testing (User ID = 1)
     return controller.get_my_tokens(
-        user_id=current_user.id,
+        user_id=1,
         db=db
     )
 
@@ -56,12 +55,12 @@ def get_my_tokens(
     status_code=status.HTTP_200_OK
 )
 def get_token_details(
-    token_id: str,
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    token_id: int,
+    db: Session = Depends(get_db)
 ):
+    # Temporary Testing (User ID = 1)
     return controller.get_token_details(
         token_id=token_id,
-        user_id=current_user.id,
+        user_id=1,
         db=db
     )

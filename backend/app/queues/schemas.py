@@ -1,10 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 
 class QueueResponseSchema(BaseModel):
-    id: str
-    institution_id: str
+    id: int
+    institution_id: int
     name: str
     description: str | None = None
     daily_limit: int
@@ -12,13 +12,12 @@ class QueueResponseSchema(BaseModel):
     is_active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class QueueDetailSchema(BaseModel):
-    id: str
-    institution_id: str
+    id: int
+    institution_id: int
     name: str
     description: str | None = None
     daily_limit: int
@@ -27,5 +26,4 @@ class QueueDetailSchema(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

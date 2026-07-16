@@ -1,17 +1,17 @@
 from pydantic import BaseModel
 from datetime import datetime
 
-from backend.app.tokens.models import TokenStatus
+from backend.app.tokens_backup.models import TokenStatus
 
 
 class BookTokenSchema(BaseModel):
-    queue_id: str
+    queue_id: int
 
 
 class TokenResponseSchema(BaseModel):
-    id: str
-    user_id: str
-    queue_id: str
+    id: int
+    user_id: int
+    queue_id: int
     token_number: int
     status: TokenStatus
     booking_date: datetime
@@ -22,9 +22,9 @@ class TokenResponseSchema(BaseModel):
 
 
 class TokenDetailSchema(BaseModel):
-    id: str
-    user_id: str
-    queue_id: str
+    id: int
+    user_id: int
+    queue_id: int
     token_number: int
     status: TokenStatus
     booking_date: datetime

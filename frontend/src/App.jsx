@@ -1,11 +1,16 @@
 import LandingPage from "./pages/LandingPage";
-import './index.css'
+import './index.css' 
+import { BrowserRouter as Router } from 'react-router-dom';
+import AppRoutes from './routes/AppRoutes';
+
 
 function App() {
   return( 
-  <div className="w-full">
-  <LandingPage />
-  </div>
+  <Router >
+    <div className="w-full"> 
+      <AppRoutes />
+    </div>
+  </Router>
   )
 
 }

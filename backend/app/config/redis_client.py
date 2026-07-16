@@ -37,26 +37,28 @@ def verify_registration(body):
             status_code=400,
             detail="Registration expired."
         )
-    stored_otp= redis_client.get(f"otp:{body.email}")
+    stored_otp= redis_client.get(f"register_otp:{body.email}")
     if stored_otp is None:
         raise HTTPException(status_code=400,detail="OTP expired.")
     if  body.otp != stored_otp:
         raise HTTPException(status_code=401, detail="Incorrect OTP")
     
     registration_data = json.loads(value)
-    redis_client.delete(f"verify_email:{body.email}")
     redis_client.delete(f"register:{body.email}")
 
     return registration_data
 
-async def store_and_send_otp(email: str, bg_tasks: BackgroundTasks):
+def store_and_send_otp(purpose: str , email: EmailStr, bg_tasks: BackgroundTasks):
     otp = f"{secrets.randbelow(1000000):06d}"
     redis_client.setex(
-        f"otp:{email}",
+        f"{purpose}_otp:{email}",
         300,
         otp
     )
     bg_tasks.add_task(send_verification_email, email, otp)
+
+def verified_user(purpose:str, email:EmailStr):
+    redis_client.set(f"{purpose}_verified:{email}",300 ,"true")
 
 def start_cooldown(key:str, seconds:int):
     redis_client.setex(key, seconds,"1")
@@ -76,3 +78,4 @@ def check_rate_limit(key: str, limit: int, window: int):
             status_code=429,
             detail=f"Too many requests. Try again in {ttl} seconds."
         )
+    

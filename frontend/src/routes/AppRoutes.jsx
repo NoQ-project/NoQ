@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, Router } from 'react-router-dom'
+import { QueueProvider } from '../context/QueueContext';
 import LandingPage from '../pages/LandingPage';
-import NoqLogin from '../components/NoqLogin';
-import UserPanel from '../components/UserPanel';
-
+import NoqLogin from '../components/auth/Login'; 
+import UserPanel from '../pages/UserPanel';
+import OrgPanel from '../pages/OrgPanel';
 function AppRoutes() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [initialAuthView, setInitialAuthView] = useState('login');
@@ -20,28 +21,13 @@ function AppRoutes() {
 
   return (
     <>
-      <Routes>
-      
-        <Route 
-          path="/" 
-          element={
-            <LandingPage 
-              onOpenAuth={(view) => {
-                setInitialAuthView(view);
-                setShowLoginModal(true);
-              }} 
-            />
-          } 
-        />
-
-        
-        <Route path="/user" element={<UserPanel onLogout={handleLogout} />} />
-
-      
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-
-   
+     <QueueProvider>
+           <Routes>
+             <Route path="/" element={<LandingPage />} />
+             <Route path="/user/*" element={<UserPanel />} />
+             <Route path="/org/*" element={<OrgPanel />} />
+            </Routes>
+        </QueueProvider>
       <NoqLogin 
         isOpen={showLoginModal} 
         onClose={() => setShowLoginModal(false)}

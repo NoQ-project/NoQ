@@ -25,14 +25,22 @@ def resend_otp(body:EmailSchema, bg_tasks:BackgroundTasks):
 
 @auth_routes.post("/login",status_code=status.HTTP_200_OK)
 def login(body: LoginSchema, response: Response, db:Session = Depends(get_db)):
-    access_token= controller.login_user(body, db)
+    tokens = controller.login_user(body, db)
     response.set_cookie(
         key="access_token",
-        value=access_token,
+        value=tokens["access_token"],
         httponly=True,
         secure=True,
         samesite="lax",
         max_age=15 * 60
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=tokens["refresh_token"],
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=30 * 24 * 60 * 60
     )
     return {"message": "Login successful"}
 
@@ -48,4 +56,7 @@ def verify_reset_password(body:VerifyEmailSchema):
 def reset_password(body:ResetPasswordSchema, db:Session = Depends(get_db)):
     return controller.reset_password(body, db)
 
+@auth_routes.post("/refresh", status_code=status.HTTP_200_OK)
+def refresh_token(response: Response, request: Request, db: Session = Depends(get_db)):
+    return controller.refresh_token(request, response, db)
 

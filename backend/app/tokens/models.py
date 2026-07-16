@@ -22,11 +22,8 @@ class TokenStatus(enum.Enum):
 class Token(Base):
     __tablename__ = "tokens"
 
-    id = Column(
-        String(36),
-        primary_key=True,
-        default=lambda: str(uuid.uuid4())
-    )
+    id = Column(Integer, 
+               primary_key=True)
     user_id = Column(
         String(36),
         ForeignKey("users.id"),

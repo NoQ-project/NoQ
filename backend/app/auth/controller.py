@@ -1,4 +1,4 @@
-from backend.app.auth.schemas import  RegisterSchema, LoginSchema, VerifyEmailSchema
+from backend.app.auth.schemas import  RegisterSchema, LoginSchema, VerifyEmailSchema, EmailSchema
 from sqlalchemy.orm import Session
 from backend.app.auth.models import UserModel
 from fastapi import HTTPException,Request , status, Depends, BackgroundTasks
@@ -65,4 +65,9 @@ def login_user(body:LoginSchema, db:Session):
     token = jwt.encode({"id":user.id,"exp":exp_time}, settings.SECRET_KEY, settings.ALGORITHM)
     return {"token": token}
     
+def reset_password(body:EmailSchema, db: Session, bg_tasks=BackgroundTasks):
+    user = db.query(UserModel).filter(UserModel.email==body.email).first()
+    if not user:
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Invalid Email")
+    store_and_send_otp(body.email, bg_tasks)
     

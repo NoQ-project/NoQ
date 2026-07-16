@@ -5,7 +5,8 @@ from sqlalchemy import (
     DateTime,
     Boolean,
     Enum,
-    ForeignKey
+    ForeignKey,
+    Integer
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -27,11 +28,8 @@ class NotificationStatus(enum.Enum):
 class Notification(Base):
     __tablename__ = "notifications"
 
-    id = Column(
-        String(36),
-        primary_key=True,
-        default=lambda: str(uuid.uuid4())
-    )
+    id = Column(Integer, 
+               primary_key=True)
     user_id = Column(
         String(36),
         ForeignKey("users.id"),

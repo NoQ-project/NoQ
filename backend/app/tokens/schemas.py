@@ -1,8 +1,7 @@
-<<<<<<< HEAD:backend/app/tokens_backup/schemas.py
 from pydantic import BaseModel
 from datetime import datetime
 
-from backend.app.tokens_backup.models import TokenStatus
+from backend.app.tokens.models import TokenStatus
 
 
 class BookTokenSchema(BaseModel):
@@ -35,5 +34,12 @@ class TokenDetailSchema(BaseModel):
 
     class Config:
         from_attributes = True
-=======
->>>>>>> f4c3dca878710c3027b416ba91e7275d45219b3f:backend/app/tokens/schemas.py
+
+class WaitingPositionSchema(BaseModel):
+
+    token_number: int
+    waiting_position: int
+    estimated_waiting_time: int
+
+    class Config:
+        from_attributes = True

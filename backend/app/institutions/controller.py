@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from sqlalchemy.orm import Session
 from backend.app.institutions.service import InstitutionService
 
@@ -15,7 +14,6 @@ class InstitutionController:
             query=query
         )
 
-
     @staticmethod
     def get_institution_by_id(
         institution_id: int,
@@ -25,5 +23,3 @@ class InstitutionController:
             institution_id=institution_id,
             db=db
         )
-=======
->>>>>>> f4c3dca878710c3027b416ba91e7275d45219b3f

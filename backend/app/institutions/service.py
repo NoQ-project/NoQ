@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -37,7 +36,6 @@ class InstitutionService:
 
         return institutions
 
-
     @staticmethod
     def get_institution_by_id(
         institution_id: int,
@@ -53,12 +51,9 @@ class InstitutionService:
         )
 
         if not institution:
-
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Institution not found."
             )
 
         return institution
-=======
->>>>>>> f4c3dca878710c3027b416ba91e7275d45219b3f

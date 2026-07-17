@@ -5,7 +5,7 @@ from backend.app.utils.database import get_db
 from fastapi import HTTPException,Request , status, Depends
 from sqlalchemy.orm import Session
 from backend.app.auth.models import UserModel, UserRole
-from backend.app.tokens_backup.models import Token 
+from backend.app.tokens.models import Token 
 from backend.app.queues.models import Queue 
 from backend.app.admin.models import Review 
 from backend.app.user.models import User 

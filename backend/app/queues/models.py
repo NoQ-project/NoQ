@@ -4,45 +4,53 @@ from sqlalchemy.sql import func
 from backend.app.utils.database import Base
 import uuid
 
+
 class Queue(Base):
     __tablename__ = "queues"
 
-    id = Column(Integer, 
-<<<<<<< HEAD
-            primary_key=True)
-=======
-               primary_key=True)
->>>>>>> f4c3dca878710c3027b416ba91e7275d45219b3f
+    id = Column(
+    Integer,
+    primary_key=True,
+    autoincrement=True
+)
+
     institution_id = Column(
         Integer,
         ForeignKey("institutions.id"),
         nullable=False
     )
+
     name = Column(
         String(100),
         nullable=False
     )
+
     description = Column(
         Text,
         nullable=True
     )
+
     daily_limit = Column(
         Integer,
         nullable=False
     )
+
     avg_service_time = Column(
         Integer,
         default=10
     )
+
     # average time in minutes
     is_active = Column(
         Boolean,
         default=True
     )
+
     created_at = Column(
         DateTime,
         server_default=func.now()
     )
+
     updated_at = Column(
         DateTime,
         server_default=func.now(),
@@ -54,6 +62,7 @@ class Queue(Base):
         "Institution",
         back_populates="queues"
     )
+
     tokens = relationship(
         "Token",
         back_populates="queue",

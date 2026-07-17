@@ -22,31 +22,24 @@ class TokenStatus(enum.Enum):
 class Token(Base):
     __tablename__ = "tokens"
 
-<<<<<<< HEAD:backend/app/tokens_backup/models.py
     id = Column(
-        Integer,
-        primary_key=True
-    )
+    Integer,
+    primary_key=True,
+    autoincrement=True
+)
 
     user_id = Column(
-        Integer,
-        ForeignKey("usertable.id"),
-=======
-    id = Column(Integer, 
-               primary_key=True)
-    user_id = Column(
-        Integer,
-        ForeignKey("users.id"),
->>>>>>> f4c3dca878710c3027b416ba91e7275d45219b3f:backend/app/tokens/models.py
-        nullable=False
-    )
+    Integer,
+    ForeignKey("usertable.id"),
+    nullable=False
+)
+
 
     queue_id = Column(
-        Integer,
-        ForeignKey("queues.id"),
-        nullable=False
-    )
-
+    Integer,
+    ForeignKey("queues.id"),
+    nullable=False
+)
     token_number = Column(
         Integer,
         nullable=False
@@ -79,10 +72,9 @@ class Token(Base):
     )
 
     # Relationships
-
-    user = relationship(
-        "UserModel"
-    )
+   # user = relationship(
+    #    "UserModel"
+    #)
 
     queue = relationship(
         "Queue",

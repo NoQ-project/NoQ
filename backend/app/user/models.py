@@ -5,7 +5,10 @@ from backend.app.utils.database import Base
 class User(Base):
     __tablename__ = "users"
     
-    id = Column(Integer , primary_key=True)
+    id = Column(
+    Integer,
+    primary_key=True
+    )
     full_name = Column(
         String(100),
         nullable=False

@@ -97,3 +97,23 @@ def mark_token_as_missed(
         token_id=token_id,
         db=db
     )
+
+def get_current_token(
+    queue_id: int,
+    db: Session
+):
+
+    return service.get_current_token(
+        queue_id=queue_id,
+        db=db
+    )
+
+def get_waiting_tokens(
+    queue_id: int,
+    db: Session
+):
+
+    return service.get_waiting_tokens(
+        queue_id=queue_id,
+        db=db
+    )

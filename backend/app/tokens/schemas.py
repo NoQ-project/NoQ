@@ -43,3 +43,17 @@ class WaitingPositionSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CurrentTokenSchema(BaseModel):
+    token_number: int
+    status: TokenStatus
+
+    class Config:
+        from_attributes = True
+
+class WaitingTokensSchema(BaseModel):
+    token_number: int
+    status: TokenStatus
+
+    class Config:
+        from_attributes = True

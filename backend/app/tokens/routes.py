@@ -8,7 +8,10 @@ from backend.app.tokens.schemas import (
     BookTokenSchema,
     TokenResponseSchema,
     TokenDetailSchema,
-    WaitingPositionSchema
+    WaitingPositionSchema,
+    CurrentTokenSchema,
+    WaitingTokensSchema
+
 )
 from backend.app.utils.database import get_db
 
@@ -149,3 +152,34 @@ def mark_token_as_missed(
         db=db
     )
 
+@token_routes.get(
+    "/current-token/{queue_id}",
+    response_model=CurrentTokenSchema,
+    status_code=status.HTTP_200_OK
+)
+def get_current_token(
+    queue_id: int,
+    db: Session = Depends(get_db)
+):
+
+    return controller.get_current_token(
+        queue_id=queue_id,
+        db=db
+    )
+
+@token_routes.get(
+    "/waiting-tokens/{queue_id}",
+    response_model=list[WaitingTokensSchema],
+    status_code=status.HTTP_200_OK
+)
+def get_waiting_tokens(
+
+    queue_id: int,
+    db: Session = Depends(get_db)
+
+):
+
+    return controller.get_waiting_tokens(
+        queue_id=queue_id,
+        db=db
+    )

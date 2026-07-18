@@ -327,3 +327,48 @@ def mark_token_as_missed(
     db.refresh(token)
 
     return token
+
+def get_current_token(
+    queue_id: int,
+    db: Session
+):
+
+    token = (
+        db.query(Token)
+        .filter(
+            Token.queue_id == queue_id,
+            Token.status == TokenStatus.CALLED
+        )
+        .order_by(
+            Token.token_number.asc()
+        )
+        .first()
+    )
+
+    if not token:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No current token found."
+        )
+
+    return token
+
+def get_waiting_tokens(
+    queue_id: int,
+    db: Session
+):
+
+    tokens = (
+        db.query(Token)
+        .filter(
+            Token.queue_id == queue_id,
+            Token.status == TokenStatus.WAITING
+        )
+        .order_by(
+            Token.token_number.asc()
+        )
+        .all()
+    )
+
+    return tokens

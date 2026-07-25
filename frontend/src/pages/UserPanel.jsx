@@ -172,7 +172,7 @@ export default function UserPanel() {
           </nav>
         </div>
 
-        <div onClick={startEditing} className="flex items-center gap-2 md:gap-3 cursor-pointer hover:bg-[#F5F4F7] p-1 md:p-1.5 rounded-xl transition-all">
+        <div onClick={startEditing} className="flex items-center justify-center gap-2 md:gap-3 cursor-pointer hover:bg-[#F5F4F7] p-1 md:p-1.5 rounded-xl transition-all">
           <div className="text-right hidden sm:block">
             <div className="text-xs font-semibold">{profile.name}</div>
             <div className="text-[10px] text-[#6B6B6B]">{profile.phone}</div>
@@ -188,64 +188,69 @@ export default function UserPanel() {
         
         {/* ─── HOME TAB VIEW ─── */}
         {activeTab === 'home' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch lg:h-[calc(100vh-160px)]">
             
             {/* Active Bookings (Left Block) - Expanded with full-height stretch */}
-            <div className="lg:col-span-7 space-y-4 flex flex-col justify-start">
-              <div className="flex justify-between items-center px-1">
-                <h2 className="text-sm font-bold text-[#1A1A1A]">Welcome back, {profile.name.split(' ')[0]}</h2>
+            <div className="lg:col-span-7 flex flex-col h-full overflow-hidden space-y-4">
+              <div className="flex justify-between items-center px-1 flex-shrink-0">
+                <h3 className="text-sm font-bold text-[#1A1A1A]">Welcome back, {profile.name.split(' ')[0]}</h3>
                 <span className="text-[11px] font-semibold text-[#6B6B6B]">
                   {activeTokens.length} Active {activeTokens.length === 1 ? 'Booking' : 'Bookings'}
                 </span>
               </div>
 
-              {activeTokens.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-4 flex-grow">
-                  {activeTokens.map((token) => (
-                    <div key={token.id} className="bg-white border border-[#E9E7ED] rounded-2xl p-6 md:p-8 shadow-sm hover:border-[#534AB7]/20 transition-all flex flex-col justify-between">
-                      <div>
-                        <div className="flex justify-between items-center mb-4">
-                          <div className="text-sm font-bold text-[#1A1A1A] truncate max-w-[70%]">{token.institution}</div>
-                          <span className="flex items-center gap-1.5 text-[10px] bg-[#EAF3DE] text-[#3B6D11] px-2.5 py-1 rounded-full font-bold">
-                            Live
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-baseline gap-3 my-4">
-                          <div className="text-4xl md:text-5xl font-bold text-[#534AB7] tracking-tight">{token.number}</div>
-                          <div className="text-xs text-[#6B6B6B] truncate">{token.department} &bull; {token.counter}</div>
-                        </div>
-                      </div>
+              {/* Parent container box wrapping the tokens */}
+              <div className="flex-grow bg-[#E2E0E8] border border-[#D2D0D8] rounded-2xl p-6 md:p-8 shadow-sm flex flex-col overflow-hidden">
+                <div className="flex-grow overflow-y-auto pr-1 space-y-4">
+                  {activeTokens.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                      {activeTokens.map((token) => (
+                        <div key={token.id} className="bg-white border border-[#E9E7ED] rounded-xl p-5 flex flex-col justify-between flex-shrink-0 hover:border-[#534AB7]/30 transition-all shadow-sm">
+                          <div>
+                            <div className="flex justify-between items-center mb-3">
+                              <div className="text-xs font-bold text-[#1A1A1A] truncate max-w-[70%]">{token.institution}</div>
+                              <span className="flex items-center gap-1.5 text-[9px] bg-[#EAF3DE] text-[#3B6D11] px-2 py-0.5 rounded-full font-bold">
+                                Live
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-baseline gap-2.5 my-3">
+                              <div className="text-3xl font-bold text-[#534AB7] tracking-tight">{token.number}</div>
+                              <div className="text-[11px] text-[#6B6B6B] truncate">{token.department} &bull; {token.counter}</div>
+                            </div>
+                          </div>
 
-                      <div className="grid grid-cols-3 text-center border-t border-[#F5F4F0] pt-4 mt-4 gap-2 bg-[#F5F4F7]/60 rounded-xl p-3">
-                        <div>
-                          <div className="text-sm font-bold">{token.ahead}</div>
-                          <div className="text-[10px] text-[#6B6B6B] uppercase font-semibold">Ahead</div>
+                          <div className="grid grid-cols-3 text-center border-t border-[#F5F4F0] pt-3 mt-3 gap-2 bg-[#F5F4F7]/60 rounded-lg p-2.5">
+                            <div>
+                              <div className="text-xs font-bold">{token.ahead}</div>
+                              <div className="text-[9px] text-[#6B6B6B] uppercase font-semibold">Ahead</div>
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-[#3B6D11]">{token.estWait}</div>
+                              <div className="text-[9px] text-[#6B6B6B] uppercase font-semibold">Wait</div>
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold">{token.serving}</div>
+                              <div className="text-[9px] text-[#6B6B6B] uppercase font-semibold">Serving</div>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="text-sm font-bold text-[#3B6D11]">{token.estWait}</div>
-                          <div className="text-[10px] text-[#6B6B6B] uppercase font-semibold">Wait</div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-bold">{token.serving}</div>
-                          <div className="text-[10px] text-[#6B6B6B] uppercase font-semibold">Serving</div>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : (
+                    <div className="text-center text-xs text-[#6B6B6B] h-full flex items-center justify-center">
+                      No active tokens running right now. Select "Book Token" to join a line.
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="bg-white border border-[#E9E7ED] rounded-2xl p-8 text-center text-xs text-[#6B6B6B] py-24 flex-grow flex items-center justify-center">
-                  No active tokens running right now. Select "Book Token" to join a line.
-                </div>
-              )}
+              </div>
             </div>
 
             {/* Quick Actions Card (Right Block) - Made much taller to eliminate white gaps */}
-            <div className="lg:col-span-5 bg-white border border-[#E9E7ED] rounded-2xl p-8 shadow-sm flex flex-col justify-between min-h-[320px] lg:min-h-[400px]">
-              <div className="space-y-3">
-                <h3 className="text-base font-bold text-[#1A1A1A]">Skipping lines made simple</h3>
-                <p className="text-xs text-[#6B6B6B] leading-relaxed">
+            <div className="lg:col-span-5 bg-white border border-[#E9E7ED] rounded-2xl p-8 shadow-sm flex flex-col justify-between h-full">
+              <div className="space-y-3 py-2">
+                <h3 className="text-base font-bold pb-4 text-[#1A1A1A]">Skipping lines made simple</h3>
+                <p className="text-xs text-[#6B6B6B] pt-4 leading-relaxed">
                   You can book multiple tokens simultaneously across separate remote branches or counters from this screen. Save your time and monitor everything in real-time.
                 </p>
               </div>
@@ -265,15 +270,15 @@ export default function UserPanel() {
 
         {/* ─── BOOK TOKEN TAB VIEW ─── */}
         {activeTab === 'book' && (
-          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-6 md:p-8 shadow-sm max-w-3xl mx-auto space-y-6">
+          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-6 md:p-8 shadow-sm w-full lg:h-[calc(100vh-160px)] flex flex-col overflow-hidden space-y-6">
             {!selectedOrgForBooking ? (
               <>
-                <div>
+                <div className="flex-shrink-0">
                   <h3 className="text-base font-bold text-[#1A1A1A]">Search Institutions</h3>
                   <p className="text-xs text-[#6B6B6B] mt-1">Find active service lines and check real-time availability.</p>
                 </div>
 
-                <div className="relative w-full">
+                <div className="relative w-full flex-shrink-0">
                   <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-[#6B6B6B]">
                     <Search size={16} />
                   </div>
@@ -282,11 +287,11 @@ export default function UserPanel() {
                     placeholder="Search bank, hospital, branch location..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-[#F5F4F7] rounded-xl text-xs text-[#1A1A1A] border border-transparent outline-none focus:bg-white focus:border-[#534AB7]/30 transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-[#F5F4F7] rounded-xl text-xs text-[#1A1A1A] border border-transparent outline-none focus:bg-white focus:border-[#534AB7]/30 transition-all"
                   />
                 </div>
 
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none flex-shrink-0">
                   {categories.map((category) => (
                     <button
                       key={category}
@@ -300,7 +305,7 @@ export default function UserPanel() {
                   ))}
                 </div>
 
-                <div className="border border-[#E9E7ED] rounded-xl overflow-hidden divide-y divide-[#E9E7ED]">
+                <div className="flex-grow overflow-y-auto border border-[#E9E7ED] rounded-xl divide-y divide-[#E9E7ED]">
                   {filteredOrgs.length > 0 ? (
                     filteredOrgs.map((org) => {
                       const Icon = org.icon;
@@ -313,7 +318,7 @@ export default function UserPanel() {
                               <p className="text-[11px] text-[#6B6B6B] mt-1 truncate">{org.category} &middot; <span className="text-[#3B6D11] font-semibold">{org.waiting} waiting</span></p>
                             </div>
                           </div>
-                          <button className="text-xs font-bold text-[#534AB7] bg-[#EEEDFE] px-3.5 py-1.5 rounded-lg flex-shrink-0">
+                          <button className="text-xs font-bold text-[#534AB7] bg-[#EEEDFE] px-3.5 py-2.5 rounded-lg flex-shrink-0">
                             Select
                           </button>
                         </div>
@@ -325,12 +330,12 @@ export default function UserPanel() {
                 </div>
               </>
             ) : (
-              <div className="space-y-6">
+              <div className="flex-grow overflow-y-auto space-y-6 pr-1 max-w-xl">
                 <button onClick={() => setSelectedOrgForBooking(null)} className="flex items-center gap-1.5 text-xs font-semibold text-[#6B6B6B] hover:text-[#1A1A1A] mb-2 transition-colors">
                   <ArrowLeft size={14}/> Back to list
                 </button>
                 
-                <div className="p-5 bg-[#F5F4F7] rounded-xl flex items-center gap-4">
+                <div className="p-5 bg-[#F5F4F7] rounded-xl flex items-center gap-4 flex-shrink-0">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${selectedOrgForBooking.iconBg}`}>
                     <selectedOrgForBooking.icon size={24} />
                   </div>
@@ -369,59 +374,61 @@ export default function UserPanel() {
 
         {/* ─── TRACK TAB VIEW ─── */}
         {activeTab === 'track' && (
-          <div className="max-w-2xl mx-auto space-y-6">
-            <h3 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider text-center px-1">Live Monitor Timelines</h3>
-            
-            {activeTokens.length > 0 ? (
-              <div className="space-y-6">
-                {activeTokens.map((token) => (
-                  <div key={token.id} className="bg-white border border-[#E9E7ED] rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
-                    <div className="pb-4 border-b border-[#F5F4F0] flex justify-between items-start">
-                      <div className="text-left">
-                        <div className="text-3xl font-bold text-[#534AB7]">{token.number}</div>
-                        <p className="text-sm font-bold text-[#1A1A1A] mt-1">{token.institution}</p>
-                        <p className="text-xs text-[#6B6B6B] mt-0.5">{token.department} &bull; {token.counter}</p>
-                      </div>
-                      <button 
-                        onClick={() => handleCancelToken(token.id)}
-                        className="text-xs font-bold text-[#C93B2B] bg-[#FAEEDA] px-3.5 py-1.5 rounded-lg hover:bg-[#f5e3cc] transition-colors"
-                      >
-                        Cancel Ticket
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-6 relative before:absolute before:bottom-3 before:top-3 before:left-4 before:w-0.5 before:bg-[#E9E7ED]">
-                      {trackingSteps.map((step, index) => (
-                        <div key={index} className="flex items-center gap-4 relative z-10">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            step.status === 'done' ? 'bg-[#EAF3DE] text-[#3B6D11]' : step.status === 'active' ? 'bg-[#EEEDFE] text-[#534AB7]' : 'bg-white border border-[#DEDCE4] text-[#6B6B6B]'
-                          }`}>
-                            {step.status === 'done' && <CheckCircle2 size={16} />}
-                            {step.status === 'active' && <Loader2 size={16} className="animate-spin" />}
-                            {step.status === 'pending' && <Clock size={16} />}
-                          </div>
-                          <div className={`text-xs md:text-sm ${step.status === 'active' ? 'text-[#534AB7] font-bold' : 'text-[#1A1A1A] font-medium'}`}>
-                            {step.label} {step.status === 'active' && `(${token.estWait} left)`}
-                          </div>
+          <div className="w-full lg:h-[calc(100vh-160px)] flex items-center justify-center overflow-hidden">
+            <div className="max-w-2xl w-full max-h-full overflow-y-auto space-y-6 pr-1">
+              <h3 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider text-center px-1">Live Monitor Timelines</h3>
+              
+              {activeTokens.length > 0 ? (
+                <div className="space-y-6">
+                  {activeTokens.map((token) => (
+                    <div key={token.id} className="bg-white border border-[#E9E7ED] rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
+                      <div className="pb-4 border-b border-[#F5F4F0] flex justify-between items-start">
+                        <div className="text-left">
+                          <div className="text-3xl font-bold text-[#534AB7]">{token.number}</div>
+                          <p className="text-sm font-bold text-[#1A1A1A] mt-1">{token.institution}</p>
+                          <p className="text-xs text-[#6B6B6B] mt-0.5">{token.department} &bull; {token.counter}</p>
                         </div>
-                      ))}
+                        <button 
+                          onClick={() => handleCancelToken(token.id)}
+                          className="text-xs font-bold text-[#C93B2B] bg-[#FAEEDA] px-3.5 py-1.5 rounded-lg hover:bg-[#f5e3cc] transition-colors"
+                        >
+                          Cancel Ticket
+                        </button>
+                      </div>
+                      
+                      <div className="space-y-6 relative before:absolute before:bottom-3 before:top-3 before:left-4 before:w-0.5 before:bg-[#E9E7ED]">
+                        {trackingSteps.map((step, index) => (
+                          <div key={index} className="flex items-center gap-4 relative z-10">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              step.status === 'done' ? 'bg-[#EAF3DE] text-[#3B6D11]' : step.status === 'active' ? 'bg-[#EEEDFE] text-[#534AB7]' : 'bg-white border border-[#DEDCE4] text-[#6B6B6B]'
+                            }`}>
+                              {step.status === 'done' && <CheckCircle2 size={16} />}
+                              {step.status === 'active' && <Loader2 size={16} className="animate-spin" />}
+                              {step.status === 'pending' && <Clock size={16} />}
+                            </div>
+                            <div className={`text-xs md:text-sm ${step.status === 'active' ? 'text-[#534AB7] font-bold' : 'text-[#1A1A1A] font-medium'}`}>
+                              {step.label} {step.status === 'active' && `(${token.estWait} left)`}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white border border-[#E9E7ED] rounded-2xl p-16 text-center text-xs text-[#6B6B6B]">
-                No active operational queues to monitor.
-              </div>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white border border-[#E9E7ED] rounded-2xl p-16 text-center text-xs text-[#6B6B6B] w-full">
+                  No active operational queues to monitor.
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* ─── HISTORY TAB VIEW ─── */}
         {activeTab === 'history' && (
-          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-6 md:p-8 shadow-sm max-w-3xl mx-auto space-y-5">
-            <h3 className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wider flex items-center gap-1.5"><HistoryIcon size={16}/> Past Visitations Log</h3>
-            <div className="border border-[#E9E7ED] rounded-xl overflow-hidden divide-y divide-[#E9E7ED]">
+          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-6 md:p-8 shadow-sm w-full lg:h-[calc(100vh-160px)] flex flex-col overflow-hidden space-y-5">
+            <h3 className="text-sm font-bold text-[#1A1A1A] uppercase tracking-wider flex items-center gap-1.5 flex-shrink-0"><HistoryIcon size={16}/> Past Visitations Log</h3>
+            <div className="flex-grow overflow-y-auto border border-[#E9E7ED] rounded-xl divide-y divide-[#E9E7ED]">
               {historicalTokens.map((item) => (
                 <div key={item.id} className="flex justify-between items-center p-5 bg-white hover:bg-[#F5F4F7]/20 transition-colors">
                   <div>
@@ -439,16 +446,17 @@ export default function UserPanel() {
 
         {/* ─── PROFILE TAB VIEW ─── */}
         {activeTab === 'profile' && (
-          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-6 md:p-8 shadow-sm max-w-2xl mx-auto">
-            <div className="flex items-center gap-4 pb-6 border-b border-[#F5F4F0] mb-6">
-              <div className="w-16 h-16 rounded-full bg-[#534AB7] text-white font-bold text-2xl flex items-center justify-center shadow-md">
-                {profile.name.split(' ').map(n => n[0]).join('')}
+          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-6 md:p-8 shadow-sm w-full lg:h-[calc(100vh-160px)] flex flex-col overflow-hidden">
+            <div className="flex-grow overflow-y-auto max-w-xl w-full space-y-6 pr-1">
+              <div className="flex items-center gap-4 pb-6 border-b border-[#F5F4F0] mb-6 flex-shrink-0">
+                <div className="w-16 h-16 rounded-full bg-[#534AB7] text-white font-bold text-2xl flex items-center justify-center shadow-md">
+                  {profile.name.split(' ').map(n => n[0]).join('')}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#1A1A1A]">{profile.name}</h3>
+                  <p className="text-xs text-[#6B6B6B]">Client ID Account: #NQ-98452-CP</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-[#1A1A1A]">{profile.name}</h3>
-                <p className="text-xs text-[#6B6B6B]">Client ID Account: #NQ-98452-CP</p>
-              </div>
-            </div>
 
             <form onSubmit={handleSaveProfile} className="space-y-5">
               <div>
@@ -512,7 +520,8 @@ export default function UserPanel() {
               </div>
             </form>
           </div>
-        )}
+        </div>
+      )}
 
       </main>
 

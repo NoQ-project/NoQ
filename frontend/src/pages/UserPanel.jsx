@@ -72,8 +72,7 @@ export default function UserPanel() {
 
   const filteredOrgs = organizations.filter((org) => {
     const matchesCategory = activeCategory === 'All' || org.category === activeCategory;
-    const matchesSearch = org.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          org.branch.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||  org.branch.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -206,13 +205,12 @@ export default function UserPanel() {
           </button>
         ))}
       </div>
-
       {/* ─── SCREEN WORKSPACE CONTENT ROUTER ─── */}
-      <main className="max-w-[1440px] mx-auto p-4 md:p-6 lg:p-8">
+      <main className="px-4 md:px-8 pt-6 md:pt-8 pb-20 md:pb-12 space-y-6">
         
         {/* ─── HOME TAB VIEW ─── */}
         {activeTab === 'home' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             
             <div className="lg:col-span-7 space-y-4">
               <div className="flex justify-between items-center px-1">
@@ -223,37 +221,39 @@ export default function UserPanel() {
               </div>
 
               {activeTokens.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-                  {activeTokens.map((token) => (
-                    <div key={token.id} className="bg-white border border-[#E9E7ED] rounded-2xl p-5 shadow-sm hover:border-[#534AB7]/20 transition-all">
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="text-xs font-bold text-[#1A1A1A] truncate max-w-[70%]">{token.institution}</div>
-                        <span className="flex items-center gap-1 text-[10px] bg-[#EAF3DE] text-[#3B6D11] px-2 py-0.5 rounded-full font-medium">
-                          Live
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-baseline gap-3 my-2">
-                        <div className="text-3xl font-bold text-[#534AB7] tracking-tight">{token.number}</div>
-                        <div className="text-[11px] text-[#6B6B6B] truncate">{token.department} &bull; {token.counter}</div>
-                      </div>
+                <div className="bg-[#E9E7ED] rounded-3xl p-4 md:p-5 shadow-inner">
+                  <div className="flex flex-col gap-3 overflow-y-auto max-h-[400px] lg:max-h-[450px] pr-2">
+                    {activeTokens.map((token) => (
+                      <div key={token.id} className="flex-shrink-0 bg-gradient-to-br from-[#EEEDFE]/50 to-white border border-white/60 rounded-2xl p-3 shadow-sm hover:border-[#534AB7]/30 transition-all w-full">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <div className="text-xs font-bold text-[#1A1A1A] truncate max-w-[70%]">{token.institution}</div>
+                          <span className="flex items-center gap-1 text-[10px] bg-[#EAF3DE] text-[#3B6D11] px-2 py-0.5 rounded-full font-medium">
+                            Live
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-baseline gap-2 my-1">
+                          <div className="text-2xl font-bold text-[#534AB7] tracking-tight">{token.number}</div>
+                          <div className="text-[10px] text-[#6B6B6B] truncate">{token.department} &bull; {token.counter}</div>
+                        </div>
 
-                      <div className="grid grid-cols-3 text-center border-t border-[#F5F4F0] pt-3 mt-3 gap-1 bg-[#F5F4F7]/40 rounded-xl p-2">
-                        <div>
-                          <div className="text-xs font-bold">{token.ahead}</div>
-                          <div className="text-[9px] text-[#6B6B6B] uppercase">Ahead</div>
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-[#3B6D11]">{token.estWait}</div>
-                          <div className="text-[9px] text-[#6B6B6B] uppercase">Wait</div>
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold">{token.serving}</div>
-                          <div className="text-[9px] text-[#6B6B6B] uppercase">Serving</div>
+                        <div className="grid grid-cols-3 text-center border-t border-[#F5F4F0] pt-2 mt-2 gap-1 bg-[#F5F4F7]/40 rounded-xl p-1.5">
+                          <div>
+                            <div className="text-xs font-bold">{token.ahead}</div>
+                            <div className="text-[8px] text-[#6B6B6B] uppercase">Ahead</div>
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-[#3B6D11]">{token.estWait}</div>
+                            <div className="text-[8px] text-[#6B6B6B] uppercase">Wait</div>
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold">{token.serving}</div>
+                            <div className="text-[8px] text-[#6B6B6B] uppercase">Serving</div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="bg-white border border-[#E9E7ED] rounded-2xl p-8 text-center text-xs text-[#6B6B6B] py-16">
@@ -262,19 +262,22 @@ export default function UserPanel() {
               )}
             </div>
 
-            <div className="lg:col-span-5 bg-white border border-[#E9E7ED] rounded-2xl p-6 shadow-sm flex flex-col justify-between min-h-[220px]">
-              <div>
-                <h3 className="text-sm font-bold text-[#1A1A1A] mb-1.5">Skipping lines made simple</h3>
-                <p className="text-xs text-[#6B6B6B]">You can book multiple tokens simultaneously across separate remote branches or counters from this screen.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mt-6">
-                <div onClick={() => setActiveTab('book')} className="bg-[#F5F4F7] rounded-xl p-3.5 cursor-pointer hover:bg-[#EEEDFE] hover:text-[#534AB7] transition-all group">
-                  <Building2 size={18} className="mb-2 text-[#6B6B6B] group-hover:text-[#534AB7]" />
-                  <div className="text-xs font-bold">New Booking</div>
+            <div className="lg:col-span-5 space-y-4 flex flex-col">
+              <div className="hidden lg:block h-5"></div>
+              <div className="bg-[#E9E7ED] rounded-3xl p-6 shadow-inner flex flex-col justify-between flex-1 min-h-[220px]">
+                <div className="pt-6">
+                  <h3 className="text-xl md:text-2xl font-bold text-[#1A1A1A] mb-2 tracking-tight">Skipping lines made simple</h3>
+                  <p className="text-sm text-[#6B6B6B] leading-relaxed pt-8">You can book multiple tokens simultaneously across separate remote branches or counters from this screen.</p>
                 </div>
-                <div onClick={() => setActiveTab('track')} className="bg-[#F5F4F7] rounded-xl p-3.5 cursor-pointer hover:bg-[#E1F5EE] hover:text-[#0F6E56] transition-all group">
-                  <Ticket size={18} className="mb-2 text-[#6B6B6B] group-hover:text-[#0F6E56]" />
-                  <div className="text-xs font-bold">Monitor Lines</div>
+                <div className="grid grid-cols-2 gap-3 mt-6">
+                  <div onClick={() => setActiveTab('book')} className="bg-[#F5F4F7] rounded-xl p-3.5 cursor-pointer hover:bg-[#EEEDFE] hover:text-[#534AB7] transition-all group">
+                    <Building2 size={18} className="mb-2 text-[#6B6B6B] group-hover:text-[#534AB7]" />
+                    <div className="text-xs font-bold">New Booking</div>
+                  </div>
+                  <div onClick={() => setActiveTab('track')} className="bg-[#F5F4F7] rounded-xl p-3.5 cursor-pointer hover:bg-[#E1F5EE] hover:text-[#0F6E56] transition-all group">
+                    <Ticket size={18} className="mb-2 text-[#6B6B6B] group-hover:text-[#0F6E56]" />
+                    <div className="text-xs font-bold">Monitor Lines</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -283,29 +286,26 @@ export default function UserPanel() {
 
         {/* ─── BOOK TOKEN TAB VIEW ─── */}
         {activeTab === 'book' && (
-          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-5 md:p-6 shadow-sm max-w-2xl mx-auto space-y-4">
+          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-4 shadow-sm w-full">
             
             {!selectedOrgForBooking ? (
               <>
                 <div>
-                  <h3 className="text-sm font-bold text-[#1A1A1A]">Search Institutions</h3>
+                  <h3 className="text-sm font-bold py-2 text-[#1A1A1A]">Search Institutions</h3>
                   <p className="text-xs text-[#6B6B6B] mt-0.5">Find active service lines and check real-time availability.</p>
                 </div>
 
-                <div className="relative w-full">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-[#6B6B6B]">
-                    <Search size={15} />
-                  </div>
+                <div className="relative w-full px-1.5 py-1.5 bg-[#F5F4F7] rounded-xl flex items-center gap-2 ">
                   <input
                     type="text"
                     placeholder="Search bank, hospital, branch location..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2.5 bg-[#F5F4F7] rounded-xl text-xs text-[#1A1A1A] border border-transparent outline-none focus:bg-white focus:border-[#534AB7]/30 transition-all"
+                    className="w-full px-4 py-2.5 bg-[#F5F4F7] rounded-xl text-xs text-[#1A1A1A] border border-transparent outline-none focus:bg-white focus:border-[#534AB7]/30 transition-all"
                   />
                 </div>
 
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none mt-3 px-1 pt-2">
                   {categories.map((category) => (
                     <button
                       key={category}
@@ -388,14 +388,14 @@ export default function UserPanel() {
 
         {/* ─── TRACK TAB VIEW ─── */}
         {activeTab === 'track' && (
-          <div className="max-w-xl mx-auto space-y-6">
-            <h3 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider text-center px-1">Live Monitor Timelines</h3>
+          <div className="flex flex-col space-y-4 bg-gray-300 border border-[#E9E7ED] rounded-2xl p-5 shadow-sm w-full">
+            <h3 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider text-center py-2 px-1">Live Monitor Timelines</h3>
             
             {activeTokens.length > 0 ? (
               <div className="space-y-6">
                 {activeTokens.map((token) => (
                   <div key={token.id} className="bg-white border border-[#E9E7ED] rounded-2xl p-6 shadow-sm space-y-4">
-                    <div className="text-center pb-3 border-b border-[#F5F4F0] flex justify-between items-start">
+                    <div className="text-center pb-3 border-b border-[#F5F4F0] flex gap-4 justify-between items-start">
                       <div className="text-left">
                         <div className="text-2xl font-bold text-[#534AB7]">{token.number}</div>
                         <p className="text-xs font-bold text-[#1A1A1A] mt-0.5">{token.institution}</p>
@@ -438,20 +438,26 @@ export default function UserPanel() {
 
         {/* ─── HISTORY TAB VIEW ─── */}
         {activeTab === 'history' && (
-          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-4 md:p-5 shadow-sm max-w-2xl mx-auto space-y-3">
+          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-5 md:p-6 shadow-sm w-full mx-auto">
             <h3 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider flex items-center gap-1.5"><HistoryIcon size={14}/> Past Visitations Log</h3>
             <div className="border border-[#E9E7ED] rounded-xl overflow-hidden divide-y divide-[#E9E7ED]">
-              {historicalTokens.map((item) => (
-                <div key={item.id} className="flex justify-between items-center p-4 bg-white hover:bg-[#F5F4F7]/20 transition-colors">
-                  <div>
-                    <div className="text-xs font-bold text-[#1A1A1A]">{item.type}</div>
-                    <div className="text-[10px] text-[#6B6B6B] mt-0.5">{item.meta}</div>
-                  </div>
-                  <span className={`text-[8px] font-bold tracking-wider px-2 py-0.5 rounded-full uppercase ${item.badge}`}>
-                    {item.variant}
-                  </span>
+              {historicalTokens.length === 0 ? (
+                <div className="p-8 text-center text-xs text-[#6B6B6B]">
+                  No historical tokens found yet.
                 </div>
-              ))}
+              ) : (
+                historicalTokens.map((item) => (
+                  <div key={item.id} className="flex justify-between items-center p-4  bg-white hover:bg-[#F5F4F7]/20 transition-colors">
+                    <div>
+                      <div className="text-xs font-bold text-[#1A1A1A]">{item.type}</div>
+                      <div className="text-[10px] text-[#6B6B6B] mt-0.5">{item.meta}</div>
+                    </div>
+                    <span className={`text-[8px] font-bold tracking-wider px-2 py-0.5 rounded-full uppercase ${item.badge}`}>
+                      {item.variant}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

@@ -16,7 +16,7 @@ function TokenCard({ token, org, queue, onCancel }) {
   const isServing = token.status === 'serving';
 
   return (
-    <div className="rounded-xl border border-[#142B29]/12 bg-white p-5">
+    <div className="rounded-xl border border-[#E7E2D7] bg-[#FCFBF8] p-5 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-[#142B29]/55">

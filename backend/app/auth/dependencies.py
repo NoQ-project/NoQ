@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from backend.app.auth.models import UserModel, UserRole
 from backend.app.tokens.models import Token 
 from backend.app.queues.models import Queue 
-from backend.app.admin.models import Review 
 from backend.app.user.models import User 
 from backend.app.notifications.models import Notification
 from backend.app.institutions.models import Institution 
@@ -141,18 +140,7 @@ def get_owned_notification(
         current_user=current_user,
     )
 
-def get_owned_review(
-    review_id: int,
-    db: Session,
-    current_user,
-):
-    return require_owner(
-        db=db,
-        model=Review,
-        resource_id=review_id,
-        owner_column=Review.user_id,
-        current_user=current_user,
-    )
+
 
 def create_access_token(user_id: int):
 

@@ -3,7 +3,7 @@ import math
 from fastapi import HTTPException, status
 from . import repository
 from .schemas import DashboardResponse, DashboardStats, UserSummary, UserListResponse, UserDetail, MessageResponse, InstitutionDetail, InstitutionListResponse, InstitutionSummary, InstitutionQueue, QueueDetail, QueueInstitution, QueueListResponse, QueueSummary, TokenSummary, TokenListResponse, TokenDetail, AuditLogListResponse, AuditLogSummary
-from backend.app.tokens import Token
+from backend.app.tokens.models import Token
 from datetime import datetime, timezone
 
 def add_log(

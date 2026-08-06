@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, dependencies
 from sqlalchemy.orm import Session
 from backend.app.utils.database import get_db
 from backend.app.admin.schemas import DashboardResponse, UserListResponse, UserDetail, MessageResponse, InstitutionDetail, QueueDetail, QueueListResponse, TokenDetail, TokenListResponse, AuditLogSummary, AuditLogListResponse
@@ -7,7 +7,7 @@ from backend.app.auth.dependencies import require_role
 from backend.app.auth.models import UserRole
 
 admin_routes = APIRouter(prefix="/admin",
-                         dependencies= Depends(require_role(UserRole.ADMIN))) 
+                         dependencies= [Depends(require_role(UserRole.ADMIN))]) 
 
 @admin_routes.get(
     "/dashboard",

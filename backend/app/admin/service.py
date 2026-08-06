@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 import math
-
+from fastapi import HTTPException, status
 from . import repository
-from .schemas import DashboardResponse, DashboardStats, UserSummary, UserListResponse
+from .schemas import DashboardResponse, DashboardStats, UserSummary, UserListResponse, UserDetail
 
 def get_dashboard(db: Session) -> DashboardResponse:
 
@@ -55,4 +55,34 @@ def get_users(
         limit=limit,
         total=total,
         pages=pages,
+    )
+
+def get_user(
+    db: Session,
+    user_id: int,
+):
+    user = repository.get_user_by_id(
+        db=db,
+        user_id=user_id,
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
+        )
+
+    profile = user.profile
+
+    return UserDetail(
+        id=user.id,
+        first_name=user.FirstName,
+        last_name=user.LastName,
+        email=user.email,
+        is_verified=user.is_verified,
+        is_active=user.is_active,
+        phone=profile.phone if profile else None,
+        address=profile.address if profile else None,
+        created_at=user.created_at,
+        updated_at=user.updated_at,
     )

@@ -27,3 +27,14 @@ class UserListResponse(BaseModel):
     limit: int
     total: int
     pages: int
+
+class UserDetail(BaseModel):
+    id: int
+    name: str
+    email: str
+    is_verified: bool
+    is_active: bool
+    phone: str | None
+    address: str | None
+    created_at: datetime
+    updated_at: datetime

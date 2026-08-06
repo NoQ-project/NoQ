@@ -102,5 +102,18 @@ def count_users(
                 UserModel.email.ilike(f"%{search}%"),
             )
         )
-
     return query.count()
+
+def get_user_by_id(
+    db: Session,
+    user_id: int,
+):
+    return (
+        db.query(UserModel)
+        .filter(
+            UserModel.id == user_id,
+            UserModel.role == UserRole.USER,
+        )
+        .first()
+    )
+

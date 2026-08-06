@@ -20,14 +20,18 @@ def get_password_hash(password):
     return password_hash.hash(password)
 
 
-def register(body: RegisterSchema, bg_tasks:BackgroundTasks, db: Session):
+def register(body: RegisterSchema, 
+             bg_tasks:BackgroundTasks, 
+             db: Session):
     is_user = db.query(UserModel).filter(UserModel.email == body.email).first()
     if is_user:
-        raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail="email already exists")
+        raise HTTPException(status_code = status.HTTP_409_CONFLICT, 
+                            detail="email already exists")
     hash_password= get_password_hash(body.password)
     save_pending_registration(body, hash_password)
     store_and_send_otp(register, body.email, bg_tasks)
     return {"message": "OTP sent in email"}
+
 
 def verify_register(body:VerifyEmailSchema, db: Session):
     data=verify_registration(body)
@@ -47,19 +51,27 @@ def verify_register(body:VerifyEmailSchema, db: Session):
 def resend_otp(body:VerifyEmailSchema, bg_tasks: BackgroundTasks):
     if not redis_client.exists(f"register:{body.email}"):
         raise HTTPException(status_code=400, detail="Registration has expired. Please register again")
+    
     check_cooldown(f"cooldown:resend_otp:{body.email}")
+
     check_rate_limit(f"rate_limit:resesnd_otp:{body.email}", 5, 60)
+
     store_and_send_otp("register", body.email, bg_tasks)
+
     start_cooldown(f"cooldown:resend_otp:{body.email}", 120)
+
     return {"message":"OTP sent successfully"}
+
 
 def verify_password(plain_password, hash_password):
     return password_hash.verify(plain_password, hash_password)
 
 def login_user(body:LoginSchema, db:Session):
     user = db.query(UserModel).filter(UserModel.email==body.email).first()
+
     if not user:
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Invalid Email")
+    
     if not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Invalid Password")
 
@@ -73,17 +85,24 @@ def login_user(body:LoginSchema, db:Session):
     )
     return {"access_token": access_token,
             "refresh_token": refresh_token}
+
     
-def request_reset_password(body:EmailSchema, db:Session, bg_tasks: BackgroundTasks):
+def request_reset_password(body:EmailSchema, 
+                           db:Session, 
+                           bg_tasks: BackgroundTasks):
     is_user = db.query(UserModel).filter(UserModel.email == body.email).first()
+
     if not is_user:
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Email doesnot exist")
     store_and_send_otp("reset_password", body.email, bg_tasks)
 
+
 def verify_reset_password(body: VerifyEmailSchema):
     stored_otp= redis_client.get(f"reset_password_otp:{body.email}")
+
     if stored_otp is None:
         raise HTTPException(status_code=400,detail="OTP expired.")
+    
     if  body.otp != stored_otp:
         raise HTTPException(status_code=401, detail="Incorrect OTP")
     redis_client.delete(f"reset_password_otp:{body.email}")
@@ -92,19 +111,24 @@ def verify_reset_password(body: VerifyEmailSchema):
 
 def reset_password(body:ResetPasswordSchema, db:Session):
     user = db.query(UserModel).filter(UserModel.email == body.email).first()
+
     if not user:
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Email doesnot exist")
+    
     verified = redis_client.get(f"reset_password_verified:{body.email}")
+
     if verified is None:
         raise HTTPException(status_code=400, detail="OTP not verified")
+    
     user.password_hash = get_password_hash(body.new_password)
     db.commit()
     db.refresh(user)
     redis_client.delete(f"reset_password_verified:{body.email}")
     return {"message":"Password Reset"}
 
-def refresh_token(request: Request, response: Response, db: Session
-):
+
+def refresh_token(request: Request, response: Response, db: Session):
+
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         raise HTTPException(

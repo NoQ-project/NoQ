@@ -11,20 +11,34 @@ from backend.app.auth.dependencies import get_owned_token
 
 auth_routes = APIRouter(prefix="/auth") 
 
-@auth_routes.post("/register",status_code=status.HTTP_200_OK)
-def register(body:RegisterSchema,bg_tasks:BackgroundTasks,db:Session= Depends(get_db)):
+@auth_routes.post("/register",
+                  status_code=status.HTTP_200_OK)
+def register(body:RegisterSchema,
+             bg_tasks:BackgroundTasks,
+             db:Session= Depends(get_db)):
     return controller.register(body,bg_tasks, db)
 
-@auth_routes.post("/verify_register",response_model=UserResponseSchema, status_code=status.HTTP_201_CREATED)
-def verify_register(body: VerifyEmailSchema, db:Session=Depends(get_db)):
+
+@auth_routes.post("/verify_register",
+                  response_model=UserResponseSchema, 
+                  status_code=status.HTTP_201_CREATED)
+def verify_register(body: VerifyEmailSchema, 
+                    db:Session=Depends(get_db)):
     return controller.verify_register(body,db)
 
-@auth_routes.post("/resend_otp", status_code=status.HTTP_200_OK)
-def resend_otp(body:EmailSchema, bg_tasks:BackgroundTasks):
+
+@auth_routes.post("/resend_otp", 
+                  status_code=status.HTTP_200_OK)
+def resend_otp(body:EmailSchema, 
+               bg_tasks:BackgroundTasks):
     return controller.resend_otp(body, bg_tasks)
 
-@auth_routes.post("/login",status_code=status.HTTP_200_OK)
-def login(body: LoginSchema, response: Response, db:Session = Depends(get_db)):
+
+@auth_routes.post("/login",
+                  status_code=status.HTTP_200_OK)
+def login(body: LoginSchema, 
+          response: Response, 
+          db:Session = Depends(get_db)):
     tokens = controller.login_user(body, db)
     response.set_cookie(
         key="access_token",
@@ -44,19 +58,31 @@ def login(body: LoginSchema, response: Response, db:Session = Depends(get_db)):
     )
     return {"message": "Login successful"}
 
-@auth_routes.post("/request_reset_password", status_code=status.HTTP_200_OK)
-def request_reset_password(body:EmailSchema,  bg_tasks:BackgroundTasks,db:Session = Depends(get_db)):
+
+@auth_routes.post("/request_reset_password", 
+                  status_code=status.HTTP_200_OK)
+def request_reset_password(body:EmailSchema,  
+                           bg_tasks:BackgroundTasks,
+                           db:Session = Depends(get_db)):
     return controller.request_reset_password(body, bg_tasks, db)
 
-@auth_routes.post("/verify_reset_password", status_code=status.HTTP_200_OK)
+
+@auth_routes.post("/verify_reset_password", 
+                  status_code=status.HTTP_200_OK)
 def verify_reset_password(body:VerifyEmailSchema):
     return controller.verify_reset_password(body)
 
-@auth_routes.post("/reset_password", status_code=status.HTTP_200_OK)
-def reset_password(body:ResetPasswordSchema, db:Session = Depends(get_db)):
+
+@auth_routes.post("/reset_password", 
+                  status_code=status.HTTP_200_OK)
+def reset_password(body:ResetPasswordSchema, 
+                   db:Session = Depends(get_db)):
     return controller.reset_password(body, db)
 
+
 @auth_routes.post("/refresh", status_code=status.HTTP_200_OK)
-def refresh_token(response: Response, request: Request, db: Session = Depends(get_db)):
+def refresh_token(response: Response, 
+                  request: Request, 
+                  db: Session = Depends(get_db)):
     return controller.refresh_token(request, response, db)
 

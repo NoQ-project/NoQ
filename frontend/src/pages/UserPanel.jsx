@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Home as HomeIcon
 } from 'lucide-react';
+import "../assets/css/UserPanel.css";
 
 export default function UserPanel() {
   const [activeTab, setActiveTab] = useState('home');
@@ -52,9 +53,9 @@ export default function UserPanel() {
   const categories = ['All', 'Banking', 'Healthcare', 'Government'];
 
   const organizations = [
-    { id: 1, name: 'City Bank', category: 'Banking', branch: 'Lazimpat', departments: ['General Banking', 'Loans & Credit', 'Account Opening'], queues: 3, waiting: 13, icon: Building2, iconBg: 'bg-[#EEEDFE] text-[#534AB7]' },
-    { id: 2, name: 'City Hospital', category: 'Healthcare', branch: 'Baneshwor', departments: ['OPD Checkup', 'Lab Reports', 'Pharmacy'], queues: 2, waiting: 8, icon: HeartPulse, iconBg: 'bg-[#E1F5EE] text-[#0F6E56]' },
-    { id: 3, name: 'Dept. of Passports', category: 'Government', branch: 'Tripureshwor', departments: ['Biometrics', 'Passport Collection'], queues: 1, waiting: 3, icon: Building2, iconBg: 'bg-[#F5F4F7] text-[#6B6B6B]' },
+    { id: 1, name: 'City Bank', category: 'Banking', branch: 'Lazimpat', departments: ['General Banking', 'Loans & Credit', 'Account Opening'], queues: 3, waiting: 13, icon: Building2, iconClass: 'icon-indigo' },
+    { id: 2, name: 'City Hospital', category: 'Healthcare', branch: 'Baneshwor', departments: ['OPD Checkup', 'Lab Reports', 'Pharmacy'], queues: 2, waiting: 8, icon: HeartPulse, iconClass: 'icon-emerald' },
+    { id: 3, name: 'Dept. of Passports', category: 'Government', branch: 'Tripureshwor', departments: ['Biometrics', 'Passport Collection'], queues: 1, waiting: 3, icon: Building2, iconClass: 'icon-gray' },
   ];
 
   const trackingSteps = [
@@ -65,15 +66,14 @@ export default function UserPanel() {
   ];
 
   const [historicalTokens, setHistoricalTokens] = useState([
-    { id: 'h-1', type: 'General Banking', meta: 'Lazimpat · Jun 25', variant: 'Active', badge: 'bg-[#EAF3DE] text-[#3B6D11]' },
-    { id: 'h-2', type: 'General Banking', meta: 'New Road · Jun 20', variant: 'Done', badge: 'bg-[#EAF3DE] text-[#3B6D11]' },
-    { id: 'h-3', type: 'Loans & Credit', meta: 'Lazimpat · Jun 15', variant: 'Done', badge: 'bg-[#EAF3DE] text-[#3B6D11]' }
+    { id: 'h-1', type: 'General Banking', meta: 'Lazimpat · Jun 25', variant: 'Active', badgeClass: 'badge-active' },
+    { id: 'h-2', type: 'General Banking', meta: 'New Road · Jun 20', variant: 'Done', badgeClass: 'badge-active' },
+    { id: 'h-3', type: 'Loans & Credit', meta: 'Lazimpat · Jun 15', variant: 'Done', badgeClass: 'badge-active' }
   ]);
 
   const filteredOrgs = organizations.filter((org) => {
     const matchesCategory = activeCategory === 'All' || org.category === activeCategory;
-    const matchesSearch = org.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          org.branch.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = org.name.toLowerCase().includes(searchQuery.toLowerCase()) || org.branch.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -106,7 +106,7 @@ export default function UserPanel() {
     setActiveTokens([...activeTokens, newGeneratedToken]);
     
     setHistoricalTokens([
-      { id: `h-${Date.now()}`, type: selectedDept, meta: `${selectedOrgForBooking.branch} · Today`, variant: 'Active', badge: 'bg-[#EEEDFE] text-[#534AB7]' },
+      { id: `h-${Date.now()}`, type: selectedDept, meta: `${selectedOrgForBooking.branch} · Today`, variant: 'Active', badgeClass: 'badge-indigo' },
       ...historicalTokens
     ]);
 
@@ -145,6 +145,7 @@ export default function UserPanel() {
   };
 
   return (
+<<<<<<< HEAD
     
     <div className="min-h-screen min-h-[100dvh] bg-[#F6F3EC] font-sans antialiased text-[#1A1A1A] flex flex-col justify-between md:justify-start">
       
@@ -154,6 +155,21 @@ export default function UserPanel() {
           <span className="font-bold text-lg md:text-xl text-[#1A1A1A] tracking-tight cursor-pointer" onClick={() => { setActiveTab('home'); setSelectedOrgForBooking(null); }}>NoQ</span>
           
           <nav className="hidden md:flex gap-1">
+=======
+    <div className="app-container">
+      
+      {/* ─── GLOBAL HEADER (VISIBLE ON BOTH MOBILE & DESKTOP) ─── */}
+      <header className="global-header">
+        <div className="header-left">
+          <span 
+            className="brand-logo" 
+            onClick={() => { setActiveTab('home'); setSelectedOrgForBooking(null); }}
+          >
+            NoQ
+          </span>
+          
+          <nav className="desktop-nav md:flex">
+>>>>>>> user
             {['home', 'book', 'track', 'history', 'profile'].map((tab) => (
               <button
                 key={tab}
@@ -162,9 +178,7 @@ export default function UserPanel() {
                   if (tab !== 'profile') setIsEditingProfile(false);
                   if (tab !== 'book') setSelectedOrgForBooking(null);
                 }}
-                className={`px-4 py-2 text-xs font-semibold capitalize rounded-lg transition-all ${
-                  activeTab === tab ? 'bg-[#EEEDFE] text-[#534AB7]' : 'text-[#6B6B6B] hover:text-[#1A1A1A]'
-                }`}
+                className={`nav-button ${activeTab === tab ? 'active' : ''}`}
               >
                 {tab === 'book' ? 'Book Token' : tab === 'track' ? 'Track Queue' : tab}
               </button>
@@ -172,17 +186,25 @@ export default function UserPanel() {
           </nav>
         </div>
 
+<<<<<<< HEAD
         <div onClick={startEditing} className="flex items-center justify-center gap-2 md:gap-3 cursor-pointer hover:bg-[#F5F4F7] p-1 md:p-1.5 rounded-xl transition-all">
           <div className="text-right hidden sm:block">
             <div className="text-xs font-semibold">{profile.name}</div>
             <div className="text-[10px] text-[#6B6B6B]">{profile.phone}</div>
+=======
+        <div onClick={startEditing} className="user-profile-badge">
+          <div className="user-info sm:block">
+            <div className="user-name">{profile.name}</div>
+            <div className="user-phone">{profile.phone}</div>
+>>>>>>> user
           </div>
-          <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#EEEDFE] text-[#3C3489] font-semibold text-xs md:text-sm flex items-center justify-center border border-[#DEDCE4]">
+          <div className="user-avatar">
             {profile.name.split(' ').map(n => n[0]).join('')}
           </div>
         </div>
       </header>
 
+<<<<<<< HEAD
       {/* ─── SCREEN WORKSPACE CONTENT ROUTER ─── */}
       <main className="flex-grow max-w-[1440px] w-full mx-auto p-4 md:p-6 lg:p-8 pb-24 md:pb-8">
         
@@ -527,6 +549,10 @@ export default function UserPanel() {
 
       {/* ─── MOBILE BOTTOM STICKY NAVIGATION ANCHOR BAR (ONLY VISIBLE UNDER 768PX) ─── */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#E9E7ED] z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] px-2 py-2 flex justify-around items-center">
+=======
+      {/* ─── MOBILE BOTTOM STICKY NAVIGATION ANCHOR BAR ─── */}
+      <div className="mobile-bottom-nav md:hidden">
+>>>>>>> user
         {['home', 'book', 'track', 'history', 'profile'].map((tab) => (
           <button
             key={tab}
@@ -535,17 +561,343 @@ export default function UserPanel() {
               if (tab !== 'profile') setIsEditingProfile(false);
               if (tab !== 'book') setSelectedOrgForBooking(null);
             }}
-            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all min-w-[60px] ${
-              activeTab === tab ? 'text-[#534AB7] font-bold bg-[#EEEDFE]/60' : 'text-[#6B6B6B]'
-            }`}
+            className={`mobile-nav-item ${activeTab === tab ? 'active' : ''}`}
           >
             {getTabIcon(tab)}
-            <span className="text-[9px] capitalize tracking-wide">
+            <span className="mobile-nav-label">
               {tab === 'book' ? 'Book' : tab === 'track' ? 'Track' : tab}
             </span>
           </button>
         ))}
       </div>
+<<<<<<< HEAD
+=======
+
+      {/* ─── SCREEN WORKSPACE CONTENT ROUTER ─── */}
+      <main className="main-content">
+        
+        {/* ─── HOME TAB VIEW ─── */}
+        {activeTab === 'home' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 home-grid">
+            
+            <div className="lg:col-span-7 home-left-col">
+              <div className="welcome-header">
+                <h2 className="welcome-title">Welcome back, {profile.name.split(' ')[0]}</h2>
+                <span className="active-count">
+                  {activeTokens.length} Active {activeTokens.length === 1 ? 'Booking' : 'Bookings'}
+                </span>
+              </div>
+
+              {activeTokens.length > 0 ? (
+                <div className="active-tokens-container">
+                  <div className="tokens-scroll-area">
+                    {activeTokens.map((token) => (
+                      <div key={token.id} className="token-card">
+                        <div className="token-card-header">
+                          <div className="token-institution">{token.institution}</div>
+                          <span className="live-badge">Live</span>
+                        </div>
+                        
+                        <div className="token-card-body">
+                          <div className="token-number">{token.number}</div>
+                          <div className="token-dept">{token.department} &bull; {token.counter}</div>
+                        </div>
+
+                        <div className="token-metrics-grid">
+                          <div>
+                            <div className="metric-value">{token.ahead}</div>
+                            <div className="metric-label">Ahead</div>
+                          </div>
+                          <div>
+                            <div className="metric-value wait-value">{token.estWait}</div>
+                            <div className="metric-label">Wait</div>
+                          </div>
+                          <div>
+                            <div className="metric-value">{token.serving}</div>
+                            <div className="metric-label">Serving</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="empty-state-card">
+                  No active tokens running right now. Select "Book Token" to join a line.
+                </div>
+              )}
+            </div>
+
+            <div className="lg:col-span-5 home-right-col">
+              <div className="hidden lg:block spacer-block"></div>
+              <div className="promo-banner-card">
+                <div>
+                  <h3 className="promo-title">Skipping lines made simple</h3>
+                  <p className="promo-subtitle">You can book multiple tokens simultaneously across separate remote branches or counters from this screen.</p>
+                </div>
+                <div className="grid grid-cols-2 action-tiles-grid">
+                  <div onClick={() => setActiveTab('book')} className="action-tile group">
+                    <Building2 size={18} className="tile-icon" />
+                    <div className="tile-title">New Booking</div>
+                  </div>
+                  <div onClick={() => setActiveTab('track')} className="action-tile group hover-emerald">
+                    <Ticket size={18} className="tile-icon" />
+                    <div className="tile-title">Monitor Lines</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── BOOK TOKEN TAB VIEW ─── */}
+        {activeTab === 'book' && (
+          <div className="card-container">
+            {!selectedOrgForBooking ? (
+              <>
+                <div>
+                  <h3 className="section-title">Search Institutions</h3>
+                  <p className="section-subtitle">Find active service lines and check real-time availability.</p>
+                </div>
+
+                <div className="search-input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Search bank, hospital, branch location..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="search-input"
+                  />
+                </div>
+
+                <div className="category-chips-row">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => setActiveCategory(category)}
+                      className={`category-chip ${activeCategory === category ? 'active' : ''}`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="org-list-wrapper">
+                  {filteredOrgs.length > 0 ? (
+                    filteredOrgs.map((org) => {
+                      const Icon = org.icon;
+                      return (
+                        <div key={org.id} onClick={() => handleSelectOrg(org)} className="org-item group">
+                          <div className="org-info">
+                            <div className={`org-icon-wrapper ${org.iconClass}`}>
+                              <Icon size={16} />
+                            </div>
+                            <div className="org-details">
+                              <h4 className="org-title">{org.name} ({org.branch})</h4>
+                              <p className="org-meta">{org.category} &middot; <span className="waiting-highlight">{org.waiting} waiting</span></p>
+                            </div>
+                          </div>
+                          <button className="select-btn">Select</button>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="empty-search">No institutions match your search parameters.</div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="booking-wizard space-y-4">
+                <button onClick={() => setSelectedOrgForBooking(null)} className="back-btn">
+                  <ArrowLeft size={14}/> Back to list
+                </button>
+                
+                <div className="selected-org-summary">
+                  <div className={`org-icon-wrapper ${selectedOrgForBooking.iconClass}`}>
+                    <selectedOrgForBooking.icon size={20} />
+                  </div>
+                  <div>
+                    <h4 className="summary-title">{selectedOrgForBooking.name}</h4>
+                    <p className="summary-subtitle">{selectedOrgForBooking.branch} Branch &middot; {selectedOrgForBooking.waiting} waiting</p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleExecuteBooking} className="booking-form">
+                  <div>
+                    <label className="form-label">Select Service Department</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 dept-grid">
+                      {selectedOrgForBooking.departments.map((dept) => (
+                        <div 
+                          key={dept}
+                          onClick={() => setSelectedDept(dept)}
+                          className={`dept-option ${selectedDept === dept ? 'selected' : ''}`}
+                        >
+                          {dept}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button type="submit" className="confirm-btn">
+                    Confirm & Book Token Now
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── TRACK TAB VIEW ─── */}
+        {activeTab === 'track' && (
+          <div className="track-container card-container">
+            <h3 className="track-header">Live Monitor Timelines</h3>
+            
+            {activeTokens.length > 0 ? (
+              <div className="track-list">
+                {activeTokens.map((token) => (
+                  <div key={token.id} className="track-card">
+                    <div className="track-card-header">
+                      <div className="track-info">
+                        <div className="track-number">{token.number}</div>
+                        <p className="track-institution">{token.institution}</p>
+                        <p className="track-dept">{token.department} &bull; {token.counter}</p>
+                      </div>
+                      <button 
+                        onClick={() => handleCancelToken(token.id)}
+                        className="cancel-btn"
+                      >
+                        Cancel Ticket
+                      </button>
+                    </div>
+                    
+                    <div className="tracking-timeline">
+                      {trackingSteps.map((step, index) => (
+                        <div key={index} className="timeline-step">
+                          <div className={`step-indicator ${step.status}`}>
+                            {step.status === 'done' && <CheckCircle2 size={14} />}
+                            {step.status === 'active' && <Loader2 size={14} className="animate-spin" />}
+                            {step.status === 'pending' && <Clock size={14} />}
+                          </div>
+                          <div className={`step-label ${step.status === 'active' ? 'active-step' : ''}`}>
+                            {step.label} {step.status === 'active' && `(${token.estWait} left)`}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state-card">
+                No active operational queues to monitor.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── HISTORY TAB VIEW ─── */}
+        {activeTab === 'history' && (
+          <div className="card-container">
+            <h3 className="history-title"><HistoryIcon size={14}/> Past Visitations Log</h3>
+            <div className="history-list">
+              {historicalTokens.length === 0 ? (
+                <div className="empty-search">No historical tokens found yet.</div>
+              ) : (
+                historicalTokens.map((item) => (
+                  <div key={item.id} className="history-item">
+                    <div>
+                      <div className="history-type">{item.type}</div>
+                      <div className="history-meta">{item.meta}</div>
+                    </div>
+                    <span className={`status-badge ${item.badgeClass}`}>
+                      {item.variant}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ─── PROFILE TAB VIEW ─── */}
+        {activeTab === 'profile' && (
+          <div className="card-container profile-container">
+            <div className="profile-header">
+              <div className="profile-avatar">
+                {profile.name.split(' ').map(n => n[0]).join('')}
+              </div>
+              <div>
+                <h3 className="profile-name-title">{profile.name}</h3>
+                <p className="profile-account-id">Client ID Account: #NQ-98452-CP</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="profile-form">
+              <div>
+                <label className="form-label">Full Identity Name</label>
+                <input 
+                  type="text" 
+                  value={tempProfile.name}
+                  onChange={(e) => setTempProfile({ ...tempProfile, name: e.target.value })}
+                  disabled={!isEditingProfile}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 form-grid">
+                <div>
+                  <label className="form-label">Phone Number</label>
+                  <input 
+                    type="text" 
+                    value={tempProfile.phone}
+                    onChange={(e) => setTempProfile({ ...tempProfile, phone: e.target.value })}
+                    disabled={!isEditingProfile}
+                    className="form-input"
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Email Address</label>
+                  <input 
+                    type="email" 
+                    value={tempProfile.email}
+                    onChange={(e) => setTempProfile({ ...tempProfile, email: e.target.value })}
+                    disabled={!isEditingProfile}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="form-label">Residential Address</label>
+                <input 
+                  type="text" 
+                  value={tempProfile.address}
+                  onChange={(e) => setTempProfile({ ...tempProfile, address: e.target.value })}
+                  disabled={!isEditingProfile}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="profile-footer">
+                <div className="verification-status">
+                  <Shield size={14} className="shield-icon" /> Verified Profile
+                </div>
+
+                {isEditingProfile ? (
+                  <div className="btn-group">
+                    <button type="button" onClick={() => setIsEditingProfile(false)} className="cancel-edit-btn">Cancel</button>
+                    <button type="submit" className="save-btn"><Save size={13}/> Save</button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setIsEditingProfile(true)} className="edit-btn"><User size={13}/> Edit Details</button>
+                )}
+              </div>
+            </form>
+          </div>
+        )}
+
+      </main>
+>>>>>>> user
     </div>
   );
 }

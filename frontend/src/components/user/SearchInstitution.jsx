@@ -26,13 +26,13 @@ export default function SearchInstitution({ onSelectOrg }) {
   });
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
+    <div className="mx-auto flex h-full w-full max-w-[calc(100%-0.5rem)] flex-col rounded-[22px] border border-[#E7E2D7] bg-[#FCFBF8] p-5 shadow-[0_8px_24px_rgba(20,43,41,0.05)] sm:max-w-[calc(100%-1rem)] sm:p-6">
       <SectionLabel icon={Search}>Book a token</SectionLabel>
-      <h1 className="mt-2 text-2xl font-medium text-[#142B29]">
+      <h1 className="mt-5 pb-2 text-[20px] font-semibold leading-tight text-[#142B29]">
         Which organization would you like to visit?
       </h1>
 
-      <div className="mt-6 flex items-center gap-2 rounded-lg border border-[#142B29]/15 bg-white px-3.5 py-2.5">
+      <div className="mt-3 flex items-center gap-2 rounded-xl border border-[#E7E2D7] bg-[#F7F3EA] px-3.5 py-3 shadow-[0_1px_0_rgba(20,43,41,0.03)]">
         <Search size={16} className="text-[#142B29]/40" aria-hidden="true" />
         <input
           value={query}
@@ -59,7 +59,7 @@ export default function SearchInstitution({ onSelectOrg }) {
         ))}
       </div>
 
-      <div className="mt-6 divide-y divide-[#142B29]/10 rounded-lg border border-[#142B29]/12 bg-white">
+      <div className="mt-5 flex-1 divide-y divide-[#E7E2D7] overflow-hidden rounded-xl border border-[#E7E2D7] bg-[#FCFBF8]">
         {filtered.length === 0 && (
           <EmptyState icon={Search} title="No organizations match" description="Try a different search term or category." />
         )}
@@ -74,7 +74,7 @@ export default function SearchInstitution({ onSelectOrg }) {
             <button
               key={org.id}
               onClick={() => onSelectOrg(org.id)}
-              className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-[#0E5C56]/5"
+              className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-[#0E5C56]/6"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#0E5C56]/10">
                 <Icon size={20} className="text-[#0E5C56]" strokeWidth={1.75} aria-hidden="true" />

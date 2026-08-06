@@ -25,8 +25,8 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
         data = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM )
         user_id = data.get("id")
 
-        user= db.query(UserModel).filter(UserModel.id == user_id).first()
-        if not user:
+        current_user= db.query(UserModel).filter(UserModel.id == user_id).first()
+        if not current_user:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
                                     detail= "You are unauthorized")
     except ExpiredSignatureError:
@@ -37,7 +37,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
         )
-    return user       
+    return current_user       
 
 
 def require_role(required_role: UserRole):
@@ -50,9 +50,7 @@ def require_role(required_role: UserRole):
                 status_code=403,
                 detail="Forbidden"
             )
-
         return current_user
-
     return role_checker
 
 

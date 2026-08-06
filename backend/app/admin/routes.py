@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from backend.app.utils.database import get_db
-from backend.app.admin.schemas import DashboardResponse, UserListResponse, UserDetail, MessageResponse, InstitutionDetail, QueueDetail, QueueListResponse, TokenDetail, TokenListResponse
+from backend.app.admin.schemas import DashboardResponse, UserListResponse, UserDetail, MessageResponse, InstitutionDetail, QueueDetail, QueueListResponse, TokenDetail, TokenListResponse, AuditLogSummary, AuditLogListResponse
 from backend.app.admin import service
 from backend.app.auth.dependencies import require_role
 from backend.app.auth.models import UserRole
@@ -42,6 +42,21 @@ def get_user(
     return service.get_user(
         db=db,
         user_id=user_id,
+    )
+
+@admin_routes.patch(
+    "/users/{user_id}/status",
+    response_model=MessageResponse
+)
+def set_user_active_status(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_role(UserRole.ADMIN)),
+):
+    return service.set_user_active_status(
+        db=db,
+        user_id=user_id,
+        admin_id=current_user.id,
     )
 
 def get_institutions(
@@ -99,30 +114,16 @@ def get_queue(
         queue_id
     )
 
-@admin_routes.patch(
-    "/queues/{queue_id}/activate",
-    response_model=MessageResponse)
-def activate_queue(
+@admin_routes.patch("/queues/{queue_id}/status")
+def change_queue_status(
     queue_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_role(UserRole.ADMIN)),
 ):
-    return service.set_queue_status(
-        db,
-        queue_id,
-        True
-    )
-
-@admin_routes.patch(
-    "/queues/{queue_id}/deactivate",
-    response_model=MessageResponse)
-def deactivate_queue(
-    queue_id: int,
-    db: Session = Depends(get_db)
-):
-    return service.set_queue_status(
-        db,
-        queue_id,
-        False
+    return service.change_queue_status(
+        db=db,
+        queue_id=queue_id,
+        admin_id=current_user.id,
     )
 
 @admin_routes.get(
@@ -159,9 +160,37 @@ def get_token(
     response_model=MessageResponse)
 def cancel_token(
     token_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(UserRole.ADMIN))
 ):
     return service.cancel_token(
         db,
-        token_id
+        token_id,
+        admin_id=current_user.id
+    )
+
+@admin_routes.get(
+    "/logs",
+    response_model=AuditLogListResponse,)
+def get_logs(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    return service.get_logs(
+        db,
+        page,
+        limit,
+    )
+
+@admin_routes.get(
+    "/logs/{log_id}",
+    response_model=AuditLogSummary)
+def get_log(
+    log_id: int,
+    db: Session = Depends(get_db),
+):
+    return service.get_log(
+        db,
+        log_id,
     )

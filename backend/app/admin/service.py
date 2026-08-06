@@ -2,9 +2,26 @@ from sqlalchemy.orm import Session
 import math
 from fastapi import HTTPException, status
 from . import repository
-from .schemas import DashboardResponse, DashboardStats, UserSummary, UserListResponse, UserDetail, MessageResponse, InstitutionDetail, InstitutionListResponse, InstitutionSummary, InstitutionQueue, QueueDetail, QueueInstitution, QueueListResponse, QueueSummary, TokenSummary, TokenListResponse, TokenDetail
+from .schemas import DashboardResponse, DashboardStats, UserSummary, UserListResponse, UserDetail, MessageResponse, InstitutionDetail, InstitutionListResponse, InstitutionSummary, InstitutionQueue, QueueDetail, QueueInstitution, QueueListResponse, QueueSummary, TokenSummary, TokenListResponse, TokenDetail, AuditLogListResponse, AuditLogSummary
 from backend.app.tokens import Token
 from datetime import datetime, timezone
+
+def add_log(
+    db: Session,
+    admin_id: int,
+    action: str,
+    target_type: str,
+    target_id: int,
+    description: str | None = None,
+):
+    return repository.create_log(
+        db=db,
+        admin_id=admin_id,
+        action=action,
+        target_type=target_type,
+        target_id=target_id,
+        description=description,
+    )
 
 def get_dashboard(db: Session) -> DashboardResponse:
     statistics = DashboardStats(
@@ -91,29 +108,34 @@ def set_user_active_status(
     db: Session,
     user_id: int,
     is_active: bool,
+    admin_id:int
 ):
     user = repository.get_user_by_id(
         db=db,
         user_id=user_id,
     )
-
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found."
         )
-
     if user.is_active == is_active:
         state = "active" if is_active else "suspended"
-
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"User is already {state}."
         )
-
     user.is_active = is_active
     db.commit()
     action = "activated" if is_active else "suspended"
+    add_log(
+        db=db,
+        admin_id=user.id,
+        action=f"{action} User",
+        target_type="User",
+        target_id=user.id,
+        description=f"{action} user {user.id}",
+    )
     return MessageResponse(
         message=f"User {action} successfully."
     )
@@ -256,10 +278,11 @@ def get_queue(
     )
 
 
-def set_queue_status(
+def change_queue_status(
     db: Session,
     queue_id: int,
     is_active: bool,
+    admin_id: int
 ):
     queue = repository.get_queue_by_id(
         db,
@@ -279,6 +302,14 @@ def set_queue_status(
     queue.is_active = is_active
     db.commit()
     action = "activated" if is_active else "deactivated"
+    add_log(
+            db=db,
+            admin_id=admin_id,
+            action= f"{action} queue",
+            target_type="Queue",
+            target_id=queue.id,
+            description=f"{action} queue {queue.id}",
+        )
     return MessageResponse(
         message=f"Queue {action} successfully."
     )
@@ -344,7 +375,8 @@ def get_token(
 
 def cancel_token(
     db: Session,
-    token_id: int
+    token_id: int,
+    admin_id: int
 ):
     token = repository.get_token_by_id(
         db,
@@ -365,6 +397,69 @@ def cancel_token(
         timezone.utc
     )
     db.commit()
+    add_log(
+        db=db,
+        admin_id= admin_id,
+        action="Cancel Token",
+        target_type="Token",
+        target_id=Token.id,
+        description=f"Cancelled Token{Token.id}",
+    )
     return MessageResponse(
         message="Token cancelled successfully"
+    )
+
+
+def get_logs(
+    db,
+    page,
+    limit,
+):
+    logs = repository.get_logs(
+        db,
+        page,
+        limit,
+    )
+    total = repository.count_logs(db)
+    return AuditLogListResponse(
+        items=[
+            AuditLogSummary(
+                id=log.id,
+                admin_id=log.admin_id,
+                action=log.action,
+                target_type=log.target_type,
+                target_id=log.target_id,
+                description=log.description,
+                created_at=log.created_at,
+            )
+            for log in logs
+        ],
+        page=page,
+        limit=limit,
+        total=total,
+        pages=math.ceil(total / limit) if total else 1,
+    )
+
+
+def get_log(
+    db,
+    log_id,
+):
+    log = repository.get_log_by_id(
+        db,
+        log_id,
+    )
+    if log is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Audit log not found.",
+        )
+    return AuditLogSummary(
+        id=log.id,
+        admin_id=log.admin_id,
+        action=log.action,
+        target_type=log.target_type,
+        target_id=log.target_id,
+        description=log.description,
+        created_at=log.created_at,
     )

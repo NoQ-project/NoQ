@@ -140,3 +140,19 @@ class TokenDetail(BaseModel):
     estimated_time: datetime | None
     created_at: datetime
     cancelled_at: datetime | None
+
+class AuditLogSummary(BaseModel):
+    id: int
+    admin_id: int
+    action: str
+    target_type: str
+    target_id: int
+    description: str | None
+    created_at: datetime
+
+class AuditLogListResponse(BaseModel):
+    items: list[AuditLogSummary]
+    page: int
+    limit: int
+    total: int
+    pages: int

@@ -1,12 +1,12 @@
 from sqlalchemy.orm import Session, joinedload 
-from backend.app.auth.models import UserModel
+from backend.app.auth.models import UserModel, UserRole
 from backend.app.queues.models import Queue
 from backend.app.tokens.models import Token
-from backend.app.auth.models import UserRole
 from datetime import datetime, timedelta
 from backend.app.user.models import User
 from backend.app.institutions.models import Institution
 from sqlalchemy import or_
+from backend.app.admin.models import AuditLog
 
 def get_total_users(db: Session):
 
@@ -38,10 +38,8 @@ def get_total_tokens(db: Session):
 
 def get_today_tokens(db: Session):
     today = datetime.now().date()
-
     start = datetime.combine(today, datetime.min.time())
     end = start + timedelta(days=1)
-
     return (
         db.query(Token)
         .filter(
@@ -50,15 +48,6 @@ def get_today_tokens(db: Session):
         )
         .count()
     )
-
-
-import math
-
-from sqlalchemy import or_
-from sqlalchemy.orm import Session
-
-from app.auth.models import UserModel, UserRole
-
 
 def get_users(
     db: Session,
@@ -70,7 +59,6 @@ def get_users(
         db.query(UserModel)
         .filter(UserModel.role == UserRole.USER)
     )
-
     if search:
         query = query.filter(
             or_(
@@ -78,7 +66,6 @@ def get_users(
                 UserModel.email.ilike(f"%{search}%"),
             )
         )
-
     return (
         query.order_by(UserModel.created_at.desc())
         .offset((page - 1) * limit)
@@ -95,7 +82,6 @@ def count_users(
         db.query(UserModel)
         .filter(UserModel.role == UserRole.USER)
     )
-
     if search:
         query = query.filter(
             or_(
@@ -232,5 +218,51 @@ def get_token_by_id(
         .filter(
             Token.id == token_id
         )
+        .first()
+    )
+
+def create_log(
+    db: Session,
+    admin_id: int,
+    action: str,
+    target_type: str,
+    target_id: int,
+    description: str | None = None,
+):
+    log = AuditLog(
+        admin_id=admin_id,
+        action=action,
+        target_type=target_type,
+        target_id=target_id,
+        description=description,
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(log)
+    return log
+
+def get_logs(
+    db: Session,
+    page: int,
+    limit: int,
+):
+    return (
+        db.query(AuditLog)
+        .order_by(AuditLog.created_at.desc())
+        .offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
+
+def count_logs(db: Session):
+    return db.query(AuditLog).count()
+
+def get_log_by_id(
+    db: Session,
+    log_id: int,
+):
+    return (
+        db.query(AuditLog)
+        .filter(AuditLog.id == log_id)
         .first()
     )

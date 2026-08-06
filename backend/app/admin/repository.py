@@ -157,3 +157,80 @@ def get_institution_by_id(
         .first()
     )
 
+def get_queues(
+    db: Session,
+    page: int,
+    limit: int,
+    search: str | None,
+):
+    query = (
+        db.query(Queue)
+        .options(
+            joinedload(Queue.institution)
+        )
+    )
+    if search:
+        query = query.filter(
+            Queue.name.ilike(f"%{search}%")
+        )
+    return (
+        query.order_by(
+            Queue.created_at.desc()
+        )
+        .offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
+
+def get_queue_by_id(
+    db: Session,
+    queue_id: int,
+):
+    return (
+        db.query(Queue)
+        .options(
+            joinedload(Queue.institution)
+        )
+        .filter(
+            Queue.id == queue_id
+        )
+        .first()
+    )
+
+def get_tokens(
+    db: Session,
+    page: int,
+    limit: int
+):
+    return (
+        db.query(Token)
+        .options(
+            joinedload(Token.user),
+            joinedload(Token.queue)
+            .joinedload(Queue.institution)
+        )
+        .order_by(
+            Token.created_at.desc()
+        )
+        .offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
+
+
+def get_token_by_id(
+    db: Session,
+    token_id: int
+):
+    return (
+        db.query(Token)
+        .options(
+            joinedload(Token.user),
+            joinedload(Token.queue)
+            .joinedload(Queue.institution)
+        )
+        .filter(
+            Token.id == token_id
+        )
+        .first()
+    )

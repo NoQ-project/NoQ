@@ -38,3 +38,7 @@ class User(Base):
         "UserModel",
         back_populates="profile"
     )
+    tokens = relationship(
+        "Token",
+        back_populates="user"
+    )

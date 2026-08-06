@@ -4,7 +4,9 @@ from sqlalchemy import (
     Integer,
     DateTime,
     ForeignKey,
-    Enum
+    Enum,
+    UniqueConstraint,
+    Date
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -26,12 +28,12 @@ class Token(Base):
                primary_key=True)
     user_id = Column(
         Integer,
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False
     )
     queue_id = Column(
-        String(36),
-        ForeignKey("queues.id"),
+        Integer,
+        ForeignKey("queues.id", ondelete="CASCADE"),
         nullable=False
     )
     token_number = Column(
@@ -43,7 +45,7 @@ class Token(Base):
         default=TokenStatus.WAITING
     )
     booking_date = Column(
-        DateTime,
+        Date,
         nullable=False
     )
     estimated_time = Column(
@@ -58,10 +60,19 @@ class Token(Base):
         DateTime,
         nullable=True
     )
+    __table_args__ = (
+        UniqueConstraint(
+            "queue_id",
+            "booking_date",
+            "token_number",
+            name="unique_daily_queue_token"
+        ),
+    )
 
     # Relationships
     user = relationship(
-        "User"
+        "User",
+        back_populates="tokens"
     )
     queue = relationship(
         "Queue",

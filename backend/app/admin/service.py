@@ -2,10 +2,11 @@ from sqlalchemy.orm import Session
 import math
 from fastapi import HTTPException, status
 from . import repository
-from .schemas import DashboardResponse, DashboardStats, UserSummary, UserListResponse, UserDetail, MessageResponse, InstitutionDetail, InstitutionListResponse, InstitutionSummary, InstitutionQueue
+from .schemas import DashboardResponse, DashboardStats, UserSummary, UserListResponse, UserDetail, MessageResponse, InstitutionDetail, InstitutionListResponse, InstitutionSummary, InstitutionQueue, QueueDetail, QueueInstitution, QueueListResponse, QueueSummary, TokenSummary, TokenListResponse, TokenDetail
+from backend.app.tokens import Token
+from datetime import datetime, timezone
 
 def get_dashboard(db: Session) -> DashboardResponse:
-
     statistics = DashboardStats(
         total_users=repository.get_total_users(db),
         total_institutions=repository.get_total_institutions(db),
@@ -18,7 +19,6 @@ def get_dashboard(db: Session) -> DashboardResponse:
     return DashboardResponse(
         statistics=statistics
     )
-
 
 def get_users(
     db: Session,
@@ -191,4 +191,180 @@ def get_institution(
             ]
     )
 
+def get_queues(
+    db: Session,
+    page: int,
+    limit: int,
+    search: str | None,
+):
+    queues = repository.get_queues(
+        db,
+        page,
+        limit,
+        search
+    )
+    total = repository.count_queues(
+        db,
+        search
+    )
+    return QueueListResponse(
+        items=[
+            QueueSummary(
+                id=q.id,
+                name=q.name,
+                institution_name=q.institution.name,
+                daily_limit=q.daily_limit,
+                avg_service_time=q.avg_service_time,
+                is_active=q.is_active,
+                created_at=q.created_at
+            )
+            for q in queues
+        ],
+        page=page,
+        limit=limit,
+        total=total,
+        pages=math.ceil(total / limit) if total else 1
+    )
 
+
+def get_queue(
+    db: Session,
+    queue_id: int,
+):
+    queue = repository.get_queue_by_id(
+        db,
+        queue_id
+    )
+    if queue is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Queue not found."
+        )
+    return QueueDetail(
+        id=queue.id,
+        name=queue.name,
+        description=queue.description,
+        daily_limit=queue.daily_limit,
+        avg_service_time=queue.avg_service_time,
+        is_active=queue.is_active,
+        created_at=queue.created_at,
+        updated_at=queue.updated_at,
+        institution=QueueInstitution(
+            id=queue.institution.id,
+            name=queue.institution.name
+        )
+    )
+
+
+def set_queue_status(
+    db: Session,
+    queue_id: int,
+    is_active: bool,
+):
+    queue = repository.get_queue_by_id(
+        db,
+        queue_id
+    )
+    if queue is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Queue not found."
+        )
+    if queue.is_active == is_active:
+        state = "active" if is_active else "inactive"
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Queue is already {state}."
+        )
+    queue.is_active = is_active
+    db.commit()
+    action = "activated" if is_active else "deactivated"
+    return MessageResponse(
+        message=f"Queue {action} successfully."
+    )
+
+def get_tokens(
+    db: Session,
+    page: int,
+    limit: int
+):
+    tokens = repository.get_tokens(
+        db,
+        page,
+        limit
+    )
+    total = repository.count_tokens(db)
+    return TokenListResponse(
+        items=[
+            TokenSummary(
+                id=t.id,
+                token_number=t.token_number,
+                user_name=t.user.full_name,
+                user_phone=t.user.phone,
+                queue_name=t.queue.name,
+                institution_name=t.queue.institution.name,
+                status=t.status.value,
+                booking_date=t.booking_date,
+                created_at=t.created_at
+            )
+            for t in tokens
+        ],
+        page=page,
+        limit=limit,
+        total=total,
+        pages=math.ceil(total / limit)
+    )
+
+def get_token(
+    db: Session,
+    token_id: int
+):
+    token = repository.get_token_by_id(
+        db,
+        token_id
+    )
+    if token is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Token not found"
+        )
+    return TokenDetail(
+        id=token.id,
+        token_number=token.token_number,
+        user_name=token.user.full_name,
+        user_phone=token.user.phone,
+        queue_name=token.queue.name,
+        institution_name=token.queue.institution.name,
+        status=token.status.value,
+        booking_date=token.booking_date,
+        estimated_time=token.estimated_time,
+        created_at=token.created_at,
+        cancelled_at=token.cancelled_at
+    )
+
+def cancel_token(
+    db: Session,
+    token_id: int
+):
+    token = repository.get_token_by_id(
+        db,
+        token_id
+    )
+    if token is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Token not found"
+        )
+    if token.status == Token.CANCELLED:
+        raise HTTPException(
+            status_code=400,
+            detail="Token already cancelled"
+        )
+    token.status = Token.CANCELLED
+    token.cancelled_at = datetime.now(
+        timezone.utc
+    )
+    db.commit()
+    return MessageResponse(
+        message="Token cancelled successfully"
+    )

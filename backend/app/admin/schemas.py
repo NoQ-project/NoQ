@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from datetime import datetime
+
 
 class DashboardStats(BaseModel):
     total_users: int
@@ -9,6 +11,19 @@ class DashboardStats(BaseModel):
     total_tokens: int
     today_tokens: int
 
-
 class DashboardResponse(BaseModel):
     statistics: DashboardStats
+
+class UserSummary(BaseModel):
+    id: int
+    name: str
+    email: str
+    is_verified: bool
+    created_at: datetime
+
+class UserListResponse(BaseModel):
+    items: list[UserSummary]
+    page: int
+    limit: int
+    total: int
+    pages: int

@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, ForeignKey
 from datetime import datetime, timezone
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from backend.app.utils.database import Base
 import enum
 
@@ -18,8 +19,7 @@ class UserModel(Base):
             default=UserRole.USER,
             nullable=False
         )
-    FirstName = Column(String(20))
-    LastName= Column(String(20))
+    name = Column(String(20))
     email = Column(String(50),
                    unique=True)
     password_hash = Column(
@@ -28,6 +28,22 @@ class UserModel(Base):
     )
     password_changed_at = Column(DateTime, nullable=True)
     is_verified = Column(Boolean)
+
+    created_at = Column(
+    DateTime,
+    server_default=func.now()
+    )
+    updated_at = Column(
+        DateTime,
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+    profile = relationship(
+            "User",
+            back_populates="auth_user",
+            uselist=False
+        )
+
 
 class RefreshTokenModel(Base):
     __tablename__ = "refresh_tokens"
@@ -62,3 +78,5 @@ class RefreshTokenModel(Base):
         default=lambda: datetime.now(timezone.utc),
         nullable=False
     )
+
+    

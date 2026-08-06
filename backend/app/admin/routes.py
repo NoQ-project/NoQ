@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from backend.app.utils.database import get_db
-from backend.app.admin.schemas import DashboardResponse, UserListResponse, UserDetail
+from backend.app.admin.schemas import DashboardResponse, UserListResponse, UserDetail, MessageResponse, InstitutionDetail
 from backend.app.admin import service
 from backend.app.admin.service import get_dashboard, get_user, get_users
 from backend.app.auth.dependencies import require_role
@@ -44,3 +44,32 @@ def get_user(
         db=db,
         user_id=user_id,
     )
+
+def get_institutions(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    search: str | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    return service.get_institutions(
+        db=db,
+        page=page,
+        limit=limit,
+        search=search,
+    )
+
+
+@admin_routes.get(
+    "/institutions/{institution_id}",
+    response_model=InstitutionDetail,
+)
+def get_institution(
+    institution_id: int,
+    db: Session = Depends(get_db),
+):
+    return service.get_institution(
+        db=db,
+        institution_id=institution_id,
+    )
+
+

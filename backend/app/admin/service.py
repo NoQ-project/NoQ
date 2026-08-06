@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 import math
 from fastapi import HTTPException, status
 from . import repository
-from .schemas import DashboardResponse, DashboardStats, UserSummary, UserListResponse, UserDetail, MessageResponse
+from .schemas import DashboardResponse, DashboardStats, UserSummary, UserListResponse, UserDetail, MessageResponse, InstitutionDetail, InstitutionListResponse, InstitutionSummary, InstitutionQueue
 
 def get_dashboard(db: Session) -> DashboardResponse:
 
@@ -117,3 +117,78 @@ def set_user_active_status(
     return MessageResponse(
         message=f"User {action} successfully."
     )
+
+def get_institutions(
+    db: Session,
+    page: int,
+    limit: int,
+    search: str | None,
+):
+    institutions = repository.get_institutions(
+        db,
+        page,
+        limit,
+        search,
+    )
+    total = repository.count_institutions(
+        db,
+        search,
+    )
+    return InstitutionListResponse(
+        items=[
+            InstitutionSummary(
+                id=i.id,
+                name=i.auth_user.name,
+                email=i.auth_user.email,
+                phone=i.phone,
+                is_verified=i.auth_user.is_verified,
+                is_active=i.auth_user.is_active,
+                created_at=i.created_at,
+            )
+            for i in institutions
+        ],
+        page=page,
+        limit=limit,
+        total=total,
+        pages=math.ceil(total / limit) if total else 1,
+    )
+
+
+def get_institution(
+    db: Session,
+    institution_id: int,
+):
+    institution = repository.get_institution_by_id(
+        db,
+        institution_id,
+    )
+    if institution is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Institution not found."
+        )
+    return InstitutionDetail(
+        id=institution.id,
+        name=institution.auth_user.name,
+        email=institution.auth_user.email,
+        phone=institution.phone,
+        address=institution.address,
+        website=institution.website,
+        description=institution.description,
+        is_verified=institution.auth_user.is_verified,
+        is_active=institution.auth_user.is_active,
+        created_at=institution.created_at,
+        updated_at=institution.updated_at,
+        queues=[
+                InstitutionQueue(
+                    id=queue.id,
+                    name=queue.name,
+                    daily_limit=queue.daily_limit,
+                    avg_service_time=queue.avg_service_time,
+                    is_active=queue.is_active,
+                )
+                for queue in institution.queues
+            ]
+    )
+
+

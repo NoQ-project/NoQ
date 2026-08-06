@@ -34,8 +34,8 @@ class UserModel(Base):
         nullable=False
     )
     created_at = Column(
-    DateTime,
-    server_default=func.now()
+        DateTime,
+        server_default=func.now()
     )
     updated_at = Column(
         DateTime,
@@ -47,7 +47,11 @@ class UserModel(Base):
             back_populates="auth_user",
             uselist=False
         )
-
+    institution = relationship(
+    "Institution",
+    back_populates="auth_user",
+    uselist=False
+    )
 
 class RefreshTokenModel(Base):
     __tablename__ = "refresh_tokens"

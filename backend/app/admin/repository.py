@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload 
 from backend.app.auth.models import UserModel
 from backend.app.queues.models import Queue
 from backend.app.tokens.models import Token
@@ -6,6 +6,7 @@ from backend.app.auth.models import UserRole
 from datetime import datetime, timedelta
 from backend.app.user.models import User
 from backend.app.institutions.models import Institution
+from sqlalchemy import or_
 
 def get_total_users(db: Session):
 
@@ -114,6 +115,45 @@ def get_user_by_id(
             UserModel.id == user_id,
             UserModel.role == UserRole.USER,
         )
+        .first()
+    )
+
+def get_institutions(
+    db: Session,
+    page: int,
+    limit: int,
+    search: str | None,
+):
+    query = (
+        db.query(Institution)
+        .options(joinedload(Institution.auth_user))
+        .join(UserModel)
+        .filter(UserModel.role == UserRole.INSTITUTION)
+    )
+
+    if search:
+        query = query.filter(
+            or_(
+                UserModel.name.ilike(f"%{search}%"),
+                UserModel.email.ilike(f"%{search}%"),
+            )
+        )
+
+    return (
+        query.order_by(UserModel.created_at.desc())
+        .offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
+
+def get_institution_by_id(
+    db: Session,
+    institution_id: int,
+):
+    return (
+        db.query(Institution)
+        .options(joinedload(Institution.auth_user),joinedload(Institution.queues))
+        .filter(Institution.id == institution_id)
         .first()
     )
 

@@ -38,3 +38,6 @@ class UserDetail(BaseModel):
     address: str | None
     created_at: datetime
     updated_at: datetime
+
+class MessageResponse(BaseModel):
+    message: str

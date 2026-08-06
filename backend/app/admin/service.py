@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 import math
 from fastapi import HTTPException, status
 from . import repository
-from .schemas import DashboardResponse, DashboardStats, UserSummary, UserListResponse, UserDetail
+from .schemas import DashboardResponse, DashboardStats, UserSummary, UserListResponse, UserDetail, MessageResponse
 
 def get_dashboard(db: Session) -> DashboardResponse:
 
@@ -85,4 +85,35 @@ def get_user(
         address=profile.address if profile else None,
         created_at=user.created_at,
         updated_at=user.updated_at,
+    )
+
+def set_user_active_status(
+    db: Session,
+    user_id: int,
+    is_active: bool,
+):
+    user = repository.get_user_by_id(
+        db=db,
+        user_id=user_id,
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
+        )
+
+    if user.is_active == is_active:
+        state = "active" if is_active else "suspended"
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"User is already {state}."
+        )
+
+    user.is_active = is_active
+    db.commit()
+    action = "activated" if is_active else "suspended"
+    return MessageResponse(
+        message=f"User {action} successfully."
     )

@@ -28,7 +28,11 @@ class UserModel(Base):
     )
     password_changed_at = Column(DateTime, nullable=True)
     is_verified = Column(Boolean)
-
+    is_active = Column(
+        Boolean,
+        default=True,
+        nullable=False
+    )
     created_at = Column(
     DateTime,
     server_default=func.now()

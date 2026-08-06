@@ -71,7 +71,11 @@ def login_user(body:LoginSchema, db:Session):
 
     if not user:
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Invalid Email")
-    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account has been suspended."
+        )
     if not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Invalid Password")
 

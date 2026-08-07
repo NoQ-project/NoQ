@@ -69,30 +69,49 @@ export default function OrgPanel() {
     }
   };
 
-  // 4. Create New Department Queue
+  // 4. Create New Department Queue (Fixed & Secured)
   const addNewQueue = () => {
     const name = prompt("Enter Department Name (e.g., Loan Assistance):");
-    if (!name) return;
+    if (!name || name.trim() === "") return;
+
+    const cleanName = name.trim();
+
+  
+    if (queues.some(q => q.name.toLowerCase() === cleanName.toLowerCase())) {
+      alert("This department queue already exists!");
+      return;
+    }
+
     const prefix = prompt("Enter Ticket Prefix Code (e.g., CB-LOAN):") || "CB-GEN";
+    const cleanPrefix = prefix.trim().toUpperCase();
     
     const newId = Date.now();
     const newDept = {
       id: newId,
-      name,
-      prefix: prefix.toUpperCase(),
+      name: cleanName,
+      prefix: cleanPrefix,
       waiting: 0,
       quota: 50,
       leftToday: 50,
       status: 'OPEN'
     };
+    setServingTickets(prev => ({ 
+      ...prev, 
+      [cleanName]: { number: 'None', type: '---' } 
+    }));
+    
+    setUpNextLists(prev => ({ 
+      ...prev, 
+      [cleanName]: [] 
+    }));
 
-    setQueues([...queues, newDept]);
-    setServingTickets(prev => ({ ...prev, [name]: { number: 'None', type: '---' } }));
-    setUpNextLists(prev => ({ ...prev, [name]: [] }));
-    setActiveCounterTab(name);
+    setQueues(prevQueues => [...prevQueues, newDept]);
+    
+    
+    setActiveCounterTab(cleanName);
   };
 
-  // 5. Advanced Counter Lifecycle (Call Next Client Logic)
+ 
   const callNextClient = () => {
     const currentList = upNextLists[activeCounterTab] || [];
     if (currentList.length === 0) {
@@ -100,21 +119,20 @@ export default function OrgPanel() {
       return;
     }
 
-    // Pull first item from array list
+
     const nextClient = currentList[0];
     const updatedList = currentList.slice(1).map((item, index) => ({
       ...item,
       position: index + 1,
-      interactive: index === 0 // Make new first item interactive
+      interactive: index === 0
     }));
 
-    // Update serving display states
     setServingTickets(prev => ({
       ...prev,
       [activeCounterTab]: { number: nextClient.number, type: nextClient.type.toUpperCase() }
     }));
 
-    // Mutate list values
+  
     setUpNextLists(prev => ({ ...prev, [activeCounterTab]: updatedList }));
 
     // Decrement current waiting balance metric

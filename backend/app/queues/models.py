@@ -2,17 +2,14 @@ from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey, T
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from backend.app.utils.database import Base
-import uuid
+
 
 
 class Queue(Base):
     __tablename__ = "queues"
 
-    id = Column(
-    Integer,
-    primary_key=True,
-    autoincrement=True
-)
+    id = Column(Integer,
+            primary_key=True)
 
     institution_id = Column(
         Integer,

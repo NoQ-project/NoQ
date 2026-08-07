@@ -6,7 +6,6 @@ import {
   Clock, 
   Loader2,
   Search,
-  ChevronRight,
   User,
   Shield,
   Save,
@@ -15,6 +14,7 @@ import {
   ArrowLeft,
   Home as HomeIcon
 } from 'lucide-react';
+import "../assets/css/UserPanel.css";
 
 export default function UserPanel() {
   const [activeTab, setActiveTab] = useState('home');
@@ -52,9 +52,9 @@ export default function UserPanel() {
   const categories = ['All', 'Banking', 'Healthcare', 'Government'];
 
   const organizations = [
-    { id: 1, name: 'City Bank', category: 'Banking', branch: 'Lazimpat', departments: ['General Banking', 'Loans & Credit', 'Account Opening'], queues: 3, waiting: 13, icon: Building2, iconBg: 'bg-[#EEEDFE] text-[#534AB7]' },
-    { id: 2, name: 'City Hospital', category: 'Healthcare', branch: 'Baneshwor', departments: ['OPD Checkup', 'Lab Reports', 'Pharmacy'], queues: 2, waiting: 8, icon: HeartPulse, iconBg: 'bg-[#E1F5EE] text-[#0F6E56]' },
-    { id: 3, name: 'Dept. of Passports', category: 'Government', branch: 'Tripureshwor', departments: ['Biometrics', 'Passport Collection'], queues: 1, waiting: 3, icon: Building2, iconBg: 'bg-[#F5F4F7] text-[#6B6B6B]' },
+    { id: 1, name: 'City Bank', category: 'Banking', branch: 'Lazimpat', departments: ['General Banking', 'Loans & Credit', 'Account Opening'], queues: 3, waiting: 13, icon: Building2, iconClass: 'icon-indigo' },
+    { id: 2, name: 'City Hospital', category: 'Healthcare', branch: 'Baneshwor', departments: ['OPD Checkup', 'Lab Reports', 'Pharmacy'], queues: 2, waiting: 8, icon: HeartPulse, iconClass: 'icon-emerald' },
+    { id: 3, name: 'Dept. of Passports', category: 'Government', branch: 'Tripureshwor', departments: ['Biometrics', 'Passport Collection'], queues: 1, waiting: 3, icon: Building2, iconClass: 'icon-gray' },
   ];
 
   const trackingSteps = [
@@ -65,15 +65,14 @@ export default function UserPanel() {
   ];
 
   const [historicalTokens, setHistoricalTokens] = useState([
-    { id: 'h-1', type: 'General Banking', meta: 'Lazimpat · Jun 25', variant: 'Active', badge: 'bg-[#EAF3DE] text-[#3B6D11]' },
-    { id: 'h-2', type: 'General Banking', meta: 'New Road · Jun 20', variant: 'Done', badge: 'bg-[#EAF3DE] text-[#3B6D11]' },
-    { id: 'h-3', type: 'Loans & Credit', meta: 'Lazimpat · Jun 15', variant: 'Done', badge: 'bg-[#EAF3DE] text-[#3B6D11]' }
+    { id: 'h-1', type: 'General Banking', meta: 'Lazimpat · Jun 25', variant: 'Active', badgeClass: 'badge-active' },
+    { id: 'h-2', type: 'General Banking', meta: 'New Road · Jun 20', variant: 'Done', badgeClass: 'badge-active' },
+    { id: 'h-3', type: 'Loans & Credit', meta: 'Lazimpat · Jun 15', variant: 'Done', badgeClass: 'badge-active' }
   ]);
 
   const filteredOrgs = organizations.filter((org) => {
     const matchesCategory = activeCategory === 'All' || org.category === activeCategory;
-    const matchesSearch = org.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          org.branch.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = org.name.toLowerCase().includes(searchQuery.toLowerCase()) || org.branch.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -106,7 +105,7 @@ export default function UserPanel() {
     setActiveTokens([...activeTokens, newGeneratedToken]);
     
     setHistoricalTokens([
-      { id: `h-${Date.now()}`, type: selectedDept, meta: `${selectedOrgForBooking.branch} · Today`, variant: 'Active', badge: 'bg-[#EEEDFE] text-[#534AB7]' },
+      { id: `h-${Date.now()}`, type: selectedDept, meta: `${selectedOrgForBooking.branch} · Today`, variant: 'Active', badgeClass: 'badge-indigo' },
       ...historicalTokens
     ]);
 
@@ -145,16 +144,19 @@ export default function UserPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F3EC] font-sans antialiased text-[#1A1A1A] pb-20 md:pb-0">
+    <div className="app-container">
       
       {/* ─── GLOBAL HEADER (VISIBLE ON BOTH MOBILE & DESKTOP) ─── */}
-      <header className="bg-white border-b border-[#E9E7ED] px-4 md:px-8 py-3 md:py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-        <div className="flex items-center gap-8">
-          {/* Logo stays visible everywhere */}
-          <span className="font-bold text-lg md:text-xl text-[#1A1A1A] tracking-tight cursor-pointer" onClick={() => { setActiveTab('home'); setSelectedOrgForBooking(null); }}>NoQ</span>
+      <header className="global-header">
+        <div className="header-left">
+          <span 
+            className="brand-logo" 
+            onClick={() => { setActiveTab('home'); setSelectedOrgForBooking(null); }}
+          >
+            NoQ
+          </span>
           
-          {/* Desktop Navigation Link Tabs (Hidden under 768px screen sizes) */}
-          <nav className="hidden md:flex gap-1">
+          <nav className="desktop-nav md:flex">
             {['home', 'book', 'track', 'history', 'profile'].map((tab) => (
               <button
                 key={tab}
@@ -163,9 +165,7 @@ export default function UserPanel() {
                   if (tab !== 'profile') setIsEditingProfile(false);
                   if (tab !== 'book') setSelectedOrgForBooking(null);
                 }}
-                className={`px-4 py-2 text-xs font-semibold capitalize rounded-lg transition-all ${
-                  activeTab === tab ? 'bg-[#EEEDFE] text-[#534AB7]' : 'text-[#6B6B6B] hover:text-[#1A1A1A]'
-                }`}
+                className={`nav-button ${activeTab === tab ? 'active' : ''}`}
               >
                 {tab === 'book' ? 'Book Token' : tab === 'track' ? 'Track Queue' : tab}
               </button>
@@ -173,108 +173,88 @@ export default function UserPanel() {
           </nav>
         </div>
 
-        {/* Profile Element Container - Remains visible on both Desktop & Mobile viewports */}
-        <div onClick={startEditing} className="flex items-center gap-2 md:gap-3 cursor-pointer hover:bg-[#F5F4F7] p-1 md:p-1.5 rounded-xl transition-all">
-          <div className="text-right hidden sm:block">
-            <div className="text-xs font-semibold">{profile.name}</div>
-            <div className="text-[10px] text-[#6B6B6B]">{profile.phone}</div>
+        <div onClick={startEditing} className="user-profile-badge cursor-pointer">
+          <div className="user-info sm:block">
+            <div className="user-name">{profile.name}</div>
+            <div className="user-phone">{profile.phone}</div>
           </div>
-          <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#EEEDFE] text-[#3C3489] font-semibold text-xs md:text-sm flex items-center justify-center border border-[#DEDCE4]">
+          <div className="user-avatar">
             {profile.name.split(' ').map(n => n[0]).join('')}
           </div>
         </div>
       </header>
 
-      {/* ─── MOBILE BOTTOM STICKY NAVIGATION ANCHOR BAR (ONLY VISIBLE UNDER 768PX) ─── */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#E9E7ED] z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] px-2 py-2 flex justify-around items-center">
-        {['home', 'book', 'track', 'history', 'profile'].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => {
-              setActiveTab(tab);
-              if (tab !== 'profile') setIsEditingProfile(false);
-              if (tab !== 'book') setSelectedOrgForBooking(null);
-            }}
-            className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all min-w-[60px] ${
-              activeTab === tab ? 'text-[#534AB7] font-bold bg-[#EEEDFE]/60' : 'text-[#6B6B6B]'
-            }`}
-          >
-            {getTabIcon(tab)}
-            <span className="text-[9px] capitalize tracking-wide">
-              {tab === 'book' ? 'Book' : tab === 'track' ? 'Track' : tab}
-            </span>
-          </button>
-        ))}
-      </div>
-
       {/* ─── SCREEN WORKSPACE CONTENT ROUTER ─── */}
-      <main className="max-w-[1440px] mx-auto p-4 md:p-6 lg:p-8">
+      <main className="main-content">
         
         {/* ─── HOME TAB VIEW ─── */}
         {activeTab === 'home' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 home-grid">
             
-            <div className="lg:col-span-7 space-y-4">
-              <div className="flex justify-between items-center px-1">
-                <h2 className="text-sm font-bold text-[#1A1A1A]">Welcome back, {profile.name.split(' ')[0]}</h2>
-                <span className="text-[11px] font-semibold text-[#6B6B6B]">
+            <div className="lg:col-span-7 home-left-col">
+              <div className="welcome-header">
+                <h2 className="welcome-title">Welcome back, {profile.name.split(' ')[0]}</h2>
+                <span className="active-count">
                   {activeTokens.length} Active {activeTokens.length === 1 ? 'Booking' : 'Bookings'}
                 </span>
               </div>
 
               {activeTokens.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-                  {activeTokens.map((token) => (
-                    <div key={token.id} className="bg-white border border-[#E9E7ED] rounded-2xl p-5 shadow-sm hover:border-[#534AB7]/20 transition-all">
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="text-xs font-bold text-[#1A1A1A] truncate max-w-[70%]">{token.institution}</div>
-                        <span className="flex items-center gap-1 text-[10px] bg-[#EAF3DE] text-[#3B6D11] px-2 py-0.5 rounded-full font-medium">
-                          Live
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-baseline gap-3 my-2">
-                        <div className="text-3xl font-bold text-[#534AB7] tracking-tight">{token.number}</div>
-                        <div className="text-[11px] text-[#6B6B6B] truncate">{token.department} &bull; {token.counter}</div>
-                      </div>
+                <div className="active-tokens-container">
+                  <div className="tokens-scroll-area">
+                    {activeTokens.map((token) => (
+                      <div key={token.id} className="token-card">
+                        <div className="token-card-header">
+                          <div className="token-institution">{token.institution}</div>
+                          <span className="live-badge">Live</span>
+                        </div>
+                        
+                        <div className="token-card-body">
+                          <div className="token-number">{token.number}</div>
+                          <div className="token-dept">{token.department} &bull; {token.counter}</div>
+                        </div>
 
-                      <div className="grid grid-cols-3 text-center border-t border-[#F5F4F0] pt-3 mt-3 gap-1 bg-[#F5F4F7]/40 rounded-xl p-2">
-                        <div>
-                          <div className="text-xs font-bold">{token.ahead}</div>
-                          <div className="text-[9px] text-[#6B6B6B] uppercase">Ahead</div>
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-[#3B6D11]">{token.estWait}</div>
-                          <div className="text-[9px] text-[#6B6B6B] uppercase">Wait</div>
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold">{token.serving}</div>
-                          <div className="text-[9px] text-[#6B6B6B] uppercase">Serving</div>
+                        <div className="token-metrics-grid">
+                          <div>
+                            <div className="metric-value">{token.ahead}</div>
+                            <div className="metric-label">Ahead</div>
+                          </div>
+                          <div>
+                            <div className="metric-value wait-value">{token.estWait}</div>
+                            <div className="metric-label">Wait</div>
+                          </div>
+                          <div>
+                            <div className="metric-value">{token.serving}</div>
+                            <div className="metric-label">Serving</div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               ) : (
-                <div className="bg-white border border-[#E9E7ED] rounded-2xl p-8 text-center text-xs text-[#6B6B6B] py-16">
+                <div className="empty-state-card">
                   No active tokens running right now. Select "Book Token" to join a line.
                 </div>
               )}
             </div>
 
-            <div className="lg:col-span-5 bg-white border border-[#E9E7ED] rounded-2xl p-6 shadow-sm flex flex-col justify-between min-h-[220px]">
-              <div>
-                <h3 className="text-sm font-bold text-[#1A1A1A] mb-1.5">Skipping lines made simple</h3>
-                <p className="text-xs text-[#6B6B6B]">You can book multiple tokens simultaneously across separate remote branches or counters from this screen.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mt-6">
-                <div onClick={() => setActiveTab('book')} className="bg-[#F5F4F7] rounded-xl p-3.5 cursor-pointer hover:bg-[#EEEDFE] hover:text-[#534AB7] transition-all group">
-                  <Building2 size={18} className="mb-2 text-[#6B6B6B] group-hover:text-[#534AB7]" />
-                  <div className="text-xs font-bold">New Booking</div>
+            <div className="lg:col-span-5 home-right-col">
+              <div className="hidden lg:block spacer-block"></div>
+              <div className="promo-banner-card">
+                <div>
+                  <h3 className="promo-title">Skipping lines made simple</h3>
+                  <p className="promo-subtitle">You can book multiple tokens simultaneously across separate remote branches or counters from this screen.</p>
                 </div>
-                <div onClick={() => setActiveTab('track')} className="bg-[#F5F4F7] rounded-xl p-3.5 cursor-pointer hover:bg-[#E1F5EE] hover:text-[#0F6E56] transition-all group">
-                  <Ticket size={18} className="mb-2 text-[#6B6B6B] group-hover:text-[#0F6E56]" />
-                  <div className="text-xs font-bold">Monitor Lines</div>
+                <div className="grid grid-cols-2 action-tiles-grid">
+                  <div onClick={() => setActiveTab('book')} className="action-tile group cursor-pointer">
+                    <Building2 size={18} className="tile-icon" />
+                    <div className="tile-title">New Booking</div>
+                  </div>
+                  <div onClick={() => setActiveTab('track')} className="action-tile group hover-emerald cursor-pointer">
+                    <Ticket size={18} className="tile-icon" />
+                    <div className="tile-title">Monitor Lines</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -283,93 +263,85 @@ export default function UserPanel() {
 
         {/* ─── BOOK TOKEN TAB VIEW ─── */}
         {activeTab === 'book' && (
-          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-5 md:p-6 shadow-sm max-w-2xl mx-auto space-y-4">
-            
+          <div className="card-container">
             {!selectedOrgForBooking ? (
               <>
                 <div>
-                  <h3 className="text-sm font-bold text-[#1A1A1A]">Search Institutions</h3>
-                  <p className="text-xs text-[#6B6B6B] mt-0.5">Find active service lines and check real-time availability.</p>
+                  <h3 className="section-title">Search Institutions</h3>
+                  <p className="section-subtitle">Find active service lines and check real-time availability.</p>
                 </div>
 
-                <div className="relative w-full">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-[#6B6B6B]">
-                    <Search size={15} />
-                  </div>
+                <div className="search-input-wrapper">
                   <input
                     type="text"
                     placeholder="Search bank, hospital, branch location..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2.5 bg-[#F5F4F7] rounded-xl text-xs text-[#1A1A1A] border border-transparent outline-none focus:bg-white focus:border-[#534AB7]/30 transition-all"
+                    className="search-input"
                   />
                 </div>
 
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                <div className="category-chips-row">
                   {categories.map((category) => (
                     <button
                       key={category}
                       onClick={() => setActiveCategory(category)}
-                      className={`text-xs px-3.5 py-1.5 rounded-full border transition-colors whitespace-nowrap font-medium ${
-                        activeCategory === category ? 'bg-[#EEEDFE] text-[#3C3489] border-[#534AB7]/20 font-semibold' : 'bg-[#F5F4F7] text-[#6B6B6B] border-transparent'
-                      }`}
+                      className={`category-chip ${activeCategory === category ? 'active' : ''}`}
                     >
                       {category}
                     </button>
                   ))}
                 </div>
 
-                <div className="border border-[#E9E7ED] rounded-xl overflow-hidden divide-y divide-[#E9E7ED]">
+                <div className="org-list-wrapper">
                   {filteredOrgs.length > 0 ? (
                     filteredOrgs.map((org) => {
                       const Icon = org.icon;
                       return (
-                        <div key={org.id} onClick={() => handleSelectOrg(org)} className="flex items-center justify-between p-4 bg-white hover:bg-[#F5F4F7]/40 transition-colors cursor-pointer group">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${org.iconBg}`}><Icon size={16} /></div>
-                            <div className="min-w-0">
-                              <h4 className="text-xs font-bold text-[#1A1A1A] truncate group-hover:text-[#534AB7]">{org.name} ({org.branch})</h4>
-                              <p className="text-[11px] text-[#6B6B6B] mt-0.5 truncate">{org.category} &middot; <span className="text-[#3B6D11] font-medium">{org.waiting} waiting</span></p>
+                        <div key={org.id} onClick={() => handleSelectOrg(org)} className="org-item group cursor-pointer">
+                          <div className="org-info">
+                            <div className={`org-icon-wrapper ${org.iconClass}`}>
+                              <Icon size={16} />
+                            </div>
+                            <div className="org-details">
+                              <h4 className="org-title">{org.name} ({org.branch})</h4>
+                              <p className="org-meta">{org.category} &middot; <span className="waiting-highlight">{org.waiting} waiting</span></p>
                             </div>
                           </div>
-                          <button className="text-[11px] font-bold text-[#534AB7] bg-[#EEEDFE] px-2.5 py-1 rounded-lg flex-shrink-0">
-                            Select
-                          </button>
+                          <button className="select-btn">Select</button>
                         </div>
                       );
                     })
                   ) : (
-                    <div className="text-center py-8 text-xs text-[#6B6B6B]">No institutions match your search parameters.</div>
+                    <div className="empty-search">No institutions match your search parameters.</div>
                   )}
                 </div>
               </>
             ) : (
-              <div className="space-y-4">
-                <button onClick={() => setSelectedOrgForBooking(null)} className="flex items-center gap-1.5 text-xs font-semibold text-[#6B6B6B] hover:text-[#1A1A1A] mb-2 transition-colors">
+              <div className="booking-wizard space-y-4">
+                <button onClick={() => setSelectedOrgForBooking(null)} className="back-btn">
                   <ArrowLeft size={14}/> Back to list
                 </button>
                 
-                <div className="p-4 bg-[#F5F4F7] rounded-xl flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${selectedOrgForBooking.iconBg}`}>
+                <div className="selected-org-summary">
+                  <div className={`org-icon-wrapper ${selectedOrgForBooking.iconClass}`}>
                     <selectedOrgForBooking.icon size={20} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-[#1A1A1A]">{selectedOrgForBooking.name}</h4>
-                    <p className="text-xs text-[#6B6B6B]">{selectedOrgForBooking.branch} Branch &middot; {selectedOrgForBooking.waiting} waiting</p>
+                    <h4 className="summary-title">{selectedOrgForBooking.name}</h4>
+                    <p className="summary-subtitle">{selectedOrgForBooking.branch} Branch &middot; {selectedOrgForBooking.waiting} waiting</p>
                   </div>
                 </div>
 
-                <form onSubmit={handleExecuteBooking} className="space-y-4 pt-2">
+                <form onSubmit={handleExecuteBooking} className="booking-form">
                   <div>
-                    <label className="block text-xs font-bold text-[#6B6B6B] uppercase mb-2">Select Service Department</label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label className="form-label">Select Service Department</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 dept-grid">
                       {selectedOrgForBooking.departments.map((dept) => (
                         <div 
                           key={dept}
                           onClick={() => setSelectedDept(dept)}
-                          className={`p-3 rounded-xl border-2 text-xs font-bold cursor-pointer transition-all ${
-                            selectedDept === dept ? 'bg-[#EEEDFE] border-[#534AB7] text-[#534AB7]' : 'bg-white border-[#E9E7ED] text-[#6B6B6B]'
-                          }`}
+                          className={`dept-option ${selectedDept === dept ? 'selected' : ''}`}
                         >
                           {dept}
                         </div>
@@ -377,7 +349,7 @@ export default function UserPanel() {
                     </div>
                   </div>
 
-                  <button type="submit" className="w-full mt-4 bg-[#534AB7] hover:bg-[#3C3489] text-white py-3 rounded-xl text-xs font-bold transition-all uppercase tracking-wider">
+                  <button type="submit" className="confirm-btn">
                     Confirm & Book Token Now
                   </button>
                 </form>
@@ -388,38 +360,36 @@ export default function UserPanel() {
 
         {/* ─── TRACK TAB VIEW ─── */}
         {activeTab === 'track' && (
-          <div className="max-w-xl mx-auto space-y-6">
-            <h3 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider text-center px-1">Live Monitor Timelines</h3>
+          <div className="track-container card-container">
+            <h3 className="track-header">Live Monitor Timelines</h3>
             
             {activeTokens.length > 0 ? (
-              <div className="space-y-6">
+              <div className="track-list">
                 {activeTokens.map((token) => (
-                  <div key={token.id} className="bg-white border border-[#E9E7ED] rounded-2xl p-6 shadow-sm space-y-4">
-                    <div className="text-center pb-3 border-b border-[#F5F4F0] flex justify-between items-start">
-                      <div className="text-left">
-                        <div className="text-2xl font-bold text-[#534AB7]">{token.number}</div>
-                        <p className="text-xs font-bold text-[#1A1A1A] mt-0.5">{token.institution}</p>
-                        <p className="text-[10px] text-[#6B6B6B]">{token.department} &bull; {token.counter}</p>
+                  <div key={token.id} className="track-card">
+                    <div className="track-card-header">
+                      <div className="track-info">
+                        <div className="track-number">{token.number}</div>
+                        <p className="track-institution">{token.institution}</p>
+                        <p className="track-dept">{token.department} &bull; {token.counter}</p>
                       </div>
                       <button 
                         onClick={() => handleCancelToken(token.id)}
-                        className="text-[10px] font-bold text-[#C93B2B] bg-[#FAEEDA] px-2 py-1 rounded-md"
+                        className="cancel-btn"
                       >
                         Cancel Ticket
                       </button>
                     </div>
                     
-                    <div className="space-y-4 relative before:absolute before:bottom-2 before:top-2 before:left-3 before:w-0.5 before:bg-[#E9E7ED]">
+                    <div className="tracking-timeline">
                       {trackingSteps.map((step, index) => (
-                        <div key={index} className="flex items-center gap-4 relative z-10">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            step.status === 'done' ? 'bg-[#EAF3DE] text-[#3B6D11]' : step.status === 'active' ? 'bg-[#EEEDFE] text-[#534AB7]' : 'bg-white border border-[#DEDCE4] text-[#6B6B6B]'
-                          }`}>
+                        <div key={index} className="timeline-step">
+                          <div className={`step-indicator ${step.status}`}>
                             {step.status === 'done' && <CheckCircle2 size={14} />}
                             {step.status === 'active' && <Loader2 size={14} className="animate-spin" />}
                             {step.status === 'pending' && <Clock size={14} />}
                           </div>
-                          <div className={`text-xs ${step.status === 'active' ? 'text-[#534AB7] font-bold' : 'text-[#1A1A1A] font-medium'}`}>
+                          <div className={`step-label ${step.status === 'active' ? 'active-step' : ''}`}>
                             {step.label} {step.status === 'active' && `(${token.estWait} left)`}
                           </div>
                         </div>
@@ -429,7 +399,7 @@ export default function UserPanel() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white border border-[#E9E7ED] rounded-2xl p-12 text-center text-xs text-[#6B6B6B]">
+              <div className="empty-state-card">
                 No active operational queues to monitor.
               </div>
             )}
@@ -438,95 +408,99 @@ export default function UserPanel() {
 
         {/* ─── HISTORY TAB VIEW ─── */}
         {activeTab === 'history' && (
-          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-4 md:p-5 shadow-sm max-w-2xl mx-auto space-y-3">
-            <h3 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider flex items-center gap-1.5"><HistoryIcon size={14}/> Past Visitations Log</h3>
-            <div className="border border-[#E9E7ED] rounded-xl overflow-hidden divide-y divide-[#E9E7ED]">
-              {historicalTokens.map((item) => (
-                <div key={item.id} className="flex justify-between items-center p-4 bg-white hover:bg-[#F5F4F7]/20 transition-colors">
-                  <div>
-                    <div className="text-xs font-bold text-[#1A1A1A]">{item.type}</div>
-                    <div className="text-[10px] text-[#6B6B6B] mt-0.5">{item.meta}</div>
+          <div className="card-container">
+            <h3 className="history-title"><HistoryIcon size={14}/> Past Visitations Log</h3>
+            <div className="history-list">
+              {historicalTokens.length === 0 ? (
+                <div className="empty-search">No historical tokens found yet.</div>
+              ) : (
+                historicalTokens.map((item) => (
+                  <div key={item.id} className="history-item">
+                    <div>
+                      <div className="history-type">{item.type}</div>
+                      <div className="history-meta">{item.meta}</div>
+                    </div>
+                    <span className={`status-badge ${item.badgeClass}`}>
+                      {item.variant}
+                    </span>
                   </div>
-                  <span className={`text-[8px] font-bold tracking-wider px-2 py-0.5 rounded-full uppercase ${item.badge}`}>
-                    {item.variant}
-                  </span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         )}
 
         {/* ─── PROFILE TAB VIEW ─── */}
         {activeTab === 'profile' && (
-          <div className="bg-white border border-[#E9E7ED] rounded-2xl p-5 md:p-6 shadow-sm max-w-xl mx-auto">
-            <div className="flex items-center gap-4 pb-6 border-b border-[#F5F4F0] mb-6">
-              <div className="w-14 h-14 rounded-full bg-[#534AB7] text-white font-bold text-xl flex items-center justify-center shadow-md">
+          <div className="card-container profile-container">
+            <div className="profile-header">
+              <div className="profile-avatar">
                 {profile.name.split(' ').map(n => n[0]).join('')}
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#1A1A1A]">{profile.name}</h3>
-                <p className="text-xs text-[#6B6B6B]">Client ID Account: #NQ-98452-CP</p>
+                <h3 className="profile-name-title">{profile.name}</h3>
+                <p className="profile-account-id">Client ID Account: #NQ-98452-CP</p>
               </div>
             </div>
 
-            <form onSubmit={handleSaveProfile} className="space-y-4">
+            <form onSubmit={handleSaveProfile} className="profile-form">
               <div>
-                <label className="block text-xs font-bold text-[#6B6B6B] uppercase mb-1">Full Identity Name</label>
+                <label className="form-label">Full Identity Name</label>
                 <input 
                   type="text" 
                   value={tempProfile.name}
                   onChange={(e) => setTempProfile({ ...tempProfile, name: e.target.value })}
                   disabled={!isEditingProfile}
-                  className="w-full text-xs px-3 py-2 bg-[#F5F4F7] border border-transparent rounded-xl outline-none focus:bg-white focus:border-[#534AB7]/30 disabled:opacity-75 font-medium text-[#1A1A1A]"
+                  className="form-input"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 form-grid">
                 <div>
-                  <label className="block text-xs font-bold text-[#6B6B6B] uppercase mb-1">Phone Number</label>
+                  <label className="form-label">Phone Number</label>
                   <input 
                     type="text" 
                     value={tempProfile.phone}
                     onChange={(e) => setTempProfile({ ...tempProfile, phone: e.target.value })}
                     disabled={!isEditingProfile}
-                    className="w-full text-xs px-3 py-2 bg-[#F5F4F7] border border-transparent rounded-xl outline-none focus:bg-white focus:border-[#534AB7]/30 disabled:opacity-75 font-medium"
+                    className="form-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-[#6B6B6B] uppercase mb-1">Email Address</label>
+                  <label className="form-label">Email Address</label>
                   <input 
                     type="email" 
                     value={tempProfile.email}
                     onChange={(e) => setTempProfile({ ...tempProfile, email: e.target.value })}
                     disabled={!isEditingProfile}
-                    className="w-full text-xs px-3 py-2 bg-[#F5F4F7] border border-transparent rounded-xl outline-none focus:bg-white focus:border-[#534AB7]/30 disabled:opacity-75 font-medium"
+                    className="form-input"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#6B6B6B] uppercase mb-1">Residential Address</label>
+                <label className="form-label">Residential Address</label>
                 <input 
                   type="text" 
                   value={tempProfile.address}
                   onChange={(e) => setTempProfile({ ...tempProfile, address: e.target.value })}
                   disabled={!isEditingProfile}
-                  className="w-full text-xs px-3 py-2 bg-[#F5F4F7] border border-transparent rounded-xl outline-none focus:bg-white focus:border-[#534AB7]/30 disabled:opacity-75 font-medium"
+                  className="form-input"
                 />
               </div>
 
-              <div className="pt-4 flex items-center justify-between border-t border-[#F5F4F0]">
-                <div className="flex items-center gap-2 text-xs text-[#6B6B6B] font-medium">
-                  <Shield size={14} className="text-[#3B6D11]" /> Verified Profile
+              <div className="profile-footer">
+                <div className="verification-status">
+                  <Shield size={14} className="shield-icon" /> Verified Profile
                 </div>
 
                 {isEditingProfile ? (
-                  <div className="flex gap-2">
-                    <button type="button" onClick={() => setIsEditingProfile(false)} className="px-3.5 py-1.5 border border-[#E9E7ED] hover:bg-[#F5F4F7] font-semibold text-xs rounded-xl transition-colors">Cancel</button>
-                    <button type="submit" className="px-3.5 py-1.5 bg-[#534AB7] hover:bg-[#3C3489] text-white font-semibold text-xs rounded-xl flex items-center gap-1.5 shadow-sm"><Save size={13}/> Save</button>
+                  <div className="btn-group">
+                    <button type="button" onClick={() => setIsEditingProfile(false)} className="cancel-edit-btn">Cancel</button>
+                    <button type="submit" className="save-btn"><Save size={13}/> Save</button>
                   </div>
                 ) : (
-                  <button type="button" onClick={() => setIsEditingProfile(true)} className="px-3.5 py-1.5 bg-[#534AB7] hover:bg-[#3C3489] text-white font-semibold text-xs rounded-xl flex items-center gap-1.5 shadow-sm"><User size={13}/> Edit Details</button>
+                  <button type="button" onClick={() => setIsEditingProfile(true)} className="edit-btn"><User size={13}/> Edit Details</button>
                 )}
               </div>
             </form>
@@ -534,6 +508,26 @@ export default function UserPanel() {
         )}
 
       </main>
+
+      {/* ─── MOBILE BOTTOM STICKY NAVIGATION ANCHOR BAR ─── */}
+      <div className="mobile-bottom-nav md:hidden">
+        {['home', 'book', 'track', 'history', 'profile'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => {
+              setActiveTab(tab);
+              if (tab !== 'profile') setIsEditingProfile(false);
+              if (tab !== 'book') setSelectedOrgForBooking(null);
+            }}
+            className={`mobile-nav-item ${activeTab === tab ? 'active' : ''}`}
+          >
+            {getTabIcon(tab)}
+            <span className="mobile-nav-label">
+              {tab === 'book' ? 'Book' : tab === 'track' ? 'Track' : tab}
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

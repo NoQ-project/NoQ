@@ -43,6 +43,3 @@ async def send_verification_email(email:EmailStr, otp: str):
 
     await fm.send_message(message)
     
-
-
-

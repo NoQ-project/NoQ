@@ -1,25 +1,28 @@
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Integer
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.sql import func
 from backend.app.utils.database import Base
-import uuid
 
-
-class Review(Base):
-
+class AuditLog(Base):
     __tablename__ = "audit_logs"
-
     id = Column(
-        String(36),
-        primary_key=True,
-        default=lambda: str(uuid.uuid4())
+        Integer,
+        primary_key=True
     )
-    auth_id = Column(
-       Integer,
+    admin_id = Column(
+        Integer,
         ForeignKey("usertable.id"),
         nullable=False
     )
     action = Column(
         String(100),
+        nullable=False
+    )
+    target_type = Column(
+        String(50),
+        nullable=False
+    )
+    target_id = Column(
+        Integer,
         nullable=False
     )
     description = Column(

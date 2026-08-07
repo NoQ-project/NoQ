@@ -18,7 +18,7 @@ function LandingPage() {
       <Navbar onLoginClick={() => openAuth("login")} />
 
       <div
-        className="hero w-full mx-auto py-4 px-8 h-[70vh] grid sm:grid-cols-2 items-center gap-10 bg-[#EEEDFE]"
+        className="hero w-full mx-auto py-4 px-8 h-[100vh] grid sm:grid-cols-2 items-center gap-10 bg-[#EEEDFE]"
         id="home"
       >
         <div>

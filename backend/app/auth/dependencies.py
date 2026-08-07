@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from backend.app.auth.models import UserModel, UserRole
 from backend.app.tokens.models import Token 
 from backend.app.queues.models import Queue 
-from backend.app.admin.models import Review 
 from backend.app.user.models import User 
 from backend.app.notifications.models import Notification
 from backend.app.institutions.models import Institution 
@@ -19,22 +18,26 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
     try:
         token = request.cookies.get("access_token")
         if not token:
-            raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= "You are unauthorized")
+            raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, 
+                                detail= "You are unauthorized")
         
         data = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM )
         user_id = data.get("id")
 
-        user= db.query(UserModel).filter(UserModel.id == user_id).first()
-        if not user:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail= "You are unauthorized")
+        current_user= db.query(UserModel).filter(UserModel.id == user_id).first()
+        if not current_user:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
+                                    detail= "You are unauthorized")
     except ExpiredSignatureError:
-            raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= "Access Token Expired")
+            raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, 
+                                detail= "Access Token Expired")
     except PyJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
         )
-    return user       
+    return current_user       
+
 
 def require_role(required_role: UserRole):
 
@@ -46,14 +49,16 @@ def require_role(required_role: UserRole):
                 status_code=403,
                 detail="Forbidden"
             )
-
         return current_user
-
     return role_checker
 
 
-def require_owner (db: Session, model, resource_id: int, owner_id, current_user= Depends(get_current_user)):
-    
+def require_owner (db: Session,
+                    model, 
+                    resource_id: int, 
+                    owner_id, 
+                    current_user= Depends(get_current_user)):
+
     resource = (
         db.query(model)
         .filter(
@@ -78,7 +83,7 @@ def get_owned_token(
     return require_owner(
         db=db,
         model=Token,
-        resource_id=id,
+        resource_id=booking_id,
         owner_column=Token.user_id,
         current_user=current_user,
     )
@@ -91,7 +96,7 @@ def get_owned_queue(
     return require_owner(
         db=db,
         model=Queue,
-        resource_id= id,
+        resource_id= queue_id,
         owner_column=Queue.institution_id,
         current_user=current_user,
     )
@@ -104,7 +109,7 @@ def get_owned_user_profile(
     return require_owner(
         db=db,
         model=User,
-        resource_id= id,
+        resource_id= profile_id,
         owner_column=User.user_id,
         current_user=current_user,
     )
@@ -117,7 +122,7 @@ def get_owned_institution_profile(
     return require_owner(
         db=db,
         model=Institution,
-        resource_id=id,
+        resource_id= profile_id,
         owner_column=Institution.institution_id,
         current_user=current_user,
     )
@@ -130,23 +135,12 @@ def get_owned_notification(
     return require_owner(
         db=db,
         model=Notification,
-        resource_id=id,
+        resource_id= notification_id,
         owner_column=Notification.user_id,
         current_user=current_user,
     )
 
-def get_owned_review(
-    review_id: int,
-    db: Session,
-    current_user,
-):
-    return require_owner(
-        db=db,
-        model=Review,
-        resource_id=review_id,
-        owner_column=Review.user_id,
-        current_user=current_user,
-    )
+
 
 def create_access_token(user_id: int):
 

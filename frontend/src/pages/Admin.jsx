@@ -55,7 +55,6 @@ const CHART_COLORS = {
   line: "#e6e8ec",
 };
 
-/* ------------------------------- Mock data ------------------------------- */
 
 const QUEUES = [
   {

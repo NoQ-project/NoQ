@@ -8,48 +8,53 @@ import uuid
 class Institution(Base):
     __tablename__ = "institutions"
 
-    id = Column(Integer, 
-               primary_key=True)
-    auth_id = Column(
-       Integer,
-        ForeignKey("usertable.id"),
-        nullable=False
+    id = Column(Integer ,
+        primary_key=True)
+
+    auth_user_id = Column(
+        Integer,
+        ForeignKey("usertable.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
     )
-    name = Column(
-        String(200),
-        nullable=False
-    )
+
     description = Column(
         Text,
         nullable=True
     )
+
     address = Column(
         Text,
         nullable=False
     )
+
     phone = Column(
         String(20),
-        nullable=True
-    )
-    email = Column(
-        String(255),
-        unique=True,
         nullable=True
     )
     website = Column(
         String(255),
         nullable=True
     )
+
     created_at = Column(
         DateTime,
         server_default=func.now()
     )
+
     updated_at = Column(
         DateTime,
         server_default=func.now(),
         onupdate=func.now()
     )
+
     # Relationships
+
+    auth_user = relationship(
+        "UserModel",
+        back_populates="institution"
+    )
+
     queues = relationship(
         "Queue",
         back_populates="institution",

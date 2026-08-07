@@ -9,16 +9,14 @@ PasswordStr = Annotated[
 ]
 
 class RegisterSchema(BaseModel): 
-    FirstName: str
-    LastName: str
+    name: str
     role : UserRole
     email: EmailStr
     password: PasswordStr
 
 
 class UserResponseSchema(BaseModel): 
-    FirstName: str
-    LastName: str
+    name: str
     id: int
     role: UserRole
     email: EmailStr

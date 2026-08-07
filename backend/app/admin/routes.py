@@ -7,6 +7,7 @@ from backend.app.auth.dependencies import require_role
 from backend.app.auth.models import UserRole
 
 admin_routes = APIRouter(prefix="/admin",
+                         tags=["Admin"],
                          dependencies= [Depends(require_role(UserRole.ADMIN))]) 
 
 @admin_routes.get(

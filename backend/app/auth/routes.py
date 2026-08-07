@@ -9,7 +9,8 @@ from backend.app.auth.dependencies import require_role
 from backend.app.auth.dependencies import get_owned_token
 
 
-auth_routes = APIRouter(prefix="/auth") 
+auth_routes = APIRouter(prefix="/auth", 
+                        tags=["Authentication"]) 
 
 @auth_routes.post("/register",
                   status_code=status.HTTP_200_OK)

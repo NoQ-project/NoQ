@@ -1,14 +1,14 @@
-from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from pydantic import BaseModel
 
 
 class InstitutionResponse(BaseModel):
     id: int
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     address: str
-    phone: Optional[str] = None
-    email: Optional[str] = None
-    website: Optional[str] = None
+    phone: str | None = None
+    email: str
+    website: str | None = None
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True

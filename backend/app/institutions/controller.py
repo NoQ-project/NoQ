@@ -23,3 +23,10 @@ class InstitutionController:
             institution_id=institution_id,
             db=db
         )
+    @staticmethod
+    def get_all_institutions(
+    db: Session
+    ):
+        return InstitutionService.get_all_institutions(
+        db=db
+    )

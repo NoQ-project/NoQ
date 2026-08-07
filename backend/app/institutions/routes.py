@@ -10,6 +10,18 @@ institution_routes = APIRouter(
     tags=["Institutions"]
 )
 
+@institution_routes.get(
+    "/",
+    response_model=list[InstitutionResponse],
+    status_code=status.HTTP_200_OK
+)
+def get_all_institutions(
+    db: Session = Depends(get_db)
+):
+    return controller.InstitutionController.get_all_institutions(
+        db=db
+    )
+
 
 @institution_routes.get(
     "/search",

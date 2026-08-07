@@ -8,17 +8,17 @@ class Settings(BaseSettings):
     ALGORITHM: str
     REFRESH_TOKEN_EXP_TIME:int
     ACCESS_TOKEN_EXP_TIME:int
-    MAIL_USERNAME: int
-    MAIL_PASSWORD: int
-    MAIL_FROM: int
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
     MAIL_PORT: int
-    MAIL_SERVER: int
-    MAIL_FROM_NAME: int
-    MAIL_STARTTLS: int
-    MAIL_SSL_TLS: int
-    USE_CREDENTIALS: int
-    VALIDATE_CERTS: int
-    REDIS_HOST: int
+    MAIL_SERVER: str
+    MAIL_FROM_NAME: str
+    MAIL_STARTTLS: bool
+    MAIL_SSL_TLS: bool
+    USE_CREDENTIALS: bool
+    VALIDATE_CERTS: bool 
+    REDIS_HOST: str
     REDIS_PORT: int
     REDIS_DB: int
 

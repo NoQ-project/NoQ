@@ -13,7 +13,7 @@ from sqlalchemy.sql import func
 from backend.app.utils.database import Base
 import enum
 
-class NotificationType(str, Enum):
+class NotificationType(str, enum.Enum):
     QUEUE_UPDATE = "QUEUE_UPDATE"
     APPROACHING_TURN = "APPROACHING_TURN"
     YOUR_TURN = "YOUR_TURN"

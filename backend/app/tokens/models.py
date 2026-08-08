@@ -14,7 +14,7 @@ from backend.app.utils.database import Base
 import enum
 
 
-class TokenStatus(str, Enum):
+class TokenStatus(str, enum.Enum):
     WAITING = "WAITING"
     SERVING = "CALLED"
     COMPLETED = "COMPLETED"

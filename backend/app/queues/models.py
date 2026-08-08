@@ -1,11 +1,11 @@
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey, Text, Time, CheckConstraint
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey, Text, Time, CheckConstraint,Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from backend.app.utils.database import Base
-from enum import Enum
+import enum
 
 
-class QueueStatus(str, Enum):
+class QueueStatus(str, enum.Enum):
     OPEN = "OPEN"
     PAUSED = "PAUSED"
     CLOSED = "CLOSE"

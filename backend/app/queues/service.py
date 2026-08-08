@@ -1,13 +1,58 @@
+from datetime import date, timedelta
+
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from backend.app.queues.models import Queue
+from backend.app.queues.schemas import (
+    QueueCreateSchema,
+    QueueUpdateSchema
+)
+from backend.app.tokens.models import Token, TokenStatus
+
+
+def create_queue(
+    queue: QueueCreateSchema,
+    db: Session
+):
+
+    new_queue = Queue(
+        institution_id=1,      # TODO: Replace with logged-in institution ID
+        name=queue.name,
+        description=queue.description,
+        daily_limit=queue.daily_limit,
+        avg_service_time=queue.avg_service_time
+    )
+
+    db.add(new_queue)
+    db.commit()
+    db.refresh(new_queue)
+
+    return new_queue
+
+
+def update_queue(
+    queue_id: int,
+    queue: QueueUpdateSchema,
+    db: Session
+):
+
+    existing_queue = get_queue_by_id(queue_id, db)
+
+    for field, value in queue.model_dump(exclude_unset=True).items():
+        setattr(existing_queue, field, value)
+
+    db.commit()
+    db.refresh(existing_queue)
+
+    return existing_queue
 
 
 def get_queues_by_institution(
     institution_id: int,
     db: Session
 ):
+
     queues = (
         db.query(Queue)
         .filter(
@@ -24,9 +69,12 @@ def get_queue_by_id(
     queue_id: int,
     db: Session
 ):
+
     queue = (
         db.query(Queue)
-        .filter(Queue.id == queue_id)
+        .filter(
+            Queue.id == queue_id
+        )
         .first()
     )
 
@@ -37,3 +85,201 @@ def get_queue_by_id(
         )
 
     return queue
+
+
+def delete_queue(
+    queue_id: int,
+    db: Session
+):
+
+    queue = (
+        db.query(Queue)
+        .filter(
+            Queue.id == queue_id
+        )
+        .first()
+    )
+
+    if not queue:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Queue not found."
+        )
+
+    db.delete(queue)
+    db.commit()
+
+    return {
+        "message": "Queue deleted successfully."
+    }
+
+
+def toggle_queue_status(
+    queue_id: int,
+    db: Session
+):
+
+    queue = (
+        db.query(Queue)
+        .filter(
+            Queue.id == queue_id
+        )
+        .first()
+    )
+
+    if not queue:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Queue not found."
+        )
+
+    queue.is_active = not queue.is_active
+
+    db.commit()
+    db.refresh(queue)
+
+    return queue
+
+# QUEUE DASHBOARD
+
+def get_queue_dashboard(
+    queue_id: int,
+    db: Session
+):
+
+    queue = get_queue_by_id(queue_id, db)
+
+    today = date.today()
+
+    tokens = (
+        db.query(Token)
+        .filter(
+            Token.queue_id == queue_id,
+            Token.booking_date == today
+        )
+        .all()
+    )
+
+    total_tokens = len(tokens)
+
+    waiting = sum(
+        1 for token in tokens
+        if token.status == TokenStatus.WAITING
+    )
+
+    currently_serving = sum(
+        1 for token in tokens
+        if token.status == TokenStatus.CALLED
+    )
+
+    served = sum(
+        1 for token in tokens
+        if token.status == TokenStatus.SERVED
+    )
+
+    missed = sum(
+        1 for token in tokens
+        if token.status == TokenStatus.MISSED
+    )
+
+    cancelled = sum(
+        1 for token in tokens
+        if token.status == TokenStatus.CANCELLED
+    )
+
+    return {
+        "queue_id": queue.id,
+        "queue_name": queue.name,
+        "description": queue.description,
+        "daily_limit": queue.daily_limit,
+        "avg_service_time": queue.avg_service_time,
+        "is_active": queue.is_active,
+
+        "statistics": {
+            "total_tokens": total_tokens,
+            "waiting": waiting,
+            "currently_serving": currently_serving,
+            "served": served,
+            "missed": missed,
+            "cancelled": cancelled
+        }
+    }
+
+# QUEUE DATE RANGE STATISTICS
+
+def get_queue_statistics(
+    queue_id: int,
+    start_date: date,
+    end_date: date,
+    db: Session
+):
+
+    queue = get_queue_by_id(queue_id, db)
+
+    if start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Start date cannot be after end date."
+        )
+
+    daily_statistics = []
+
+    current_date = start_date
+
+    while current_date <= end_date:
+
+        tokens = (
+            db.query(Token)
+            .filter(
+                Token.queue_id == queue_id,
+                Token.booking_date == current_date
+            )
+            .all()
+        )
+
+        total_tokens = len(tokens)
+
+        waiting = sum(
+            1 for token in tokens
+            if token.status == TokenStatus.WAITING
+        )
+
+        currently_serving = sum(
+            1 for token in tokens
+            if token.status == TokenStatus.CALLED
+        )
+
+        served = sum(
+            1 for token in tokens
+            if token.status == TokenStatus.SERVED
+        )
+
+        missed = sum(
+            1 for token in tokens
+            if token.status == TokenStatus.MISSED
+        )
+
+        cancelled = sum(
+            1 for token in tokens
+            if token.status == TokenStatus.CANCELLED
+        )
+
+        daily_statistics.append({
+            "date": current_date,
+            "total_tokens": total_tokens,
+            "waiting": waiting,
+            "currently_serving": currently_serving,
+            "served": served,
+            "missed": missed,
+            "cancelled": cancelled
+        })
+
+        current_date += timedelta(days=1)
+
+    return {
+        "queue_id": queue.id,
+        "queue_name": queue.name,
+        "start_date": start_date,
+        "end_date": end_date,
+        "daily_statistics": daily_statistics
+    }

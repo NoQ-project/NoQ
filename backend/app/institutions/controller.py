@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from backend.app.auth.models import UserModel
 from backend.app.institutions.schemas import (
     InstitutionCreateSchema,
     InstitutionUpdateSchema
@@ -70,8 +70,10 @@ class InstitutionController:
 
     @staticmethod
     def get_dashboard(
-        db: Session
+        db: Session,
+        current_user: UserModel
     ):
         return InstitutionService.get_dashboard(
-            db=db
+            db=db,
+            current_user=current_user
         )

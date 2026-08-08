@@ -219,13 +219,14 @@ class InstitutionService:
 
     @staticmethod
     def get_dashboard(
-        db: Session
+        db: Session,
+        current_user: UserModel
     ):
 
         institution = (
             db.query(Institution)
             .filter(
-                Institution.auth_user_id == 1   # TODO: Replace with JWT user id
+                Institution.auth_user_id == current_user.id
             )
             .first()
         )

@@ -282,7 +282,7 @@ def toggle_queue_status(
     db.commit()
     schedule_queue_updates(
         queue_id=queue.id,
-        booking_date=booking_date,
+        booking_date=date.today(),
         db=db,
     )
     db.refresh(queue)

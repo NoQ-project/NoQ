@@ -9,7 +9,13 @@ from backend.app.queues.schemas import (
     QueueUpdateSchema
 )
 from backend.app.tokens.models import Token, TokenStatus
-
+from backend.app.notifications.models import NotificationType
+from backend.app.notifications.scheduler import (
+    schedule_queue_notification,
+)
+from backend.app.notifications.models import (
+    NotificationType,
+)
 
 def create_queue(
     queue: QueueCreateSchema,
@@ -283,6 +289,12 @@ def toggle_queue_status(
     schedule_queue_updates(
         queue_id=queue.id,
         booking_date=date.today(),
+        db=db,
+    )
+    schedule_queue_notification(
+        queue_id=queue.id,
+        booking_date=date.today(),
+        notification_type=NotificationType,
         db=db,
     )
     db.refresh(queue)

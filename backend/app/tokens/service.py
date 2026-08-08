@@ -7,8 +7,14 @@ from backend.app.tokens.models import (
     TokenStatus
 )
 from backend.app.queues.models import Queue, QueueStatus, QueueWorkingHour
-from backend.app.tracking.events import schedule_token_update
-from backend.app.tracking.events import schedule_queue_updates
+from backend.app.tracking.events import schedule_token_update, schedule_queue_updates
+from backend.app.notifications.scheduler import (
+    schedule_notification,
+    schedule_threshold_notification,
+)
+from backend.app.notifications.models import (
+    NotificationType,
+)
 
 def book_token(
     queue_id: int,
@@ -406,20 +412,38 @@ def advance_queue(
             elif result == TokenStatus.MISSED:
                 current_token.missed_at = datetime.now()
 
-        if not next_token:
-            queue.current_serving_token_id = None
-            db.commit()
-            if current_token:
-                schedule_token_update(
-                    current_token.id
-                )
-            if current_token:
-                db.refresh(current_token)
-            return {
-                "message": "Current token completed. No waiting tokens remain.",
-                "completed_token": current_token,
-                "serving_token": None
-            }
+            if not next_token:
+                queue.current_serving_token_id = None
+                db.commit()
+                if current_token:
+                    schedule_token_update(
+                        current_token.id
+                    )
+                if current_token:
+                    if result == TokenStatus.COMPLETED:
+                        schedule_notification(
+                            token_id=current_token.id,
+                            notification_type=(
+                                NotificationType.TOKEN_COMPLETED
+                            ),
+                        )
+                    elif result == TokenStatus.MISSED:
+                        schedule_notification(
+                            token_id=current_token.id,
+                            notification_type=(
+                                NotificationType.TOKEN_MISSED
+                            ),
+                        )
+                if current_token:
+                    db.refresh(current_token)
+                return {
+                    "message": (
+                        "Current token completed. "
+                        "No waiting tokens remain."
+                    ),
+                    "completed_token": current_token,
+                    "serving_token": None,
+                    }
         next_token.status = TokenStatus.SERVING
         next_token.started_at = datetime.now()
         queue.current_serving_token_id = next_token.id
@@ -430,6 +454,33 @@ def advance_queue(
             )
         schedule_token_update(
             next_token.id
+        )
+        if current_token:
+            if result == TokenStatus.COMPLETED:
+                schedule_notification(
+                    token_id=current_token.id,
+                    notification_type=(
+                        NotificationType.TOKEN_COMPLETED
+                    ),
+                )
+
+        elif result == TokenStatus.MISSED:
+            schedule_notification(
+                token_id=current_token.id,
+                notification_type=(
+                    NotificationType.TOKEN_MISSED
+                ),
+            )
+        schedule_notification(
+            token_id=next_token.id,
+            notification_type=(
+                NotificationType.YOUR_TURN
+            ),
+            )
+        schedule_threshold_notification(
+            queue_id=queue.id,
+            booking_date=current_date,
+            db=db,
         )
         if current_token:
             db.refresh(current_token)

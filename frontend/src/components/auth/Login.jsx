@@ -100,12 +100,16 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
       if (data.refresh_token) {
         localStorage.setItem('refreshToken', data.refresh_token);
       }
+         // ✅ NEW LINE
+        const userRole = data.role || data.user?.role || 'user';
+        localStorage.setItem('userRole', userRole);
+        onLoginSuccess(userRole);
 
       setSuccessMessage(data.message || 'Login successful!');
 
-      setTimeout(() => {
-        if (onLoginSuccess) {
-          onLoginSuccess(data);
+     setTimeout(() => {
+        if (typeof onLoginSuccess === 'function') {
+          onLoginSuccess(userRole);
         }
         handleCloseModal();
       }, 800);

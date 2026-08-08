@@ -45,7 +45,7 @@ def login(body: LoginSchema,
         key="access_token",
         value=tokens["access_token"],
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
         max_age=15 * 60
     )
@@ -53,7 +53,7 @@ def login(body: LoginSchema,
         key="refresh_token",
         value=tokens["refresh_token"],
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
         max_age=30 * 24 * 60 * 60
     )
@@ -87,3 +87,6 @@ def refresh_token(response: Response,
                   db: Session = Depends(get_db)):
     return controller.refresh_token(request, response, db)
 
+@auth_routes.post("/logout", status_code=status.HTTP_200_OK)
+def logout(request: Request, response: Response, db: Session = Depends(get_db)):
+    return controller.logout(request, response, db)

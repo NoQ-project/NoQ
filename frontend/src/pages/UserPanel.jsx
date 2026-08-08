@@ -12,7 +12,8 @@ import {
   Ticket,
   History as HistoryIcon,
   ArrowLeft,
-  Home as HomeIcon
+  Home as HomeIcon,
+  Bell
 } from 'lucide-react';
 import "../assets/css/UserPanel.css";
 
@@ -21,6 +22,13 @@ export default function UserPanel() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   
+  // Notification toggle state
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: 'Queue Update', msg: 'Your token B-042 is now 3rd in line.', time: '2m ago', unread: true },
+    { id: 2, title: 'Booking Confirmed', msg: 'Successfully booked token for City Bank.', time: '1h ago', unread: false }
+  ]);
+
   // --- MULTI-TOKEN ACTIVE ARRAY STATE ---
   const [activeTokens, setActiveTokens] = useState([
     {
@@ -143,6 +151,8 @@ export default function UserPanel() {
     }
   };
 
+  const hasUnreadNotifications = notifications.some(n => n.unread);
+
   return (
     <div className="app-container">
       
@@ -173,13 +183,88 @@ export default function UserPanel() {
           </nav>
         </div>
 
-        <div onClick={startEditing} className="user-profile-badge cursor-pointer">
-          <div className="user-info sm:block">
-            <div className="user-name">{profile.name}</div>
-            <div className="user-phone">{profile.phone}</div>
+        {/* ─── HEADER RIGHT: NOTIFICATIONS & PROFILE ─── */}
+        <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem', position: 'relative' }}>
+          {/* Notification Bell Component */}
+          <div className="notification-container" style={{ position: 'relative' }}>
+            <button 
+              className="notification-icon-btn"
+              onClick={() => setShowNotifications(!showNotifications)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '8px',
+                borderRadius: '50%',
+                position: 'relative',
+                color: 'inherit'
+              }}
+              aria-label="Notifications"
+            >
+              <Bell size={20} />
+              {hasUnreadNotifications && (
+                <span 
+                  style={{
+                    position: 'absolute',
+                    top: '6px',
+                    right: '6px',
+                    width: '8px',
+                    height: '8px',
+                    backgroundColor: '#ef4444',
+                    borderRadius: '50%'
+                  }}
+                />
+              )}
+            </button>
+
+            {/* Notification Dropdown Box */}
+            {showNotifications && (
+              <div 
+                className="notification-dropdown"
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: '40px',
+                  width: '280px',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb',
+                  padding: '12px',
+                  zIndex: 50,
+                  color: '#1f2937'
+                }}
+              >
+                <div style={{ fontWeight: 'bold', marginBottom: '8px', borderBottom: '1px solid #f3f4f6', paddingBottom: '6px', fontSize: '0.9rem' }}>
+                  Notifications
+                </div>
+                {notifications.length > 0 ? (
+                  notifications.map(n => (
+                    <div key={n.id} style={{ fontSize: '0.8rem', padding: '6px 0', borderBottom: '1px solid #f9fafb' }}>
+                      <div style={{ fontWeight: '600' }}>{n.title}</div>
+                      <div style={{ color: '#4b5563' }}>{n.msg}</div>
+                      <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '2px' }}>{n.time}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>No new notifications</div>
+                )}
+              </div>
+            )}
           </div>
-          <div className="user-avatar">
-            {profile.name.split(' ').map(n => n[0]).join('')}
+
+          {/* User Profile Badge */}
+          <div onClick={startEditing} className="user-profile-badge cursor-pointer">
+            <div className="user-info sm:block">
+              <div className="user-name">{profile.name}</div>
+              <div className="user-phone">{profile.phone}</div>
+            </div>
+            <div className="user-avatar">
+              {profile.name.split(' ').map(n => n[0]).join('')}
+            </div>
           </div>
         </div>
       </header>

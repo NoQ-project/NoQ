@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, 
   HeartPulse, 
@@ -15,6 +15,7 @@ import {
   Home as HomeIcon,
   Bell
 } from 'lucide-react';
+import tokenService from '../services/tokenServices';
 import "../assets/css/UserPanel.css";
 
 export default function UserPanel() {
@@ -30,18 +31,7 @@ export default function UserPanel() {
   ]);
 
   // --- MULTI-TOKEN ACTIVE ARRAY STATE ---
-  const [activeTokens, setActiveTokens] = useState([
-    {
-      id: 'token-1',
-      number: 'B-042',
-      department: 'General Banking',
-      counter: 'Counter 3',
-      institution: 'City Bank, Lazimpat',
-      ahead: 3,
-      estWait: '~12 min',
-      serving: 'B-039'
-    }
-  ]);
+  const [activeTokens, setActiveTokens] = useState([]);
 
   // Selected organization for booking wizard sub-state
   const [selectedOrgForBooking, setSelectedOrgForBooking] = useState(null);
@@ -72,11 +62,44 @@ export default function UserPanel() {
     { label: 'Called to counter deck room', status: 'pending' }
   ];
 
-  const [historicalTokens, setHistoricalTokens] = useState([
-    { id: 'h-1', type: 'General Banking', meta: 'Lazimpat · Jun 25', variant: 'Active', badgeClass: 'badge-active' },
-    { id: 'h-2', type: 'General Banking', meta: 'New Road · Jun 20', variant: 'Done', badgeClass: 'badge-active' },
-    { id: 'h-3', type: 'Loans & Credit', meta: 'Lazimpat · Jun 15', variant: 'Done', badgeClass: 'badge-active' }
-  ]);
+  const [historicalTokens, setHistoricalTokens] = useState([]);
+
+  // --- API FETCH FUNCTION FOR TOKENS ---
+  const fetchMyTokens = async () => {
+    try {
+      const data = await tokenService.getMyTokens();
+      
+      const mappedTokens = data.map((item) => ({
+        id: item.id,
+        number: `T-${item.token_number}`,
+        department: `Queue #${item.queue_id}`,
+        counter: item.status,
+        institution: 'Organization',
+        ahead: item.status === 'WAITING' ? 'In Line' : 'Active',
+        estWait: new Date(item.estimated_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        serving: item.status,
+        status: item.status
+      }));
+
+      setActiveTokens(mappedTokens.filter(t => t.status === 'WAITING' || t.status === 'IN_PROGRESS'));
+      
+      setHistoricalTokens(
+        mappedTokens.map(t => ({
+          id: `h-${t.id}`,
+          type: t.department,
+          meta: `Token #${t.number} · ${t.status}`,
+          variant: t.status,
+          badgeClass: t.status === 'WAITING' ? 'badge-indigo' : 'badge-active'
+        }))
+      );
+    } catch (err) {
+      console.error('Failed to fetch tokens from API:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyTokens();
+  }, []);
 
   const filteredOrgs = organizations.filter((org) => {
     const matchesCategory = activeCategory === 'All' || org.category === activeCategory;
@@ -90,41 +113,32 @@ export default function UserPanel() {
     setSelectedDept(org.departments[0]);
   };
 
-  const handleExecuteBooking = (e) => {
+  const handleExecuteBooking = async (e) => {
     e.preventDefault();
     if (!selectedOrgForBooking) return;
 
-    const randomNum = Math.floor(Math.random() * 90) + 10;
-    const prefix = selectedOrgForBooking.name.toLowerCase().includes('bank') ? 'B' : 'H';
-    const tokenNumber = `${prefix}-${randomNum}`;
-    const generatedId = `token-${Date.now()}`;
-    
-    const newGeneratedToken = {
-      id: generatedId,
-      number: tokenNumber,
-      department: selectedDept,
-      counter: `Counter ${Math.floor(Math.random() * 3) + 1}`,
-      institution: `${selectedOrgForBooking.name}, ${selectedOrgForBooking.branch}`,
-      ahead: selectedOrgForBooking.waiting + 1,
-      estWait: `~${(selectedOrgForBooking.waiting + 1) * 4} min`,
-      serving: `${prefix}-${Math.max(1, randomNum - 3)}`
-    };
-
-    setActiveTokens([...activeTokens, newGeneratedToken]);
-    
-    setHistoricalTokens([
-      { id: `h-${Date.now()}`, type: selectedDept, meta: `${selectedOrgForBooking.branch} · Today`, variant: 'Active', badgeClass: 'badge-indigo' },
-      ...historicalTokens
-    ]);
-
-    setSelectedOrgForBooking(null);
-    setSearchQuery('');
-    setActiveTab('track');
+    try {
+      const queueId = selectedOrgForBooking.id; 
+      await tokenService.bookToken(queueId);
+      
+      await fetchMyTokens();
+      setSelectedOrgForBooking(null);
+      setSearchQuery('');
+      setActiveTab('track');
+    } catch (err) {
+      console.error('Booking API call failed:', err);
+      alert('Failed to book token. Please try again.');
+    }
   };
 
-  const handleCancelToken = (id) => {
+  const handleCancelToken = async (id) => {
     if (window.confirm('Are you sure you want to drop out of this live queue line?')) {
-      setActiveTokens(activeTokens.filter(token => token.id !== id));
+      try {
+        await tokenService.cancelToken(id);
+        await fetchMyTokens();
+      } catch (err) {
+        console.error('Cancellation failed:', err);
+      }
     }
   };
 

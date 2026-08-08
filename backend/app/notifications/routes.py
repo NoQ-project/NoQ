@@ -9,8 +9,8 @@ from backend.app.auth.dependencies import get_current_user
 from backend.app.utils.database import get_db
 from backend.app.auth.models import UserModel
 
-from app.notifications import controller
-from app.notifications.schemas import (
+from backend.app.notifications import controller
+from backend.app.notifications.schemas import (
     NotificationMessageResponse,
     NotificationResponse,
 )

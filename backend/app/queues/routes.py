@@ -3,8 +3,8 @@ from datetime import date
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import List
-from backend.app.auth.models import UserModel
-from backend.app.auth.dependencies import get_current_user
+from backend.app.auth.models import UserModel, UserRole
+from backend.app.auth.dependencies import get_current_user, require_role
 from backend.app.queues import controller
 from backend.app.queues.schemas import (
     QueueCreateSchema,
@@ -26,15 +26,17 @@ queue_routes = APIRouter(
 @queue_routes.post(
     "/",
     response_model=QueueDetailSchema,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
 )
 def create_queue(
     queue: QueueCreateSchema,
-    db: Session = Depends(get_db)
+    current_user: UserModel = Depends(require_role(UserRole.INSTITUTION)),
+    db: Session = Depends(get_db),
 ):
     return controller.create_queue(
         queue=queue,
-        db=db
+        db=db,
+        current_user=current_user,
     )
 
 

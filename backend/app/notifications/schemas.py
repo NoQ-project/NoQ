@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
-from app.notifications.models import NotificationType
+from backend.app.notifications.models import NotificationType
 
 class NotificationResponse(BaseModel):
     id: int

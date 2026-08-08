@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from backend.app.utils.database import get_db
 from jose import JWTError, jwt
 from backend.app.utils import settings
-from backend.app.utils.database import SessionLocal
+from backend.app.utils.database import LocalSession
 from backend.app.tokens.models import Token
 from backend.app.tracking.service import get_token_tracking
 from backend.app.tracking.websocket_manager import manager
@@ -41,7 +41,7 @@ async def tracking_websocket(
     websocket: WebSocket,
     token_id: int
 ):
-    db = SessionLocal()
+    db = LocalSession()
 
     try:
         access_token = websocket.cookies.get(

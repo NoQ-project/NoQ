@@ -16,14 +16,23 @@ from backend.app.notifications.scheduler import (
 from backend.app.notifications.models import (
     NotificationType,
 )
+from backend.app.auth.models import UserModel
+from backend.app.institutions.models import Institution
 
 def create_queue(
     queue: QueueCreateSchema,
-    db: Session
+    db: Session,
+    current_user: UserModel
 ):
-
+    institution = (
+    db.query(Institution)
+    .filter(
+        Institution.auth_user_id == current_user.id
+    )
+    .first()
+)
     new_queue = Queue(
-        institution_id=1,      # TODO: Replace with logged-in institution ID
+        institution_id=institution.id, 
         name=queue.name,
         description=queue.description,
         daily_limit=queue.daily_limit,

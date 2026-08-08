@@ -3,16 +3,18 @@ from sqlalchemy.orm import Session
 from backend.app.queues.schemas import QueueStatusToggleRequest
 from backend.app.queues import service
 from backend.app.auth.dependencies import get_owned_queue
+from backend.app.auth.models import UserModel
 
 def create_queue(
     queue,
-    db: Session
+    db: Session,
+    current_user: UserModel,
 ):
     return service.create_queue(
         queue=queue,
-        db=db
+        db=db,
+        current_user=current_user,
     )
-
 
 def update_queue(
     queue_id: int,

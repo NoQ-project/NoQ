@@ -252,10 +252,12 @@ def cancel_token(
     token.cancelled_at = datetime.now()
     current_date = datetime.now().date()
     db.commit()
-    schedule_queue_updates(
-        queue_id=queue.id,
-        booking_date=current_date,
-        db=db
+    schedule_token_update(
+        token.id
+    )
+    schedule_notification(
+        token_id=token.id,
+        notification_type=NotificationType.TOKEN_CANCELLED,
     )
     db.refresh(token)
 
@@ -448,12 +450,10 @@ def advance_queue(
         next_token.started_at = datetime.now()
         queue.current_serving_token_id = next_token.id
         db.commit()
-        if current_token:
-            schedule_token_update(
-                current_token.id
-            )
-        schedule_token_update(
-            next_token.id
+        schedule_queue_updates(
+            queue_id=queue.id,
+            booking_date=current_date,
+            db=db,
         )
         if current_token:
             if result == TokenStatus.COMPLETED:

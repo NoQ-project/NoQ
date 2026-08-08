@@ -39,7 +39,7 @@ class Queue(Base):
 
     avg_service_time = Column(
         Integer,
-        default=10
+        default=10,
     )
 
     is_active = Column(

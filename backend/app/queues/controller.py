@@ -1,8 +1,8 @@
 from datetime import date
 from sqlalchemy.orm import Session
-
+from backend.app.queues.schemas import QueueStatusToggleRequest
 from backend.app.queues import service
-
+from backend.app.auth.dependencies import get_owned_queue
 
 def create_queue(
     queue,
@@ -46,17 +46,6 @@ def get_queue_details(
     )
 
 
-def toggle_queue_status(
-    queue_id: int,
-    db: Session
-):
-    return service.toggle_queue_status(
-        queue_id=queue_id,
-        db=db
-    )
-
-# QUEUE DASHBOARD
-
 def get_queue_dashboard(
     queue_id: int,
     db: Session
@@ -78,4 +67,23 @@ def get_queue_statistics(
         start_date=start_date,
         end_date=end_date,
         db=db
+    )
+
+
+def toggle_queue_status(
+    queue_id: int,
+    data: QueueStatusToggleRequest,
+    db: Session,
+    current_user,
+):
+    queue = get_owned_queue(
+        queue_id=queue_id,
+        db=db,
+        current_user=current_user,
+    )
+
+    return service.toggle_queue_status(
+        queue=queue,
+        reason=data.reason,
+        db=db,
     )

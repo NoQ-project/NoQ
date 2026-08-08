@@ -1,14 +1,14 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
-
+from backend.app.queues.models import QueueStatus, Queue
 from backend.app.institutions.models import Institution
 from backend.app.institutions.schemas import (
     InstitutionCreateSchema,
     InstitutionUpdateSchema
 )
 from backend.app.auth.models import UserModel
-
+from datetime import datetime, timezone
 
 class InstitutionService:
 

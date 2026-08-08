@@ -42,7 +42,6 @@ class Queue(Base):
         default=10
     )
 
-    # average time in minutes
     is_active = Column(
         Boolean,
         default=True

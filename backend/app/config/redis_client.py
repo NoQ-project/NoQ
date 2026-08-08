@@ -16,8 +16,8 @@ redis_client = Redis(
 
 def save_pending_registration(body, hashed_password):
     registration_data = {
-        "first_name": body.FirstName,
-        "last_name": body.LastName,
+        "first_name": body.first_name,
+        "last_name": body.last_name,
         "email": body.email,
         "hash_password": hashed_password,
         "role": body.role.value,

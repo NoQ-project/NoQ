@@ -118,6 +118,7 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
   };
 
   // 2. SIGNUP
+  // 2. SIGNUP
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
@@ -131,15 +132,13 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
     setLoading(true);
 
     try {
-      const firstName = formData.firstName.trim();
-      const lastName = formData.lastName.trim();
-      const data = await authService.register(
-        firstName,
-        lastName,
-        role,
-        formData.email,
-        formData.password
-      );
+      const data = await authService.register({
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim(),
+        role: role.toLowerCase(),
+        email: formData.email,
+        password: formData.password
+      });
 
       setSuccessMessage(data.message || 'Registration initiated! An OTP has been sent to your email.');
       
@@ -153,7 +152,6 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
       setLoading(false);
     }
   };
-
   // 3. VERIFY OTP
   const handleVerifyOtpSubmit = async (e) => {
     e.preventDefault();

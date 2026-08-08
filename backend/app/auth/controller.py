@@ -1,6 +1,6 @@
 from backend.app.auth.schemas import  RegisterSchema, LoginSchema, VerifyEmailSchema, EmailSchema, ResetPasswordSchema
 from sqlalchemy.orm import Session
-from backend.app.auth.models import UserModel, RefreshTokenModel
+from backend.app.auth.models import UserModel, RefreshTokenModel, UserRole
 from fastapi import HTTPException,Request , status, Depends, BackgroundTasks, Response
 from pwdlib import PasswordHash
 from datetime import datetime, timedelta, timezone
@@ -29,23 +29,44 @@ def register(body: RegisterSchema,
                             detail="email already exists")
     hash_password= get_password_hash(body.password)
     save_pending_registration(body, hash_password)
-    store_and_send_otp(register, body.email, bg_tasks)
+    store_and_send_otp("register",bg_tasks, body.email)
     return {"message": "OTP sent in email"}
 
 
-def verify_register(body:VerifyEmailSchema, db: Session):
-    data=verify_registration(body)
+# backend/app/auth/controller.py
 
-    new_user = UserModel(
-        FirstName=data["first_name"],
-        LastName=data["last_name"],
-        email=data["email"],
-        password_hash=data["hash_password"],
-        role=data["role"]
+def verify_register(body, db: Session):
+    # Retrieve user data saved in Redis during the first sign-up step
+    data = verify_registration(body)
+
+    # Extract the hashed password regardless of key name stored in Redis
+    hashed_pwd = (
+        data.get("password") 
+        or data.get("hash_password") 
+        or data.get("hashed_password")
     )
+
+    if not hashed_pwd:
+        raise HTTPException(
+            status_code=400, 
+            detail="Registration session expired or invalid. Please sign up again."
+        )
+
+    # Create the user model with exact column names matching usertable
+    new_user = UserModel(
+        first_name=data.get("first_name", ""),
+        last_name=data.get("last_name", ""),
+        email=data["email"],
+        password_hash=hashed_pwd,
+        role=data.get("role") if data.get("role") else UserRole.USER,
+        is_verified=True,
+        is_active=True
+    )
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    
     return new_user
    
 def resend_otp(body:VerifyEmailSchema, bg_tasks: BackgroundTasks):

@@ -36,11 +36,13 @@ def get_token_details(
     )
 
 def cancel_token(
+    queue_id:int,
     token_id: int,
     user_id: int,
     db: Session
 ):
     return service.cancel_token(
+        queue_id= queue_id,
         token_id=token_id,
         user_id=user_id,
         db=db

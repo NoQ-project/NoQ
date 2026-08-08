@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from backend.app.auth.models import UserModel
-from backend.app.auth.dependencies import get_current_user, require_owner
+from backend.app.auth.dependencies import get_current_user, get_owned_queue, get_owned_token
 from backend.app.tokens import controller
 from backend.app.tokens.models import TokenStatus
 from backend.app.tokens.schemas import (
@@ -48,11 +48,11 @@ def book_token_route(
 @token_routes.post(
     "/queues/{queue_id}/advance"
 )
-def advance_token_route(
+def advance_token(
     queue_id: int,
     result: TokenStatus,
-    current_user: UserModel = Depends(require_owner),
-    db: Session = Depends(get_db)
+    current_user: UserModel = Depends(),
+    db:Session = Depends(get_db)
 ):
     return controller.advance_token_controller(
         queue_id=queue_id,
@@ -82,7 +82,7 @@ def get_my_tokens(
 )
 def get_token_details(
     token_id: int,
-     current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(get_owned_token),
     db: Session = Depends(get_db)
 ):
     return controller.get_token_details(
@@ -97,11 +97,13 @@ def get_token_details(
     status_code=status.HTTP_200_OK
 )
 def cancel_token(
+    queue_id: int,
     token_id: int,
-     current_user: UserModel = Depends(get_current_user),
+     current_user: UserModel = Depends(get_owned_token),
     db: Session = Depends(get_db)
 ):
     return controller.cancel_token(
+        queue_id= queue_id,
         token_id=token_id,
         user_id=current_user.profile.id,
         db=db
@@ -115,7 +117,7 @@ def cancel_token(
 def get_waiting_position(
 
     token_id:int,
-     current_user: UserModel = Depends(require_owner),
+     current_user: UserModel = Depends(get_owned_token),
     db:Session=Depends(get_db)
 ):
 

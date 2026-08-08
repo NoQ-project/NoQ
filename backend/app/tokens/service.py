@@ -7,7 +7,8 @@ from backend.app.tokens.models import (
     TokenStatus
 )
 from backend.app.queues.models import Queue, QueueStatus, QueueWorkingHour
-
+from backend.app.tracking.events import schedule_token_update
+from backend.app.tracking.events import schedule_queue_updates
 
 def book_token(
     queue_id: int,
@@ -147,6 +148,11 @@ def book_token(
         )
         db.add(token)
         db.commit()
+        schedule_queue_updates(
+            queue_id=queue.id,
+            booking_date=current_date,
+            db=db
+        )
         db.refresh(token)
         return token
     except HTTPException:
@@ -201,6 +207,7 @@ def get_token_by_id(
 
 
 def cancel_token(
+    queue_id: int,
     token_id: int,
     user_id: int,
     db: Session
@@ -226,11 +233,24 @@ def cancel_token(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Only waiting tokens can be cancelled."
         )
-
+    queue = (
+            db.query(Queue)
+            .filter(
+                Queue.id == queue_id,
+                Queue.is_active.is_(True)
+            )
+            .with_for_update()
+            .first()
+            )
     token.status = TokenStatus.CANCELLED
     token.cancelled_at = datetime.now()
-
+    current_date = datetime.now().date()
     db.commit()
+    schedule_queue_updates(
+        queue_id=queue.id,
+        booking_date=current_date,
+        db=db
+    )
     db.refresh(token)
 
     return token
@@ -390,6 +410,10 @@ def advance_queue(
             queue.current_serving_token_id = None
             db.commit()
             if current_token:
+                schedule_token_update(
+                    current_token.id
+                )
+            if current_token:
                 db.refresh(current_token)
             return {
                 "message": "Current token completed. No waiting tokens remain.",
@@ -401,13 +425,20 @@ def advance_queue(
         queue.current_serving_token_id = next_token.id
         db.commit()
         if current_token:
+            schedule_token_update(
+                current_token.id
+            )
+        schedule_token_update(
+            next_token.id
+        )
+        if current_token:
             db.refresh(current_token)
         db.refresh(next_token)
         return {
             "message": "Queue advanced successfully.",
             "completed_token": current_token,
             "serving_token": next_token
-        }
+        }        
     except HTTPException:
         db.rollback()
         raise

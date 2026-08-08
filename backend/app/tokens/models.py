@@ -5,7 +5,8 @@ from sqlalchemy import (
     ForeignKey,
     Enum,
     UniqueConstraint,
-    Date
+    Date,
+    Index
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -13,12 +14,12 @@ from backend.app.utils.database import Base
 import enum
 
 
-class TokenStatus(enum.Enum):
-    WAITING = "waiting"
-    CALLED = "called"
-    SERVED = "served"
-    CANCELLED = "cancelled"
-    MISSED = "missed"
+class TokenStatus(str, Enum):
+    WAITING = "WAITING"
+    SERVING = "CALLED"
+    COMPLETED = "COMPLETED"
+    MISSED = "MISSED"
+    CANCELLED = "CANCELLED"
 
 
 class Token(Base):
@@ -65,26 +66,55 @@ class Token(Base):
         DateTime,
         server_default=func.now()
     )
-
+    started_at = Column(
+        DateTime,
+        nullable=True
+    )
+    completed_at = Column(
+        DateTime,
+        nullable=True
+    )
+    missed_at = Column(
+        DateTime,
+        nullable=True
+    )
     cancelled_at = Column(
         DateTime,
         nullable=True
     )
+    user = relationship(
+        "User",
+        back_populates="tokens"
+    )
+
+    queue = relationship(
+        "Queue",
+        back_populates="tokens"
+    )
+
+    notifications = relationship(
+        "Notification",
+        back_populates="token"
+    )
+
     __table_args__ = (
         UniqueConstraint(
             "queue_id",
             "booking_date",
             "token_number",
-            name="unique_daily_queue_token"
+            name="uq_queue_date_token_number"
         ),
-    )
 
-    # Relationships
-    user = relationship(
-        "User",
-        back_populates="tokens"
-    )
-    queue = relationship(
-        "Queue",
-        back_populates="tokens"
+        Index(
+            "ix_token_queue_date_status",
+            "queue_id",
+            "booking_date",
+            "status"
+        ),
+
+        Index(
+            "ix_token_user_status",
+            "user_id",
+            "status"
+        ),
     )

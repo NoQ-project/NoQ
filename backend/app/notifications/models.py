@@ -12,16 +12,19 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from backend.app.utils.database import Base
 import enum
-class NotificationType(enum.Enum):
-    IN_APP = "in_app"
-    EMAIL = "email"
-    SMS = "sms"
+
+class NotificationType(str, Enum):
+    QUEUE_UPDATE = "QUEUE_UPDATE"
+    APPROACHING_TURN = "APPROACHING_TURN"
+    YOUR_TURN = "YOUR_TURN"
+    MISSED = "MISSED"
+    CANCELLED = "CANCELLED"
+    SYSTEM = "SYSTEM"
 
 class NotificationStatus(enum.Enum):
     PENDING = "pending"
     SENT = "sent"
     FAILED = "failed"
-    READ = "read"
 
 class Notification(Base):
     __tablename__ = "notifications"
@@ -35,7 +38,7 @@ class Notification(Base):
     )
     token_id = Column(
         Integer,
-        ForeignKey("tokens.id"),
+        ForeignKey("tokens.id", ondelete="CASCADE"),
         nullable=True
     )
     type = Column(
@@ -69,8 +72,11 @@ class Notification(Base):
 
     # Relationships
     user = relationship(
-        "User"
+        "User",
+        back_populates="notifications"
     )
+
     token = relationship(
-        "Token"
+        "Token",
+        back_populates="notifications"
     )

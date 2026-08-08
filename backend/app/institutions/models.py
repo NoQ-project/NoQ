@@ -2,7 +2,6 @@ from sqlalchemy import Column, String, Boolean, DateTime, Text,Integer, ForeignK
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from backend.app.utils.database import Base
-import uuid
 
 
 class Institution(Base):
@@ -10,6 +9,10 @@ class Institution(Base):
 
     id = Column(Integer ,
         primary_key=True)
+    name = Column(
+    String(255),
+    nullable=False
+    )
 
     auth_user_id = Column(
         Integer,

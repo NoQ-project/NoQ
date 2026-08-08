@@ -13,15 +13,17 @@ class UserRole(enum.Enum):
 class UserModel(Base):
     __tablename__ = "usertable"
     id = Column(Integer, 
-               primary_key=True)
+        primary_key=True)
     role = Column(
             Enum(UserRole),
             default=UserRole.USER,
             nullable=False
         )
     name = Column(String(20))
-    email = Column(String(50),
-                   unique=True)
+    email = Column(
+    String(50),
+    unique=True
+    )
     password_hash = Column(
             String(255),
             nullable=False
@@ -63,7 +65,7 @@ class RefreshTokenModel(Base):
     )
     user_id = Column(
         Integer,
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey("usertable.id", ondelete="CASCADE"),
         nullable=False
     )
     token = Column(

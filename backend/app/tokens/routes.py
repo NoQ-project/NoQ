@@ -2,8 +2,10 @@ from typing import List
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
-
+from backend.app.auth.models import UserModel
+from backend.app.auth.dependencies import get_current_user, get_owned_queue, get_owned_token
 from backend.app.tokens import controller
+from backend.app.tokens.models import TokenStatus
 from backend.app.tokens.schemas import (
     BookTokenSchema,
     TokenResponseSchema,
@@ -26,17 +28,37 @@ token_routes = APIRouter(
     response_model=TokenResponseSchema,
     status_code=status.HTTP_201_CREATED
 )
-def book_token(
-    body: BookTokenSchema,
+
+@token_routes.post(
+    "/book",
+    status_code=status.HTTP_201_CREATED
+)
+def book_token_route(
+    queue_id: int,
+    current_user: UserModel = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Temporary Testing (User ID = 1)
-    return controller.book_token(
-        queue_id=body.queue_id,
-        user_id=1,
+    return controller.book_token_controller(
+        queue_id=queue_id,
+        user_id=current_user.profile.id,
         db=db
     )
 
+
+@token_routes.post(
+    "/queues/{queue_id}/advance"
+)
+def advance_token(
+    queue_id: int,
+    result: TokenStatus,
+    current_user: UserModel = Depends(),
+    db:Session = Depends(get_db)
+):
+    return controller.advance_token_controller(
+        queue_id=queue_id,
+        result=result,
+        db=db
+    )
 
 @token_routes.get(
     "/my-tokens",
@@ -44,11 +66,11 @@ def book_token(
     status_code=status.HTTP_200_OK
 )
 def get_my_tokens(
+     current_user: UserModel = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Temporary Testing (User ID = 1)
     return controller.get_my_tokens(
-        user_id=1,
+        user_id=current_user.profile.id,
         db=db
     )
 
@@ -60,12 +82,12 @@ def get_my_tokens(
 )
 def get_token_details(
     token_id: int,
+    current_user: UserModel = Depends(get_owned_token),
     db: Session = Depends(get_db)
 ):
-    # Temporary Testing (User ID = 1)
     return controller.get_token_details(
         token_id=token_id,
-        user_id=1,
+        user_id=current_user.profile.id,
         db=db
     )
 
@@ -75,14 +97,15 @@ def get_token_details(
     status_code=status.HTTP_200_OK
 )
 def cancel_token(
+    queue_id: int,
     token_id: int,
+     current_user: UserModel = Depends(get_owned_token),
     db: Session = Depends(get_db)
 ):
-
-    # Temporary Testing (User ID = 1)
     return controller.cancel_token(
+        queue_id= queue_id,
         token_id=token_id,
-        user_id=1,
+        user_id=current_user.profile.id,
         db=db
     )
 
@@ -94,63 +117,18 @@ def cancel_token(
 def get_waiting_position(
 
     token_id:int,
+     current_user: UserModel = Depends(get_owned_token),
     db:Session=Depends(get_db)
 ):
 
     return controller.get_waiting_position(
 
         token_id=token_id,
-        user_id=1,
+        user_id=current_user.profile.id,
         db=db
     )
 
-@token_routes.patch(
-    "/call-next/{queue_id}",
-    response_model=TokenResponseSchema
-)
-def call_next_token(
 
-        queue_id:int,
-        db:Session=Depends(get_db)
-
-):
-
-    return controller.call_next_token(
-        queue_id=queue_id,
-        db=db
-    )
-
-@token_routes.patch(
-    "/serve/{token_id}",
-    response_model=TokenResponseSchema
-)
-def serve_token(
-
-        token_id:int,
-        db:Session=Depends(get_db)
-
-):
-
-    return controller.serve_token(
-        token_id=token_id,
-        db=db
-    )
-
-@token_routes.patch(
-    "/missed/{token_id}",
-    response_model=TokenResponseSchema
-)
-def mark_token_as_missed(
-
-        token_id:int,
-        db:Session=Depends(get_db)
-
-):
-
-    return controller.mark_token_as_missed(
-        token_id=token_id,
-        db=db
-    )
 
 @token_routes.get(
     "/current-token/{queue_id}",

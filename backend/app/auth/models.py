@@ -47,12 +47,14 @@ class UserModel(Base):
     profile = relationship(
             "User",
             back_populates="auth_user",
-            uselist=False
+            uselist=False,
+            cascade="all, delete-orphan"
         )
     institution = relationship(
     "Institution",
     back_populates="auth_user",
-    uselist=False
+    uselist=False,
+    cascade="all, delete-orphan"
     )
 
 class RefreshTokenModel(Base):

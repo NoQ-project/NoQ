@@ -13,24 +13,19 @@ function LandingPage() {
     setShowLogin(true);
   };
 
-  const closeAuth = () => {
-    setShowLogin(false);
-  };
-
   return (
     <>
       <Navbar onLoginClick={() => openAuth("login")} />
 
       <div className="noq-page">
+        {/* ===== Hero Section ===== */}
         <div
           className="noq-hero w-full mx-auto py-4 px-8 h-[100vh] grid sm:grid-cols-2 items-center gap-10"
           id="home"
         >
           <div>
             <h1 className="font-bold text-3xl py-5">Welcome to NoQ</h1>
-
             <p className="py-2">Queue smarter, not longer</p>
-
             <p className="py-2">
               Book your spot online, track your turn in real time, and walk in
               only when you're called. No more waiting in line.
@@ -83,6 +78,7 @@ function LandingPage() {
           </div>
         </div>
 
+        {/* ===== Available Services ===== */}
         <div
           className="noq-services grid gap-4 w-full mx-auto scroll-mt-[56px]"
           id="services"
@@ -128,6 +124,7 @@ function LandingPage() {
           </div>
         </div>
 
+        {/* ===== How It Works ===== */}
         <div
           className="noq-how-it-works grid gap-4 w-full mx-auto"
           id="how-it-works"
@@ -188,7 +185,8 @@ function LandingPage() {
           </button>
         </div>
 
-        <div id="contact" className="noq-contact grid sm:grid-cols-2">
+        {/* ===== Contact Section (Updated with Image Container) ===== */}
+        <div id="contact" className="noq-contact">
           <div className="noq-contact-text">
             <p className="font-bold">Contact us</p>
             <p>
@@ -196,6 +194,13 @@ function LandingPage() {
               here to assist with bookings, queue setup, or any issues you run
               into.
             </p>
+            {/* फोटो यहाँ राखिएको छ */}
+            <div className="noq-contact-image">
+              <img
+                src="https://images.unsplash.com/photo-1534536281715-e28d76689b4d?q=80&w=800&auto=format&fit=crop"
+                alt="Contact Support"
+              />
+            </div>
           </div>
 
           <div className="noq-contact-form">
@@ -216,7 +221,7 @@ function LandingPage() {
                   id="message"
                   name="message"
                   cols="30"
-                  rows="5"
+                  rows="4"
                   placeholder="Enter your message"
                 ></textarea>
                 <button className="noq-send">Send</button>

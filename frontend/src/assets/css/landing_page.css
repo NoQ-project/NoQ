@@ -4,12 +4,12 @@
 :root {
   --ink: #1C1233;
   --ink-soft: #554870;
-  --violet: #7C5CFC;          /* Brighter, eye-catching violet */
+  --violet: #7C5CFC;
   --violet-deep: #1F1538;
   --paper: #F6F3FF;
   --paper-card: #FFFFFF;
   --coral: #FF6849;
-  --orange: #FF7A00;          /* Vivid Orange Token */
+  --orange: #FF7A00;
   --amber: #F5A623;
   --green: #2FA84F;
   --line: #E1DAF7;
@@ -47,7 +47,7 @@ body {
 }
 
 .noq-page h1 {
-  color: #FFFFFF; /* High Contrast White Header */
+  color: #FFFFFF;
   letter-spacing: -0.02em;
 }
 
@@ -83,6 +83,7 @@ header {
   background: linear-gradient(180deg, #EFEAFD 0%, var(--paper) 100%);
   position: relative;
   overflow: hidden;
+  max-width: 1400px; /* Hero width widened */
 }
 
 .noq-hero::before {
@@ -284,15 +285,14 @@ header {
   background: #EDE7FD;
 }
 
-/* ===== Services & How It Works ===== */
+/* ===== Services & How It Works (Max Width र Padding मिलाइएको छ) ===== */
 .noq-services, 
 .noq-how-it-works {
-  padding: 4rem 2rem;
-  max-width: 1100px;
+  padding: 2rem 1.5rem; /* Padding घटाइयो */
+  max-width: 1350px;    /* max-width 1100px बाट बढाएर 1350px बनाइयो */
   margin: 0 auto;
 }
 
-/* HIGH CONTRAST TEXT OVERLAY FIX FOR BOTH TITLES */
 .noq-services > p:first-child,
 .noq-services h2,
 .noq-services h3 {
@@ -301,8 +301,8 @@ header {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #FFFFFF !important; /* Pure White text for high visibility */
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); /* Subtle Shadow to pop */
+  color: #FFFFFF !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   margin-bottom: 1.25rem;
 }
 
@@ -313,8 +313,8 @@ header {
   font-weight: 700;
   font-family: var(--font-display);
   letter-spacing: -0.01em;
-  color: #FFFFFF !important; /* Pure White text */
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); /* Extra crisp drop shadow */
+  color: #FFFFFF !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   margin-bottom: 1.25rem;
 }
 
@@ -339,7 +339,7 @@ header {
 .noq-step-card .font-bold {
   font-family: var(--font-display);
   font-weight: 700;
-  color: var(--ink); /* Very clear dark title inside white card */
+  color: var(--ink);
   font-size: 1.2rem;
   margin-bottom: 0.4rem;
 }
@@ -351,7 +351,6 @@ header {
   line-height: 1.5;
 }
 
-/* HIGH-CONTRAST VIVID ORANGE BADGES (1, 2, 3, 4) */
 .noq-service-image,
 .noq-step {
   background: linear-gradient(135deg, #FF7A00, #FF5500); 
@@ -390,18 +389,20 @@ header {
 
 /* ===== Contact Section ===== */
 .noq-contact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 2.5rem;
   scroll-margin-top: 24px;
-  max-width: 1100px;
-  margin: 4rem auto;
-  padding: 0 2rem;
+  max-width: 1350px; /* Contact को max-width पनि बढाएर 1350px बनाइयो */
+  margin: 1.5rem auto 3rem auto;
+  padding: 0 1.5rem;
   align-items: center;
 }
 
 .noq-contact-text {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .noq-contact-text .font-bold {
@@ -409,6 +410,21 @@ header {
   font-size: 2rem;
   color: #FFFFFF;
   text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.noq-contact-image {
+  width: 100%;
+  height: 210px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  margin-top: 0.5rem;
+}
+
+.noq-contact-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .noq-contact-form {
@@ -433,7 +449,7 @@ header {
 }
 
 .noq-contact-form > form > div {
-  margin-bottom: 1.2rem;
+  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
 }
@@ -479,6 +495,15 @@ header {
 }
 
 /* ===== Responsive Rules ===== */
+@media (max-width: 768px) {
+  .noq-contact {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin: 1.5rem auto;
+    padding: 0 1.25rem;
+  }
+}
+
 @media (max-width: 640px) {
   .noq-hero {
     height: auto !important;
@@ -499,11 +524,6 @@ header {
 
   .noq-services, 
   .noq-how-it-works {
-    padding: 3rem 1.25rem;
-  }
-
-  .noq-contact {
-    margin: 2.5rem auto;
-    padding: 0 1.25rem;
+    padding: 2rem 1.25rem;
   }
 }

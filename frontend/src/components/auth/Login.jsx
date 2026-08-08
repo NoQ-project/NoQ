@@ -1,44 +1,213 @@
 import React, { useState, useEffect } from 'react';
+// Updated relative import path:
+import { authService } from '../../services/authService'; 
 import "../../assets/css/login.css";
 import "../../assets/css/signup.css";
 
-function NoqLogin({ isOpen, onClose, initialView = "login" }) {
-  const [isSignupView, setIsSignupView] = useState(false);
+// Rest of your NoqLogin component code remains the same...
+function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
+  const [currentView, setCurrentView] = useState('login');
   const [role, setRole] = useState('user');
+
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     if (isOpen) {
-      setIsSignupView(initialView === "signup");
+      setCurrentView(initialView === "signup" ? "signup" : "login");
+      resetForm();
     }
   }, [isOpen, initialView]);
-  
+
   if (!isOpen) return null;
 
-  const handleLoginSubmit = (e) => {
-    e.preventDefault();
-    console.log("Login captured within React context!");
+  const resetForm = () => {
+    setFormData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    });
+    setOtp(['', '', '', '', '', '']);
+    setErrorMessage('');
+    setSuccessMessage('');
   };
 
-  const handleSignupSubmit = (e) => {
-    e.preventDefault();
-    console.log("Signup captured with Role:", role);
+  const handleInputChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  const handleOtpChange = (element, index) => {
+    const value = element.value;
+    if (/[^0-9]/.test(value) && value !== '') return;
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    if (value && index < 5) {
+      document.getElementById(`otp-digit-${index + 1}`)?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (e, index) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      document.getElementById(`otp-digit-${index - 1}`)?.focus();
+    }
+  };
+
+  const switchView = (view) => {
+    setErrorMessage('');
+    setSuccessMessage('');
+    setCurrentView(view);
   };
 
   const handleCloseModal = () => {
-    setIsSignupView(false);
+    resetForm();
     onClose();
+  };
+
+  // --- API HANDLERS ---
+
+  // 1. LOGIN
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+    setLoading(true);
+
+    try {
+      const data = await authService.login(formData.email, formData.password);
+      
+      // Store tokens
+      if (data.access_token) {
+        localStorage.setItem('accessToken', data.access_token);
+      }
+      if (data.refresh_token) {
+        localStorage.setItem('refreshToken', data.refresh_token);
+      }
+
+      setSuccessMessage(data.message || 'Login successful!');
+
+      setTimeout(() => {
+        if (onLoginSuccess) {
+          onLoginSuccess(data);
+        }
+        handleCloseModal();
+      }, 800);
+
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 2. SIGNUP
+  const handleSignupSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const firstName = formData.firstName.trim();
+      const lastName = formData.lastName.trim();
+      const data = await authService.register(
+        firstName,
+        lastName,
+        role,
+        formData.email,
+        formData.password
+      );
+
+      setSuccessMessage(data.message || 'Registration initiated! An OTP has been sent to your email.');
+      
+      setTimeout(() => {
+        switchView('otp');
+      }, 1200);
+
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 3. VERIFY OTP
+  const handleVerifyOtpSubmit = async (e) => {
+    e.preventDefault();
+    const fullOtp = otp.join('');
+
+    if (fullOtp.length !== 6) {
+      setErrorMessage('Please enter all 6 digits of the OTP.');
+      return;
+    }
+
+    setLoading(true);
+    setErrorMessage('');
+
+    try {
+      await authService.verifyRegister(formData.email, fullOtp);
+      setSuccessMessage('Account verified successfully! Redirecting to login...');
+      
+      setTimeout(() => {
+        switchView('login');
+      }, 1200);
+
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 4. RESEND OTP
+  const handleResendOtp = async () => {
+    setErrorMessage('');
+    setSuccessMessage('Sending new code...');
+
+    try {
+      const data = await authService.resendOtp(formData.email);
+      setSuccessMessage(data.message || 'A new verification code has been sent to your email.');
+    } catch (error) {
+      setErrorMessage(error.message);
+      setSuccessMessage('');
+    }
   };
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-  
+      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/40 backdrop-blur-md cursor-pointer"
         onClick={handleCloseModal}
       />
 
+      {/* Modal Box */}
       <div className="relative bg-white grid login-container rounded-xl shadow-2xl p-8 z-10 max-w-sm w-full mx-auto border border-gray-100 max-h-[95vh] overflow-y-auto">
         
+        {/* Close Button */}
         <button 
           type="button"
           onClick={handleCloseModal}
@@ -47,9 +216,22 @@ function NoqLogin({ isOpen, onClose, initialView = "login" }) {
           &times;
         </button>
 
-        {isSignupView ? (
+        {/* Global Notifications */}
+        {errorMessage && (
+          <div className="bg-red-50 text-red-600 text-xs font-semibold p-3 rounded-lg mb-3 border border-red-200 text-center">
+            {errorMessage}
+          </div>
+        )}
+        {successMessage && (
+          <div className="bg-green-50 text-green-600 text-xs font-semibold p-3 rounded-lg mb-3 border border-green-200 text-center">
+            {successMessage}
+          </div>
+        )}
+
+        {/* SIGNUP FORM */}
+        {currentView === 'signup' && (
           <div className="container text-center">
-            <main className="form-area mt-4">
+            <main className="form-area mt-2">
               <h2 className="text-md text-gray-700 font-bold">create your account.</h2>
 
               <form onSubmit={handleSignupSubmit} className="flex flex-col gap-3 text-left mt-2">
@@ -66,42 +248,155 @@ function NoqLogin({ isOpen, onClose, initialView = "login" }) {
                   </select>
                 </div>
 
-                <div className="input-group">
-                  <label htmlFor="username" className="block text-xs font-bold uppercase text-gray-400 mb-1">Username:</label>
-                  <input className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" type="text" id="username" name="username" placeholder="Enter your username" required />
+                <div className="flex gap-2">
+                  <div className="input-group w-1/2">
+                    <label htmlFor="firstName" className="block text-xs font-bold uppercase text-gray-400 mb-1">First Name:</label>
+                    <input 
+                      className="border border-gray-200 rounded-xl py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                      type="text" 
+                      id="firstName" 
+                      name="firstName" 
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      placeholder="First Name" 
+                      required 
+                    />
+                  </div>
+
+                  <div className="input-group w-1/2">
+                    <label htmlFor="lastName" className="block text-xs font-bold uppercase text-gray-400 mb-1">Last Name:</label>
+                    <input 
+                      className="border border-gray-200 rounded-xl py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                      type="text" 
+                      id="lastName" 
+                      name="lastName" 
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      placeholder="Last Name" 
+                      required 
+                    />
+                  </div>
                 </div>
 
                 <div className="input-group">
                   <label htmlFor="email" className="block text-xs font-bold uppercase text-gray-400 mb-1">Email Address:</label>
-                  <input className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" type="email" id="email" name="email" placeholder="Enter your email" required />
+                  <input 
+                    className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="Enter your email" 
+                    required 
+                  />
                 </div>
 
                 <div className="input-group">
                   <label htmlFor="password" className="block text-xs font-bold uppercase text-gray-400 mb-1">Password:</label>
-                  <input className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" type="password" id="password" name="password" placeholder="Enter your password" required />
+                  <input 
+                    className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="••••••••" 
+                    required 
+                  />
                 </div>
 
                 <div className="input-group">
-                  <label htmlFor="confirm-password" className="block text-xs font-bold uppercase text-gray-400 mb-1">Confirm Password:</label>
-                  <input className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" type="password" id="confirm-password" name="confirm-password" placeholder="Confirm your password" required />
+                  <label htmlFor="confirmPassword" className="block text-xs font-bold uppercase text-gray-400 mb-1">Confirm Password:</label>
+                  <input 
+                    className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                    type="password" 
+                    id="confirmPassword" 
+                    name="confirmPassword" 
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder="••••••••" 
+                    required 
+                  />
                 </div>
                 
-                <button type="submit" className="btn-primary bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl w-full transition cursor-pointer mt-3">
-                  Sign Up as {role === 'user' ? 'User' : 'Organization'}
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="btn-primary bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold py-3 px-4 rounded-xl w-full transition cursor-pointer mt-3"
+                >
+                  {loading ? 'Sending OTP...' : `Sign Up as ${role === 'user' ? 'User' : 'Organization'}`}
                 </button>
-                 <button 
-                type="button"
-                className="switch-page text-blue-500 hover:text-blue-700 text-sm font-semibold my-2 cursor-pointer bg-transparent border-none"
-                onClick={() => setIsSignupView(false)} 
-              >
-                already have an account Login?
-              </button>
+
+                <button 
+                  type="button"
+                  className="switch-page text-blue-500 hover:text-blue-700 text-sm font-semibold my-2 cursor-pointer bg-transparent border-none text-center w-full"
+                  onClick={() => switchView('login')} 
+                >
+                  already have an account Login?
+                </button>
               </form>
             </main>
           </div>
-        ) : (
+        )}
+
+        {/* OTP VERIFICATION FORM */}
+        {currentView === 'otp' && (
+          <div className="text-center py-2">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Verify Email</h2>
+            <p className="text-xs text-gray-500 mb-6">
+              Enter the 6-digit code sent to <br />
+              <span className="font-semibold text-gray-700">{formData.email}</span>
+            </p>
+
+            <form onSubmit={handleVerifyOtpSubmit}>
+              <div className="flex justify-between gap-1.5 mb-6">
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`otp-digit-${index}`}
+                    type="text"
+                    maxLength="1"
+                    value={digit}
+                    onChange={(e) => handleOtpChange(e.target, index)}
+                    onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                    className="w-10 h-12 text-center text-lg font-bold border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                ))}
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold py-3 px-4 rounded-xl w-full transition cursor-pointer mb-3"
+              >
+                {loading ? 'Verifying...' : 'Verify OTP'}
+              </button>
+            </form>
+
+            <div className="flex justify-between items-center text-xs mt-3">
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                className="text-blue-500 hover:text-blue-700 font-semibold cursor-pointer border-none bg-transparent"
+              >
+                Resend Code
+              </button>
+              <button
+                type="button"
+                onClick={() => switchView('signup')}
+                className="text-gray-400 hover:text-gray-600 cursor-pointer border-none bg-transparent"
+              >
+                ← Back to Signup
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* LOGIN FORM */}
+        {currentView === 'login' && (
           <div className="text-center">
-            <h1 className="py-2 text-2xl font-black text-gray-900">NOQ Login Page (logo)</h1>
+            <h1 className="py-2 text-2xl font-black text-gray-900">NOQ Login</h1>
             <p className="text-sm text-gray-500">skip the wait, not the queue</p>
             <p className="text-sm text-gray-500 mb-4">sign in to your account.</p>
             <p className="text-xs text-gray-400">new here?</p> 
@@ -109,7 +404,7 @@ function NoqLogin({ isOpen, onClose, initialView = "login" }) {
               <button
                 type="button"
                 className="text-blue-500 hover:text-blue-700 text-sm font-semibold cursor-pointer bg-transparent border-none" 
-                onClick={() => setIsSignupView(true)} 
+                onClick={() => switchView('signup')} 
               >
                 create an account?
               </button>
@@ -117,14 +412,16 @@ function NoqLogin({ isOpen, onClose, initialView = "login" }) {
 
             <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4 text-left">
               <div>
-                <label htmlFor="login-username" className="block text-xs font-bold uppercase text-gray-400 mb-1">Username:</label>
+                <label htmlFor="login-email" className="block text-xs font-bold uppercase text-gray-400 mb-1">Email Address:</label>
                 <input 
                   className="border border-gray-200 rounded-xl py-2.5 px-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                  type="text" 
-                  id="login-username" 
-                  name="username" 
+                  type="email" 
+                  id="login-email" 
+                  name="email" 
+                  value={formData.email}
+                  onChange={handleInputChange}
                   required 
-                  placeholder="Enter your username" 
+                  placeholder="Enter your email" 
                 />
               </div>
               
@@ -135,13 +432,19 @@ function NoqLogin({ isOpen, onClose, initialView = "login" }) {
                   type="password" 
                   id="login-password" 
                   name="password" 
+                  value={formData.password}
+                  onChange={handleInputChange}
                   required 
                   placeholder="Enter your password" 
                 />
               </div>
               
-              <button className="login-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl w-full transition cursor-pointer" type="submit">
-                Login
+              <button 
+                disabled={loading}
+                className="login-btn bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-bold py-3 px-4 rounded-xl w-full transition cursor-pointer" 
+                type="submit"
+              >
+                {loading ? 'Logging in...' : 'Login'}
               </button>
             </form>
           </div>

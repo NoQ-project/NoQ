@@ -19,14 +19,14 @@ function Navbar({onLoginClick}) {
             </ul>  
             <div className="md:flex hidden justify-end gap-4">
                 
-                    <button class="bg-blue-500 text-white py-2 px-4 rounded"
+                    <button className="bg-blue-500 text-white py-2 px-4 rounded"
                     onClick={onLoginClick}>Login</button>
             
                 <button className="bg-green-500 text-white py-2 px-4 rounded"
                onClick={onLoginClick}>Get a token</button>
              
         </div>
-        <div onClick={()=>alert("sidebar trigered")} class="bar cursor-pointer md:hidden flex justify-end gap-4">
+        <div onClick={()=>alert("sidebar trigered")} className="bar cursor-pointer md:hidden flex justify-end gap-4">
             <i className="bar fa-solid fa-bars fa-lg"></i>
         </div>
        </nav>

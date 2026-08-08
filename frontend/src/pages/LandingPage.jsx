@@ -13,6 +13,10 @@ function LandingPage() {
     setShowLogin(true);
   };
 
+  const closeAuth = () => {
+    setShowLogin(false);
+  };
+
   return (
     <>
       <Navbar onLoginClick={() => openAuth("login")} />

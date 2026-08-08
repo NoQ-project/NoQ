@@ -194,7 +194,7 @@ function LandingPage() {
               here to assist with bookings, queue setup, or any issues you run
               into.
             </p>
-            {/* फोटो यहाँ राखिएको छ */}
+            
             <div className="noq-contact-image">
               <img
                 src="https://images.unsplash.com/photo-1534536281715-e28d76689b4d?q=80&w=800&auto=format&fit=crop"

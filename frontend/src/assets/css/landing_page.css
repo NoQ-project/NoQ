@@ -285,11 +285,10 @@ header {
   background: #EDE7FD;
 }
 
-/* ===== Services & How It Works (Max Width र Padding मिलाइएको छ) ===== */
 .noq-services, 
 .noq-how-it-works {
-  padding: 2rem 1.5rem; /* Padding घटाइयो */
-  max-width: 1350px;    /* max-width 1100px बाट बढाएर 1350px बनाइयो */
+  padding: 2rem 1.5rem;
+  max-width: 1350px;    
   margin: 0 auto;
 }
 
@@ -393,7 +392,7 @@ header {
   grid-template-columns: 1fr 1fr;
   gap: 2.5rem;
   scroll-margin-top: 24px;
-  max-width: 1350px; /* Contact को max-width पनि बढाएर 1350px बनाइयो */
+  max-width: 1350px; 
   margin: 1.5rem auto 3rem auto;
   padding: 0 1.5rem;
   align-items: center;

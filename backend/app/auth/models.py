@@ -12,21 +12,22 @@ class UserRole(enum.Enum):
 
 class UserModel(Base):
     __tablename__ = "usertable"
-    id = Column(Integer, 
-        primary_key=True)
+
+    id = Column(Integer, primary_key=True)
     role = Column(
-            Enum(UserRole),
-            default=UserRole.USER,
-            nullable=False
-        )
-    name = Column(String(20))
+        Enum(UserRole),
+        default=UserRole.USER,
+        nullable=False
+    )
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
     email = Column(
-    String(50),
-    unique=True
+        String(50),
+        unique=True
     )
     password_hash = Column(
-            String(255),
-            nullable=False
+        String(255),
+        nullable=False
     )
     password_changed_at = Column(DateTime, nullable=True)
     is_verified = Column(Boolean)
@@ -45,15 +46,21 @@ class UserModel(Base):
         onupdate=func.now()
     )
     profile = relationship(
-            "User",
-            back_populates="auth_user",
-            uselist=False
-        )
-    institution = relationship(
-    "Institution",
-    back_populates="auth_user",
-    uselist=False
+        "User",
+        back_populates="auth_user",
+        uselist=False
     )
+    institution = relationship(
+        "Institution",
+        back_populates="auth_user",
+        uselist=False
+    )
+
+    # DYNAMIC PROPERTY: Solves the FastAPI 'ResponseValidationError'
+    @property
+    def name(self) -> str:
+        return f"{self.first_name} {self.last_name}".strip()
+
 
 class RefreshTokenModel(Base):
     __tablename__ = "refresh_tokens"
@@ -88,5 +95,3 @@ class RefreshTokenModel(Base):
         default=lambda: datetime.now(timezone.utc),
         nullable=False
     )
-
-    

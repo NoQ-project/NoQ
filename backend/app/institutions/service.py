@@ -1,14 +1,14 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
-
+from backend.app.queues.models import QueueStatus, Queue
 from backend.app.institutions.models import Institution
 from backend.app.institutions.schemas import (
     InstitutionCreateSchema,
     InstitutionUpdateSchema
 )
 from backend.app.auth.models import UserModel
-
+from datetime import datetime, timezone
 
 class InstitutionService:
 
@@ -219,13 +219,14 @@ class InstitutionService:
 
     @staticmethod
     def get_dashboard(
-        db: Session
+        db: Session,
+        current_user: UserModel
     ):
 
         institution = (
             db.query(Institution)
             .filter(
-                Institution.auth_user_id == 1   # TODO: Replace with JWT user id
+                Institution.auth_user_id == current_user.id
             )
             .first()
         )

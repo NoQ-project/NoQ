@@ -1,23 +1,24 @@
 import API from './api';
 
 export const authService = {
-  // 1. POST /auth/register
-  register: async (first_name, last_name, role, email, password) => {
+  register: async ({ first_name, last_name, role, email, password }) => {
     const response = await API.post('/auth/register', {
       first_name,
       last_name,
-      role: role || 'USER',
+      role: (role || 'user').toLowerCase(), 
       email,
       password,
     });
     return response.data;
   },
-
   // 2. POST /auth/verify_register
-  verifyRegister: async (email, otp) => {
-    const response = await API.post('/auth/verify_register', { email, otp });
-    return response.data;
-  },
+ verifyRegister: async (email, otp) => {
+  const response = await API.post('/auth/verify_register', {
+    email: email.trim().toLowerCase(),
+    otp: String(otp).trim(),
+  });
+  return response.data;
+},
 
   // 3. POST /auth/resend_otp
   resendOtp: async (email) => {

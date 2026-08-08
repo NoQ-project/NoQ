@@ -3,8 +3,11 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import NoqLogin from "../components/auth/Login";
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
 function LandingPage() {
+  const navigate = useNavigate();
+
   const [showLogin, setShowLogin] = useState(false);
   const [initialAuthView, setInitialAuthView] = useState("login");
 
@@ -13,6 +16,26 @@ function LandingPage() {
     setShowLogin(true);
   };
 
+<<<<<<< HEAD
+=======
+  const closeAuth = () => {
+    setShowLogin(false);
+  };
+
+  const handleLoginSuccess = (role) => {
+    const normalizedRole = String(role).toLowerCase();
+    
+    if (normalizedRole === 'admin') {
+      navigate('/admin');
+    } else if (normalizedRole === 'org' || normalizedRole === 'organization' || normalizedRole === 'institution') {
+      navigate('/org');
+    } else {
+      navigate('/user');
+    }
+  };
+
+
+>>>>>>> 2a147b596808efec2aa6fabc922bf3a7c51cca45
   return (
     <>
       <Navbar onLoginClick={() => openAuth("login")} />
@@ -233,12 +256,13 @@ function LandingPage() {
 
       <Footer />
 
-      <NoqLogin
-        isOpen={showLogin}
-        onClose={() => setShowLogin(false)}
-        initialView={initialAuthView}
-      />
-    </>
+     <NoqLogin 
+      isOpen={showLogin} 
+      onClose={closeAuth}
+      initialView={initialAuthView}
+      onLoginSuccess={handleLoginSuccess} 
+    />
+</>
   );
 }
 

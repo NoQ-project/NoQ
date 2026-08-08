@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime, date
 
 
@@ -80,3 +80,24 @@ class QueueStatisticsRangeSchema(BaseModel):
     start_date: date
     end_date: date
     daily_statistics: list[DailyQueueStatisticsSchema]
+
+class QueueStatusToggleRequest(BaseModel):
+    reason: str | None = Field(
+        default=None,
+        max_length=500,
+    )
+
+
+class QueueStatusResponse(BaseModel):
+    queue_id: int
+    is_active: bool
+    pause_reason: str | None
+    paused_at: datetime | None
+    message: str
+
+class QueueTrackingResponse(BaseModel):
+    queue_id: int
+    is_active: bool
+    pause_reason: str | None
+    current_token_number: int | None
+    waiting_count: int

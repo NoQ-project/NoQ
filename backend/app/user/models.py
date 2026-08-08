@@ -42,3 +42,7 @@ class User(Base):
         "Token",
         back_populates="user"
     )
+    notifications = relationship(
+        "Notification",
+        back_populates="user"
+    )

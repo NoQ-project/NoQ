@@ -77,8 +77,8 @@ def require_owner (db: Session,
 
 def get_owned_token(
     booking_id: int,
-    db: Session,
-    current_user,
+    current_user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     return require_owner(
         db=db,
@@ -90,8 +90,8 @@ def get_owned_token(
 
 def get_owned_queue(
     queue_id: int,
-    db: Session,
-    current_user,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
 ):
     return require_owner(
         db=db,
@@ -100,46 +100,46 @@ def get_owned_queue(
         owner_column=Queue.institution_id,
         current_user=current_user,
     )
-
 def get_owned_user_profile(
     profile_id: int,
-    db: Session,
-    current_user,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
 ):
     return require_owner(
         db=db,
         model=User,
-        resource_id= profile_id,
+        resource_id=profile_id,
         owner_column=User.user_id,
         current_user=current_user,
     )
 
+
 def get_owned_institution_profile(
     profile_id: int,
-    db: Session,
-    current_user,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
 ):
     return require_owner(
         db=db,
         model=Institution,
-        resource_id= profile_id,
+        resource_id=profile_id,
         owner_column=Institution.institution_id,
         current_user=current_user,
     )
 
+
 def get_owned_notification(
     notification_id: int,
-    db: Session,
-    current_user,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
 ):
     return require_owner(
         db=db,
         model=Notification,
-        resource_id= notification_id,
+        resource_id=notification_id,
         owner_column=Notification.user_id,
         current_user=current_user,
     )
-
 
 
 def create_access_token(user_id: int):

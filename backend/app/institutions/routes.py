@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
-
+from backend.app.auth.models import UserModel
+from backend.app.auth.dependencies import get_current_user
 from backend.app.utils.database import get_db
 from backend.app.institutions.schemas import (
     InstitutionDashboardResponse,
@@ -63,10 +64,12 @@ def search_institutions(
     status_code=status.HTTP_200_OK
 )
 def get_dashboard(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+     current_user: UserModel = Depends(get_current_user)
 ):
     return controller.InstitutionController.get_dashboard(
-        db=db
+        db=db,
+         current_user=current_user,
     )
 
 

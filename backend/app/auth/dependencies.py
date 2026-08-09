@@ -53,26 +53,28 @@ def require_role(required_role: UserRole):
     return role_checker
 
 
-def require_owner (db: Session,
-                    model, 
-                    resource_id: int, 
-                    owner_id, 
-                    current_user= Depends(get_current_user)):
-
+def require_owner(
+    db: Session,
+    model,
+    resource_id: int,
+    owner_column,
+    current_user=Depends(get_current_user)
+):
     resource = (
         db.query(model)
         .filter(
             model.id == resource_id,
-            owner_id == current_user.id
+            owner_column == current_user.id
         )
         .first()
     )
+
     if resource is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"{model.__name__} not found."
         )
-    
+
     return resource
 
 def get_owned_token(

@@ -7,9 +7,13 @@ from backend.app.tracking.service import get_token_tracking
 
 
 def schedule_token_update(token_id: int):
-    asyncio.create_task(
-        broadcast_token_update(token_id)
-    )
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(
+            broadcast_token_update(token_id)
+        )
+    except RuntimeError:
+        return
 
 
 async def broadcast_token_update(
@@ -42,6 +46,7 @@ async def broadcast_token_update(
 
     finally:
         db.close()
+
 
 def schedule_queue_updates(
     queue_id: int,

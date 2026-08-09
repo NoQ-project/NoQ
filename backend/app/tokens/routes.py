@@ -9,7 +9,7 @@ from backend.app.auth.dependencies import (
     require_role,
 )
 from backend.app.tokens import controller
-from backend.app.tokens.models import TokenStatus
+from backend.app.tokens.models import Token, TokenStatus
 from backend.app.tokens.schemas import (
     TokenResponseSchema,
     TokenDetailSchema,
@@ -44,6 +44,11 @@ def book_token_route(
         user_id=current_user.profile.id,
         db=db,
     )
+    return controller.book_token(
+    queue_id=queue_id,
+    user_id=current_user.id,
+    db=db
+)
 
 @token_routes.get(
     "/my-tokens",
@@ -71,7 +76,7 @@ def get_my_tokens(
 )
 def get_token_details(
     token_id: int,
-    current_user: UserModel = Depends(get_owned_token),
+    current_token: Token = Depends(get_owned_token),
     db: Session = Depends(get_db),
 ):
     if not current_user.profile:
@@ -81,7 +86,7 @@ def get_token_details(
         )
     return controller.get_token_details(
         token_id=token_id,
-        user_id=current_user.profile.id,
+        user_id=current_token.user_id,
         db=db,
     )
 
@@ -115,7 +120,7 @@ def cancel_token(
 )
 def get_waiting_position(
     token_id: int,
-    current_user: UserModel = Depends(get_owned_token),
+    current_token: Token = Depends(get_owned_token),
     db: Session = Depends(get_db),
 ):
     if not current_user.profile:
@@ -125,7 +130,7 @@ def get_waiting_position(
         )
     return controller.get_waiting_position(
         token_id=token_id,
-        user_id=current_user.profile.id,
+        user_id=current_token.user_id,
         db=db,
     )
 

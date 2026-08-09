@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime, date
+from backend.app.queues.models import QueueStatus
 
 
 class QueueCreateSchema(BaseModel):
@@ -16,7 +17,6 @@ class QueueUpdateSchema(BaseModel):
     avg_service_time: int
     is_active: bool
 
-
 class QueueResponseSchema(BaseModel):
     id: int
     institution_id: int
@@ -25,11 +25,12 @@ class QueueResponseSchema(BaseModel):
     daily_limit: int
     avg_service_time: int
     is_active: bool
+    status: QueueStatus
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
-
+    
 class QueueDetailSchema(BaseModel):
     id: int
     institution_id: int
@@ -38,6 +39,7 @@ class QueueDetailSchema(BaseModel):
     daily_limit: int
     avg_service_time: int
     is_active: bool
+    status: QueueStatus
     created_at: datetime
     updated_at: datetime
 

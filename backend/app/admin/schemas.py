@@ -1,6 +1,11 @@
+
 from pydantic import BaseModel
 from datetime import datetime, date
 
+
+# ============================================================
+# DASHBOARD
+# ============================================================
 
 class DashboardStats(BaseModel):
     total_users: int
@@ -11,8 +16,14 @@ class DashboardStats(BaseModel):
     total_tokens: int
     today_tokens: int
 
+
 class DashboardResponse(BaseModel):
     statistics: DashboardStats
+
+
+# ============================================================
+# USERS
+# ============================================================
 
 class UserSummary(BaseModel):
     id: int
@@ -21,12 +32,14 @@ class UserSummary(BaseModel):
     is_verified: bool
     created_at: datetime
 
+
 class UserListResponse(BaseModel):
     items: list[UserSummary]
     page: int
     limit: int
     total: int
     pages: int
+
 
 class UserDetail(BaseModel):
     id: int
@@ -39,8 +52,18 @@ class UserDetail(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
+# ============================================================
+# COMMON
+# ============================================================
+
 class MessageResponse(BaseModel):
     message: str
+
+
+# ============================================================
+# INSTITUTIONS
+# ============================================================
 
 class InstitutionSummary(BaseModel):
     id: int
@@ -51,6 +74,7 @@ class InstitutionSummary(BaseModel):
     is_active: bool
     created_at: datetime
 
+
 class InstitutionListResponse(BaseModel):
     items: list[InstitutionSummary]
     page: int
@@ -58,12 +82,14 @@ class InstitutionListResponse(BaseModel):
     total: int
     pages: int
 
+
 class InstitutionQueue(BaseModel):
     id: int
     name: str
     daily_limit: int
     avg_service_time: int
     is_active: bool
+
 
 class InstitutionDetail(BaseModel):
     id: int
@@ -79,6 +105,11 @@ class InstitutionDetail(BaseModel):
     updated_at: datetime
     queues: list[InstitutionQueue]
 
+
+# ============================================================
+# QUEUES
+# ============================================================
+
 class QueueSummary(BaseModel):
     id: int
     name: str
@@ -88,6 +119,7 @@ class QueueSummary(BaseModel):
     is_active: bool
     created_at: datetime
 
+
 class QueueListResponse(BaseModel):
     items: list[QueueSummary]
     page: int
@@ -95,9 +127,11 @@ class QueueListResponse(BaseModel):
     total: int
     pages: int
 
+
 class QueueInstitution(BaseModel):
     id: int
     name: str
+
 
 class QueueDetail(BaseModel):
     id: int
@@ -110,6 +144,11 @@ class QueueDetail(BaseModel):
     updated_at: datetime
     institution: QueueInstitution
 
+
+# ============================================================
+# TOKENS
+# ============================================================
+
 class TokenSummary(BaseModel):
     id: int
     token_number: int
@@ -121,12 +160,14 @@ class TokenSummary(BaseModel):
     booking_date: date
     created_at: datetime
 
+
 class TokenListResponse(BaseModel):
     items: list[TokenSummary]
     page: int
     limit: int
     total: int
     pages: int
+
 
 class TokenDetail(BaseModel):
     id: int
@@ -141,6 +182,11 @@ class TokenDetail(BaseModel):
     created_at: datetime
     cancelled_at: datetime | None
 
+
+# ============================================================
+# AUDIT LOGS
+# ============================================================
+
 class AuditLogSummary(BaseModel):
     id: int
     admin_id: int
@@ -150,9 +196,11 @@ class AuditLogSummary(BaseModel):
     description: str | None
     created_at: datetime
 
+
 class AuditLogListResponse(BaseModel):
     items: list[AuditLogSummary]
     page: int
     limit: int
     total: int
     pages: int
+

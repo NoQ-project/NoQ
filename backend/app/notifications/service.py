@@ -10,8 +10,6 @@ from backend.app.notifications.policy import (
     get_threshold_notification,
 )
 from backend.app.tokens.models import Token
-from backend.app.notifications.models import Notification
-
 
 def get_notifications(
     user_id: int,

@@ -8,7 +8,7 @@ import enum
 class QueueStatus(str, enum.Enum):
     OPEN = "OPEN"
     PAUSED = "PAUSED"
-    CLOSED = "CLOSE"
+    CLOSED = "CLOSED"
 
 class Queue(Base):
     __tablename__ = "queues"
@@ -87,6 +87,11 @@ class Queue(Base):
         "QueueWorkingHour",
         back_populates="queue",
         cascade="all, delete-orphan"
+    )
+
+    notifications = relationship(
+    "Notification",
+    back_populates="queue"
     )
 
 class QueueWorkingHour(Base):

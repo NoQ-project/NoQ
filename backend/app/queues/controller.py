@@ -1,9 +1,12 @@
 from datetime import date
+
 from sqlalchemy.orm import Session
+
 from backend.app.queues.schemas import QueueStatusToggleRequest
 from backend.app.queues import service
 from backend.app.auth.dependencies import get_owned_queue
 from backend.app.auth.models import UserModel
+
 
 def create_queue(
     queue,
@@ -16,6 +19,7 @@ def create_queue(
         current_user=current_user,
     )
 
+
 def update_queue(
     queue_id: int,
     queue,
@@ -24,6 +28,16 @@ def update_queue(
     return service.update_queue(
         queue_id=queue_id,
         queue=queue,
+        db=db
+    )
+
+
+def get_institution_queues(
+    institution_id: int,
+    db: Session
+):
+    return service.get_queues_by_institution(
+        institution_id=institution_id,
         db=db
     )
 
@@ -76,7 +90,7 @@ def toggle_queue_status(
     queue_id: int,
     data: QueueStatusToggleRequest,
     db: Session,
-    current_user,
+    current_user: UserModel,
 ):
     queue = get_owned_queue(
         queue_id=queue_id,
@@ -89,6 +103,8 @@ def toggle_queue_status(
         reason=data.reason,
         db=db,
     )
+
+
 def generate_queue_qr(
     queue_id: int,
     db: Session

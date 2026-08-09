@@ -1,8 +1,8 @@
-"""NoQ schema
+"""initial final schema
 
-Revision ID: 5830d93dc9c1
+Revision ID: 4d5f042c72aa
 Revises: 
-Create Date: 2026-08-06 21:27:55.555808
+Create Date: 2026-08-09 10:05:05.542096
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '5830d93dc9c1'
+revision: str = '4d5f042c72aa'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,7 +24,8 @@ def upgrade() -> None:
     op.create_table('usertable',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('role', sa.Enum('USER', 'INSTITUTION', 'ADMIN', name='userrole'), nullable=False),
-    sa.Column('name', sa.String(length=20), nullable=True),
+    sa.Column('first_name', sa.String(length=100), nullable=False),
+    sa.Column('last_name', sa.String(length=100), nullable=False),
     sa.Column('email', sa.String(length=50), nullable=True),
     sa.Column('password_hash', sa.String(length=255), nullable=False),
     sa.Column('password_changed_at', sa.DateTime(), nullable=True),
@@ -48,6 +49,7 @@ def upgrade() -> None:
     )
     op.create_table('institutions',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=255), nullable=False),
     sa.Column('auth_user_id', sa.Integer(), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('address', sa.Text(), nullable=False),
@@ -59,6 +61,18 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('auth_user_id')
     )
+    op.create_table('refresh_tokens',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('token', sa.String(length=500), nullable=False),
+    sa.Column('expires_at', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('revoked', sa.Boolean(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['usertable.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_refresh_tokens_id'), 'refresh_tokens', ['id'], unique=False)
+    op.create_index(op.f('ix_refresh_tokens_token'), 'refresh_tokens', ['token'], unique=True)
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('auth_user_id', sa.Integer(), nullable=False),
@@ -79,66 +93,88 @@ def upgrade() -> None:
     sa.Column('daily_limit', sa.Integer(), nullable=False),
     sa.Column('avg_service_time', sa.Integer(), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('status', sa.Enum('OPEN', 'PAUSED', 'CLOSED', name='queuestatus'), nullable=False),
+    sa.Column('pause_reason', sa.Text(), nullable=True),
+    sa.Column('current_serving_token_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
-    sa.ForeignKeyConstraint(['institution_id'], ['institutions.id'], ),
+    sa.ForeignKeyConstraint(['institution_id'], ['institutions.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('refresh_tokens',
+    op.create_index(op.f('ix_queues_current_serving_token_id'), 'queues', ['current_serving_token_id'], unique=False)
+    op.create_index(op.f('ix_queues_status'), 'queues', ['status'], unique=False)
+    op.create_table('queue_working_hours',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('token', sa.String(length=500), nullable=False),
-    sa.Column('expires_at', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('revoked', sa.Boolean(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+    sa.Column('queue_id', sa.Integer(), nullable=False),
+    sa.Column('day_of_week', sa.Integer(), nullable=False),
+    sa.Column('opening_time', sa.Time(), nullable=False),
+    sa.Column('closing_time', sa.Time(), nullable=False),
+    sa.CheckConstraint('day_of_week BETWEEN 0 AND 6', name='check_valid_day_of_week'),
+    sa.ForeignKeyConstraint(['queue_id'], ['queues.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_refresh_tokens_id'), 'refresh_tokens', ['id'], unique=False)
-    op.create_index(op.f('ix_refresh_tokens_token'), 'refresh_tokens', ['token'], unique=True)
+    op.create_index(op.f('ix_queue_working_hours_queue_id'), 'queue_working_hours', ['queue_id'], unique=False)
     op.create_table('tokens',
-    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('queue_id', sa.Integer(), nullable=False),
     sa.Column('token_number', sa.Integer(), nullable=False),
-    sa.Column('status', sa.Enum('WAITING', 'CALLED', 'SERVED', 'CANCELLED', 'MISSED', name='tokenstatus'), nullable=True),
+    sa.Column('status', sa.Enum('WAITING', 'SERVING', 'COMPLETED', 'MISSED', 'CANCELLED', name='tokenstatus'), nullable=False),
     sa.Column('booking_date', sa.Date(), nullable=False),
     sa.Column('estimated_time', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+    sa.Column('started_at', sa.DateTime(), nullable=True),
+    sa.Column('completed_at', sa.DateTime(), nullable=True),
+    sa.Column('missed_at', sa.DateTime(), nullable=True),
     sa.Column('cancelled_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['queue_id'], ['queues.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('queue_id', 'booking_date', 'token_number', name='unique_daily_queue_token')
+    sa.UniqueConstraint('queue_id', 'booking_date', 'token_number', name='uq_queue_date_token_number')
     )
+    op.create_index('ix_token_queue_date_status', 'tokens', ['queue_id', 'booking_date', 'status'], unique=False)
+    op.create_index('ix_token_user_status', 'tokens', ['user_id', 'status'], unique=False)
     op.create_table('notifications',
-    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('queue_id', sa.Integer(), nullable=False),
     sa.Column('token_id', sa.Integer(), nullable=True),
-    sa.Column('type', sa.Enum('IN_APP', 'EMAIL', 'SMS', name='notificationtype'), nullable=False),
-    sa.Column('status', sa.Enum('PENDING', 'SENT', 'FAILED', 'READ', name='notificationstatus'), nullable=True),
+    sa.Column('type', sa.Enum('QUEUE_PAUSED', 'QUEUE_RESUMED', 'PEOPLE_AHEAD_THRESHOLD', 'YOUR_TURN', 'TOKEN_COMPLETED', 'TOKEN_MISSED', 'TOKEN_CANCELLED', name='notificationtype'), nullable=False),
     sa.Column('title', sa.String(length=255), nullable=False),
     sa.Column('message', sa.Text(), nullable=False),
-    sa.Column('is_read', sa.Boolean(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
-    sa.Column('sent_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['token_id'], ['tokens.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.Column('is_read', sa.Boolean(), nullable=False),
+    sa.Column('action', sa.String(length=50), nullable=True),
+    sa.Column('threshold', sa.Integer(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['queue_id'], ['queues.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['token_id'], ['tokens.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('token_id', 'type', 'threshold', name='uq_notification_token_type_threshold')
     )
+    op.create_index('ix_notification_user_created', 'notifications', ['user_id', 'created_at'], unique=False)
+    op.create_index('ix_notification_user_read', 'notifications', ['user_id', 'is_read'], unique=False)
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_index('ix_notification_user_read', table_name='notifications')
+    op.drop_index('ix_notification_user_created', table_name='notifications')
     op.drop_table('notifications')
+    op.drop_index('ix_token_user_status', table_name='tokens')
+    op.drop_index('ix_token_queue_date_status', table_name='tokens')
     op.drop_table('tokens')
+    op.drop_index(op.f('ix_queue_working_hours_queue_id'), table_name='queue_working_hours')
+    op.drop_table('queue_working_hours')
+    op.drop_index(op.f('ix_queues_status'), table_name='queues')
+    op.drop_index(op.f('ix_queues_current_serving_token_id'), table_name='queues')
+    op.drop_table('queues')
+    op.drop_table('users')
     op.drop_index(op.f('ix_refresh_tokens_token'), table_name='refresh_tokens')
     op.drop_index(op.f('ix_refresh_tokens_id'), table_name='refresh_tokens')
     op.drop_table('refresh_tokens')
-    op.drop_table('queues')
-    op.drop_table('users')
     op.drop_table('institutions')
     op.drop_table('audit_logs')
     op.drop_table('usertable')

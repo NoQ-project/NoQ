@@ -19,8 +19,8 @@ class UserModel(Base):
         default=UserRole.USER,
         nullable=False
     )
-    first_name = Column(String, nullable=False)
-    last_name = Column(String, nullable=False)
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
     email = Column(
         String(50),
         unique=True

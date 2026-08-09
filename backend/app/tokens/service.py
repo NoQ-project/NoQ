@@ -4,23 +4,30 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from backend.app.tokens.models import Token, TokenStatus
-from backend.app.queues.models import Queue, QueueStatus, QueueWorkingHour
+from backend.app.queues.models import (
+    Queue,
+    QueueStatus,
+    QueueWorkingHour,
+)
+
 from backend.app.tracking.events import (
     schedule_token_update,
     schedule_queue_updates,
 )
+
 from backend.app.notifications.scheduler import (
     schedule_notification,
     schedule_threshold_notification,
+    schedule_queue_threshold_notifications,
 )
+
 from backend.app.notifications.models import NotificationType
-from sqlalchemy import func
 
 
 def get_effective_service_time(
     queue_id: int,
     booking_date,
-    db: Session
+    db: Session,
 ):
     completed_tokens = (
         db.query(Token)
@@ -29,7 +36,7 @@ def get_effective_service_time(
             Token.booking_date == booking_date,
             Token.status == TokenStatus.COMPLETED,
             Token.started_at.isnot(None),
-            Token.completed_at.isnot(None)
+            Token.completed_at.isnot(None),
         )
         .all()
     )
@@ -40,6 +47,7 @@ def get_effective_service_time(
             .filter(Queue.id == queue_id)
             .first()
         )
+
         return queue.avg_service_time if queue else 10
 
     total_seconds = sum(
@@ -49,15 +57,18 @@ def get_effective_service_time(
         for token in completed_tokens
     )
 
-    average_minutes = total_seconds / 60 / len(completed_tokens)
+    average_minutes = (
+        total_seconds / 60 / len(completed_tokens)
+    )
 
     return max(1, round(average_minutes))
+
 
 def update_waiting_token_estimates(
     queue_id: int,
     booking_date,
     db: Session,
-    start_time: datetime | None = None
+    start_time: datetime | None = None,
 ):
     queue = (
         db.query(Queue)
@@ -74,7 +85,7 @@ def update_waiting_token_estimates(
     service_time = get_effective_service_time(
         queue_id=queue_id,
         booking_date=booking_date,
-        db=db
+        db=db,
     )
 
     waiting_tokens = (
@@ -82,7 +93,7 @@ def update_waiting_token_estimates(
         .filter(
             Token.queue_id == queue_id,
             Token.booking_date == booking_date,
-            Token.status == TokenStatus.WAITING
+            Token.status == TokenStatus.WAITING,
         )
         .order_by(Token.token_number.asc())
         .all()
@@ -93,7 +104,7 @@ def update_waiting_token_estimates(
         .filter(
             Token.queue_id == queue_id,
             Token.booking_date == booking_date,
-            Token.status == TokenStatus.SERVING
+            Token.status == TokenStatus.SERVING,
         )
         .first()
     )
@@ -111,6 +122,7 @@ def update_waiting_token_estimates(
         )
 
     db.flush()
+
 
 def book_token(
     queue_id: int,
@@ -297,11 +309,17 @@ def book_token(
         db.rollback()
         raise
 
-    except Exception:
+    except Exception as e:
         db.rollback()
+
+        print(
+            "BOOK TOKEN ERROR:",
+            repr(e),
+        )
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Unable to book token.",
+            detail=str(e),
         )
 
 
@@ -403,9 +421,7 @@ def cancel_token(
 
         db.commit()
 
-        schedule_token_update(
-            token.id
-        )
+        schedule_token_update(token.id)
 
         schedule_notification(
             token_id=token.id,
@@ -426,11 +442,17 @@ def cancel_token(
         db.rollback()
         raise
 
-    except Exception:
+    except Exception as e:
         db.rollback()
+
+        print(
+            "CANCEL TOKEN ERROR:",
+            repr(e),
+        )
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Unable to cancel token.",
+            detail=str(e),
         )
 
 
@@ -684,7 +706,9 @@ def advance_queue(
             notification_type=NotificationType.YOUR_TURN,
         )
 
-        schedule_threshold_notification(
+        # Queue ko waiting tokens ko threshold notification
+        # schedule गर्ने सही function
+        schedule_queue_threshold_notifications(
             queue_id=queue.id,
             booking_date=current_date,
             db=db,
@@ -705,11 +729,17 @@ def advance_queue(
         db.rollback()
         raise
 
-    except Exception:
+    except Exception as e:
         db.rollback()
+
+        print(
+            "ADVANCE QUEUE ERROR:",
+            repr(e),
+        )
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Unable to advance queue.",
+            detail=f"Unable to advance queue: {str(e)}",
         )
 
 

@@ -28,12 +28,16 @@ def schedule_notification(
     token_id: int,
     notification_type: NotificationType,
 ):
-    asyncio.create_task(
-        process_notification(
-            token_id=token_id,
-            notification_type=notification_type,
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(
+            process_notification(
+                token_id=token_id,
+                notification_type=notification_type,
+            )
         )
-    )
+    except RuntimeError:
+        return
 
 
 async def process_notification(
@@ -214,12 +218,16 @@ def schedule_threshold_notification(
     token_id: int,
     threshold: int,
 ):
-    asyncio.create_task(
-        process_threshold_notification(
-            token_id=token_id,
-            threshold=threshold,
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(
+            process_threshold_notification(
+                token_id=token_id,
+                threshold=threshold,
+            )
         )
-    )
+    except RuntimeError:
+        return
 
 
 async def process_threshold_notification(

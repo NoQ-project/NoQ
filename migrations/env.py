@@ -9,6 +9,8 @@ from backend.app.admin.models import AuditLog
 from backend.app.tokens.models import Token
 from backend.app.queues.models import Queue
 from backend.app.user.models import User
+from backend.app.queues.models import Queue
+from backend.app.queues.models import QueueWorkingHour
 from backend.app.institutions.models import Institution
 from backend.app.notifications.models import Notification
 from backend.app.utils.database import Base
@@ -26,7 +28,10 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", settings.DB_CONNECTION)
+config.set_main_option(
+    "sqlalchemy.url",
+    settings.DB_CONNECTION.replace("%", "%%")
+)
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel

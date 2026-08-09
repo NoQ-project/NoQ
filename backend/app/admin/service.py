@@ -27,7 +27,7 @@ from .schemas import (
     AuditLogSummary,
 )
 
-from backend.app.tokens.models import Token
+from backend.app.tokens.models import Token, TokenStatus
 
 
 def add_log(
@@ -471,13 +471,13 @@ def cancel_token(
             detail="Token not found",
         )
 
-    if token.status == Token.CANCELLED:
+    if token.status == TokenStatus.CANCELLED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Token already cancelled",
         )
 
-    token.status = Token.CANCELLED
+    token.status = TokenStatus.CANCELLED
     token.cancelled_at = datetime.now(timezone.utc)
 
     db.commit()
@@ -495,7 +495,6 @@ def cancel_token(
     return MessageResponse(
         message="Token cancelled successfully"
     )
-
 
 # ============================================================
 # AUDIT LOGS

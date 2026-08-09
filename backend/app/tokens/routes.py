@@ -1,12 +1,12 @@
 from typing import List
-
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 
-from backend.app.auth.models import UserModel
+from backend.app.auth.models import UserModel, UserRole
 from backend.app.auth.dependencies import (
     get_current_user,
     get_owned_token,
+    require_role,
 )
 from backend.app.tokens import controller
 from backend.app.tokens.models import TokenStatus
@@ -19,12 +19,10 @@ from backend.app.tokens.schemas import (
 )
 from backend.app.utils.database import get_db
 
-
 token_routes = APIRouter(
     prefix="/tokens",
     tags=["Tokens"],
 )
-
 
 @token_routes.post(
     "/book",
@@ -33,32 +31,19 @@ token_routes = APIRouter(
 )
 def book_token_route(
     queue_id: int,
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(require_role(UserRole.USER)),
     db: Session = Depends(get_db),
 ):
+    if not current_user.profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User profile not found for this account."
+        )
     return controller.book_token_controller(
         queue_id=queue_id,
         user_id=current_user.profile.id,
         db=db,
     )
-
-
-@token_routes.post(
-    "/queues/{queue_id}/advance",
-    status_code=status.HTTP_200_OK,
-)
-def advance_token(
-    queue_id: int,
-    result: TokenStatus,
-    current_user: UserModel = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return controller.advance_token_controller(
-        queue_id=queue_id,
-        result=result,
-        db=db,
-    )
-
 
 @token_routes.get(
     "/my-tokens",
@@ -66,14 +51,18 @@ def advance_token(
     status_code=status.HTTP_200_OK,
 )
 def get_my_tokens(
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserModel = Depends(require_role(UserRole.USER)),
     db: Session = Depends(get_db),
 ):
+    if not current_user.profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User profile not found for this account."
+        )
     return controller.get_my_tokens(
         user_id=current_user.profile.id,
         db=db,
     )
-
 
 @token_routes.get(
     "/{token_id}",
@@ -85,12 +74,16 @@ def get_token_details(
     current_user: UserModel = Depends(get_owned_token),
     db: Session = Depends(get_db),
 ):
+    if not current_user.profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User profile not found for this account."
+        )
     return controller.get_token_details(
         token_id=token_id,
         user_id=current_user.profile.id,
         db=db,
     )
-
 
 @token_routes.patch(
     "/{token_id}/cancel",
@@ -103,13 +96,17 @@ def cancel_token(
     current_user: UserModel = Depends(get_owned_token),
     db: Session = Depends(get_db),
 ):
+    if not current_user.profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User profile not found for this account."
+        )
     return controller.cancel_token(
         queue_id=queue_id,
         token_id=token_id,
         user_id=current_user.profile.id,
         db=db,
     )
-
 
 @token_routes.get(
     "/{token_id}/waiting-position",
@@ -121,12 +118,16 @@ def get_waiting_position(
     current_user: UserModel = Depends(get_owned_token),
     db: Session = Depends(get_db),
 ):
+    if not current_user.profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User profile not found for this account."
+        )
     return controller.get_waiting_position(
         token_id=token_id,
         user_id=current_user.profile.id,
         db=db,
     )
-
 
 @token_routes.get(
     "/current-token/{queue_id}",
@@ -141,7 +142,6 @@ def get_current_token(
         queue_id=queue_id,
         db=db,
     )
-
 
 @token_routes.get(
     "/waiting-tokens/{queue_id}",

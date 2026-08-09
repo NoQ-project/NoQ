@@ -13,16 +13,12 @@ from backend.app.notifications.routes import notification_routes
 from backend.app.tracking.routes import tracking_routes
 from backend.app.middleware.cors import setup_cors
 
-# Initialize database tables
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="NoQ API")
-
-# Setup CORS middleware
 setup_cors(app)
 
-
-# Root health-check route
 @app.get("/")
 def root():
     return {
@@ -30,14 +26,6 @@ def root():
         "message": "NoQ Backend is running!"
     }
 
-
-# Fallback exception handler to guarantee CORS headers on 500 errors
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    return JSONResponse(
-        status_code=500,
-        content={"detail": f"Internal Server Error: {str(exc)}"},
-    )
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     print("--- 422 VALIDATION ERROR ---")

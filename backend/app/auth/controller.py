@@ -120,7 +120,8 @@ def login_user(body:LoginSchema, db:Session):
         expires_at=datetime.now(timezone.utc) + timedelta(days=30)
     )
     return {"access_token": access_token,
-            "refresh_token": refresh_token}
+            "refresh_token": refresh_token,
+            "role": user.role.value}
 
     
 def request_reset_password(body:EmailSchema, 

@@ -48,14 +48,12 @@ def login(body: LoginSchema, response: Response, db: Session = Depends(get_db)):
         max_age=30 * 24 * 60 * 60
     )
     
-    # 👈 Return role and email so frontend routing works instantly
     return {
         "message": "Login successful",
         "role": user.role.value if user and hasattr(user.role, 'value') else (user.role if user else "user"),
         "email": user.email if user else body.email
     }
 
-# 👈 GET Current Authenticated User & Role
 @auth_routes.get("/me", response_model=UserResponseSchema, status_code=status.HTTP_200_OK)
 def get_me(current_user: UserModel = Depends(get_current_user)):
     return current_user

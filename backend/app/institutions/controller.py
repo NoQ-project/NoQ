@@ -12,11 +12,13 @@ class InstitutionController:
     @staticmethod
     def create_institution(
         institution: InstitutionCreateSchema,
-        db: Session
+        db: Session,
+        current_user: UserModel
     ):
         return InstitutionService.create_institution(
             institution=institution,
-            db=db
+            db=db,
+            current_user=current_user
         )
 
     @staticmethod
@@ -46,6 +48,7 @@ class InstitutionController:
             institution_id=institution_id,
             db=db
         )
+
     @staticmethod
     def update_institution(
         institution_id: int,
@@ -57,6 +60,7 @@ class InstitutionController:
             institution=institution,
             db=db
         )
+
     @staticmethod
     def delete_institution(
         institution_id: int,
@@ -66,7 +70,6 @@ class InstitutionController:
             institution_id=institution_id,
             db=db
         )
-
 
     @staticmethod
     def get_dashboard(

@@ -15,13 +15,14 @@ class InstitutionService:
     @staticmethod
     def create_institution(
         institution: InstitutionCreateSchema,
-        db: Session
+        db: Session,
+        current_user: UserModel
     ):
 
         existing = (
             db.query(Institution)
             .filter(
-                Institution.auth_user_id == 1
+                Institution.auth_user_id == current_user.id
             )
             .first()
         )
@@ -34,7 +35,7 @@ class InstitutionService:
 
         new_institution = Institution(
             name=institution.name,
-            auth_user_id=1,      # TODO: Replace with current logged-in user ID
+            auth_user_id=current_user.id,
             description=institution.description,
             address=institution.address,
             phone=institution.phone,

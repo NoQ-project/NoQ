@@ -416,3 +416,25 @@ def get_log_by_id(
         )
         .first()
     )
+from sqlalchemy import or_
+from backend.app.auth.models import UserModel, UserRole
+from backend.app.institutions.models import Institution
+from sqlalchemy.orm import Session
+
+def count_institutions(
+    db: Session,
+    search: str | None,
+):
+    query = (
+        db.query(Institution)
+        .join(UserModel)
+        .filter(UserModel.role == UserRole.INSTITUTION)
+    )
+    if search:
+        query = query.filter(
+            or_(
+                UserModel.name.ilike(f"%{search}%"),
+                UserModel.email.ilike(f"%{search}%"),
+            )
+        )
+    return query.count()

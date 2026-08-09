@@ -1,23 +1,14 @@
 import axios from 'axios';
 
-/**
- * Get the base URL for API calls based on environment
- * Uses VITE_API_BASE_URL from .env, defaults to localhost:8000
- */
 const getBaseURL = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  
   if (envUrl) {
     return envUrl;
   }
-  
-  // Default for development
   return 'http://localhost:8000';
 };
 
 const BASE_URL = getBaseURL();
-
-console.log(`🌐 API Base URL: ${BASE_URL}`);
 
 const API = axios.create({
   baseURL: BASE_URL,
@@ -28,10 +19,6 @@ const API = axios.create({
   timeout: 10000, 
 });
 
-/**
- * Response Interceptor
- * Handles errors and implements retry logic for 401 responses using HTTP-only cookies
- */
 API.interceptors.response.use(
   (response) => {
     return response;
@@ -39,38 +26,36 @@ API.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Handle 401 Unauthorized - Try to refresh token
+    // Prevent infinite loop if the refresh endpoint itself returns 401
+    if (originalRequest.url && originalRequest.url.includes('/auth/refresh')) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        console.log('🔄 Attempting to refresh token via cookie...');
-        
-        // Backend handles refresh token automatically via cookies
         await API.post('/auth/refresh');
-        
-        // Retry original request
         return API(originalRequest);
       } catch (refreshError) {
         console.error('❌ Token refresh failed:', refreshError.message);
-        window.location.href = '/';
+        // Clear local storage tokens if any exist
+        localStorage.removeItem('token');
+        localStorage.removeItem('access_token');
+        
+        // Redirect to login only once
+        if (window.location.pathname !== '/') {
+          window.location.href = '/';
+        }
+        return Promise.reject(refreshError);
       }
     }
 
-    // Extract error message from response
     const message =
       error.response?.data?.detail ||
       error.response?.data?.message ||
       error.message ||
       'An unexpected error occurred.';
-
-    // Log error for debugging
-    console.error('API Error:', {
-      url: error.config?.url,
-      status: error.response?.status,
-      message: message,
-      timestamp: new Date().toISOString()
-    });
 
     return Promise.reject(new Error(message));
   }

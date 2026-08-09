@@ -1,27 +1,23 @@
-import React, { useState, useMemo } from "react";
-import '../assets/css/Admin.css'
+import React, { useState, useEffect } from "react";
+import "../assets/css/Admin.css";
+import { adminService } from "../services/adminServices";
 import {
   LayoutDashboard,
   ListOrdered,
   Users,
-  BarChart3,
   Settings as SettingsIcon,
   Search,
   Bell,
-  ChevronDown,
-  Plus,
   Pause,
   Play,
-  MoreHorizontal,
   Clock,
   CheckCircle2,
-  XCircle,
-  TrendingUp,
-  TrendingDown,
   Menu,
   X,
   Building2,
-  Volume2,
+  FileText,
+  Ticket,
+  Ban,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -33,17 +29,10 @@ import {
   CartesianGrid,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
-
 
 /* ---------------------------------------------------------------
    NoQ — Admin Console
-   Signature: the "Now Serving" ticket-flow strip — tickets drift from
-   Waiting -> Called -> Serving like a departures board, because that
-   motion IS the product. All styling lives in admin.css.
 ------------------------------------------------------------------*/
 
 const CHART_COLORS = {
@@ -54,132 +43,6 @@ const CHART_COLORS = {
   muted: "#6b7280",
   line: "#e6e8ec",
 };
-
-
-const QUEUES = [
-  {
-    id: "q1",
-    code: "GEN",
-    name: "General Enquiry",
-    branch: "Kathmandu Central",
-    waiting: 14,
-    avgWait: 6,
-    status: "active",
-  },
-  {
-    id: "q2",
-    code: "PAY",
-    name: "Payments & Billing",
-    branch: "Kathmandu Central",
-    waiting: 8,
-    avgWait: 4,
-    status: "active",
-  },
-  {
-    id: "q3",
-    code: "LOAN",
-    name: "Loan Services",
-    branch: "Patan Branch",
-    waiting: 21,
-    avgWait: 13,
-    status: "active",
-  },
-  {
-    id: "q4",
-    code: "ACC",
-    name: "New Account Opening",
-    branch: "Kathmandu Central",
-    waiting: 5,
-    avgWait: 9,
-    status: "paused",
-  },
-  {
-    id: "q5",
-    code: "CARD",
-    name: "Card Services",
-    branch: "Lalitpur Branch",
-    waiting: 11,
-    avgWait: 7,
-    status: "active",
-  },
-  {
-    id: "q6",
-    code: "VIP",
-    name: "Priority Desk",
-    branch: "Kathmandu Central",
-    waiting: 2,
-    avgWait: 3,
-    status: "active",
-  },
-];
-
-const COUNTERS = [
-  {
-    id: "c1",
-    label: "Counter 01",
-    staff: "Sujata Rai",
-    queue: "GEN",
-    ticket: "GEN-142",
-    status: "serving",
-    since: "2m ago",
-  },
-  {
-    id: "c2",
-    label: "Counter 02",
-    staff: "Bikash Thapa",
-    queue: "PAY",
-    ticket: "PAY-088",
-    status: "serving",
-    since: "4m ago",
-  },
-  {
-    id: "c3",
-    label: "Counter 03",
-    staff: "Anjali Shrestha",
-    queue: "LOAN",
-    ticket: "—",
-    status: "break",
-    since: "10m ago",
-  },
-  {
-    id: "c4",
-    label: "Counter 04",
-    staff: "Nabin Gurung",
-    queue: "CARD",
-    ticket: "CARD-057",
-    status: "serving",
-    since: "1m ago",
-  },
-  {
-    id: "c5",
-    label: "Counter 05",
-    staff: "—",
-    queue: "—",
-    ticket: "—",
-    status: "offline",
-    since: "—",
-  },
-  {
-    id: "c6",
-    label: "Counter 06",
-    staff: "Manisha K.C.",
-    queue: "VIP",
-    ticket: "VIP-014",
-    status: "serving",
-    since: "6m ago",
-  },
-];
-
-const FLOW = [
-  { code: "GEN-143", queue: "General", state: "waiting" },
-  { code: "PAY-089", queue: "Payments", state: "waiting" },
-  { code: "LOAN-067", queue: "Loan", state: "called" },
-  { code: "CARD-058", queue: "Card", state: "waiting" },
-  { code: "GEN-142", queue: "General", state: "serving" },
-  { code: "VIP-014", queue: "Priority", state: "serving" },
-  { code: "PAY-088", queue: "Payments", state: "serving" },
-  { code: "LOAN-066", queue: "Loan", state: "waiting" },
-];
 
 const WAIT_TREND = [
   { t: "9am", min: 4 },
@@ -205,74 +68,37 @@ const SERVED_BY_HOUR = [
   { t: "5pm", n: 9 },
 ];
 
-const SHARE = [
-  { name: "General", value: 34, color: CHART_COLORS.serving },
-  { name: "Payments", value: 22, color: CHART_COLORS.called },
-  { name: "Loan", value: 26, color: CHART_COLORS.waiting },
-  { name: "Card", value: 18, color: CHART_COLORS.alert },
-];
-
-const ACTIVITY = [
-  { id: 1, text: "Counter 04 called CARD-057", time: "1m ago" },
-  {
-    id: 2,
-    text: "New Account Opening queue paused by Bikash Thapa",
-    time: "6m ago",
-  },
-  { id: 3, text: "LOAN-064 marked no-show", time: "12m ago" },
-  { id: 4, text: "Counter 01 finished serving GEN-141", time: "14m ago" },
-  {
-    id: 5,
-    text: "Priority Desk average wait dropped below 3 min",
-    time: "20m ago",
-  },
-];
-
 const NAV = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { key: "institutions", label: "Institutions", icon: Building2 },
   { key: "queues", label: "Queues", icon: ListOrdered },
-  { key: "counters", label: "Counters & Staff", icon: Users },
-  { key: "analytics", label: "Analytics", icon: BarChart3 },
+  { key: "users", label: "Users", icon: Users },
+  { key: "tokens", label: "Tokens", icon: Ticket },
+  { key: "logs", label: "Audit Logs", icon: FileText },
   { key: "settings", label: "Settings", icon: SettingsIcon },
 ];
 
 const VIEW_TITLES = {
-  dashboard: ["Dashboard", "Live overview of every branch, right now."],
-  queues: ["Queues", "Manage services and monitor how each queue is flowing."],
-  counters: ["Counters & Staff", "See who is serving, on break, or offline."],
-  analytics: ["Analytics", "Trends across wait time and throughput."],
-  settings: ["Settings", "Branch, notification and behaviour preferences."],
+  dashboard: ["Dashboard", "Live overview of system activity and stats."],
+  institutions: ["Institutions", "Manage registered organizations and branches."],
+  queues: ["Queues", "Manage services and monitor queue status."],
+  users: ["Users", "Manage user accounts and access permissions."],
+  tokens: ["Tokens", "View all generated tokens and perform cancellations."],
+  logs: ["Audit Logs", "Track system-wide administrative operations."],
+  settings: ["Settings", "System-wide preferences and settings."],
 };
 
-/* ------------------------------- Small bits ------------------------------- */
-
 function StatusPill({ status }) {
-  const labels = {
-    active: "Active",
-    serving: "Serving",
-    paused: "Paused",
-    break: "On break",
-    offline: "Offline",
-    called: "Called",
-    waiting: "Waiting",
-  };
+  const isOnline = status === "active" || status === "serving" || status === true;
   return (
-    <span className={`noq-status-pill ${status}`}>
+    <span className={`noq-status-pill ${isOnline ? "active" : "paused"}`}>
       <span className="dot" />
-      {labels[status] || "Unknown"}
+      {isOnline ? "Active" : "Inactive / Paused"}
     </span>
   );
 }
 
-function KpiCard({
-  label,
-  value,
-  unit,
-  delta,
-  deltaGood,
-  icon: Icon,
-  accentClass,
-}) {
+function KpiCard({ label, value, icon: Icon, accentClass }) {
   return (
     <div className="noq-kpi-card">
       <div className="noq-kpi-top">
@@ -282,157 +108,63 @@ function KpiCard({
         </div>
       </div>
       <div className="noq-kpi-value-row">
-        <span className="noq-kpi-value">{value}</span>
-        {unit && <span className="noq-kpi-unit">{unit}</span>}
+        <span className="noq-kpi-value">{value ?? 0}</span>
       </div>
-      {delta && (
-        <div className={`noq-kpi-delta ${deltaGood ? "good" : "bad"}`}>
-          {deltaGood ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-          <span>{delta}</span>
-          <span className="vs">vs yesterday</span>
-        </div>
-      )}
     </div>
-  );
-}
-
-function TicketChip({ t }) {
-  return (
-    <div className={`noq-ticket-chip ${t.state}`}>
-      <div className="noq-chip-state-row">
-        <span className="noq-chip-dot" />
-        <span className="noq-chip-state-label">{t.state}</span>
-      </div>
-      <span className="noq-chip-code">{t.code}</span>
-      <span className="noq-chip-queue">{t.queue}</span>
-    </div>
-  );
-}
-
-function Toggle({ checked, onChange }) {
-  return (
-    <button
-      className={`noq-toggle ${checked ? "on" : ""}`}
-      onClick={() => onChange(!checked)}
-    >
-      <span className="noq-toggle-thumb" />
-    </button>
   );
 }
 
 /* ------------------------------- Views ------------------------------- */
 
 function DashboardView() {
-  const totalWaiting = QUEUES.reduce((s, q) => s + q.waiting, 0);
-  const avgWait = Math.round(
-    QUEUES.reduce((s, q) => s + q.avgWait, 0) / QUEUES.length,
-  );
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    adminService
+      .getDashboard()
+      .then((data) => setStats(data.statistics))
+      .catch((err) => console.error("Failed to fetch dashboard stats:", err));
+  }, []);
 
   return (
     <>
       <div className="noq-kpi-grid">
-        <KpiCard
-          label="Total Waiting"
-          value={totalWaiting}
-          icon={Clock}
-          accentClass="waiting"
-          delta="+6"
-          deltaGood={false}
-        />
-        <KpiCard
-          label="Avg Wait Time"
-          value={avgWait}
-          unit="min"
-          icon={TrendingUp}
-          accentClass="called"
-          delta="-2 min"
-          deltaGood={true}
-        />
-        <KpiCard
-          label="Served Today"
-          value="312"
-          icon={CheckCircle2}
-          accentClass="serving"
-          delta="+18%"
-          deltaGood={true}
-        />
-        <KpiCard
-          label="No-Shows"
-          value="9"
-          icon={XCircle}
-          accentClass="alert"
-          delta="+3"
-          deltaGood={false}
-        />
+        <KpiCard label="Total Users" value={stats?.total_users} icon={Users} accentClass="waiting" />
+        <KpiCard label="Total Institutions" value={stats?.total_institutions} icon={Building2} accentClass="called" />
+        <KpiCard label="Active Queues" value={stats?.active_queues} icon={CheckCircle2} accentClass="serving" />
+        <KpiCard label="Today's Tokens" value={stats?.today_tokens} icon={Clock} accentClass="alert" />
       </div>
 
-      <div className="noq-card">
-        <div className="noq-flow-header">
-          <div>
-            <h3 className="noq-card-title">Live ticket flow</h3>
-            <p className="noq-card-sub">
-              Waiting tickets move to Called, then Serving, in real time.
-            </p>
-          </div>
-          <span className="noq-flow-live">
-            <span className="noq-live-dot" />
-            Live
-          </span>
-        </div>
-        <div className="noq-flow-strip">
-          {FLOW.map((t, i) => (
-            <TicketChip key={i} t={t} />
-          ))}
-        </div>
-      </div>
-
-      <div className="noq-grid-2col">
+      <div className="noq-grid-2col" style={{ marginTop: "24px" }}>
         <div className="noq-card">
           <h3 className="noq-card-title">Wait time trend</h3>
           <p className="noq-card-sub">Average minutes waited, today</p>
           <div style={{ height: 220 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={WAIT_TREND}
-                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
-              >
+              <LineChart data={WAIT_TREND} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid stroke={CHART_COLORS.line} vertical={false} />
-                <XAxis
-                  dataKey="t"
-                  tick={{ fontSize: 11, fill: CHART_COLORS.muted }}
-                  axisLine={{ stroke: CHART_COLORS.line }}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: CHART_COLORS.muted }}
-                  axisLine={false}
-                  tickLine={false}
-                />
+                <XAxis dataKey="t" tick={{ fontSize: 11, fill: CHART_COLORS.muted }} axisLine={{ stroke: CHART_COLORS.line }} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: CHART_COLORS.muted }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v) => [`${v} min`, "Avg wait"]} />
-                <Line
-                  type="monotone"
-                  dataKey="min"
-                  stroke={CHART_COLORS.called}
-                  strokeWidth={2.5}
-                  dot={{ r: 3, fill: CHART_COLORS.called }}
-                />
+                <Line type="monotone" dataKey="min" stroke={CHART_COLORS.called} strokeWidth={2.5} dot={{ r: 3, fill: CHART_COLORS.called }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         <div className="noq-card">
-          <h3 className="noq-card-title">Recent activity</h3>
-          <div className="noq-activity-list">
-            {ACTIVITY.map((a) => (
-              <div key={a.id} className="noq-activity-item">
-                <span className="noq-activity-dot" />
-                <div>
-                  <p className="noq-activity-text">{a.text}</p>
-                  <span className="noq-activity-time">{a.time}</span>
-                </div>
-              </div>
-            ))}
+          <h3 className="noq-card-title">Tickets served by hour</h3>
+          <p className="noq-card-sub">Across all institutions, today</p>
+          <div style={{ height: 220 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={SERVED_BY_HOUR} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid stroke={CHART_COLORS.line} vertical={false} />
+                <XAxis dataKey="t" tick={{ fontSize: 11, fill: CHART_COLORS.muted }} axisLine={{ stroke: CHART_COLORS.line }} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: CHART_COLORS.muted }} axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Bar dataKey="n" fill={CHART_COLORS.serving} radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
@@ -440,28 +172,128 @@ function DashboardView() {
   );
 }
 
+// New Institutions View
+function InstitutionsView() {
+  const [institutions, setInstitutions] = useState([]);
+  const [query, setQuery] = useState("");
+  const [selectedInst, setSelectedInst] = useState(null);
+
+  const fetchInstitutions = () => {
+    adminService
+      .getInstitutions(1, 20, query)
+      .then((res) => setInstitutions(res.items))
+      .catch((err) => console.error("Failed to load institutions:", err));
+  };
+
+  useEffect(() => {
+    fetchInstitutions();
+  }, [query]);
+
+  const handleRowClick = async (id) => {
+    try {
+      const data = await adminService.getInstitutionDetail(id);
+      setSelectedInst(data);
+    } catch (err) {
+      alert("Failed to load institution details");
+    }
+  };
+
+  return (
+    <>
+      <div className="noq-toolbar">
+        <div className="noq-search">
+          <Search size={15} />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search institutions by name or email..."
+          />
+        </div>
+      </div>
+
+      <div className="noq-table-card">
+        <div className="noq-table-scroll">
+          <table className="noq-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Verified</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {institutions.map((inst) => (
+                <tr key={inst.id} onClick={() => handleRowClick(inst.id)} style={{ cursor: "pointer" }}>
+                  <td className="noq-mono-cell">#{inst.id}</td>
+                  <td><strong>{inst.name}</strong></td>
+                  <td>{inst.email}</td>
+                  <td>{inst.phone || "—"}</td>
+                  <td>{inst.is_verified ? "Yes" : "No"}</td>
+                  <td><StatusPill status={inst.is_active} /></td>
+                </tr>
+              ))}
+              {institutions.length === 0 && (
+                <tr className="noq-empty-row">
+                  <td colSpan={6}>No institutions found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modal / Panel for Institution Details */}
+      {selectedInst && (
+        <div className="noq-modal-backdrop" style={{ background: "rgba(0,0,0,0.5)", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }} onClick={() => setSelectedInst(null)}>
+          <div className="noq-card" style={{ background: "#fff", padding: "24px", width: "500px", maxWidth: "90%", maxHeight: "80vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 className="noq-card-title" style={{ margin: 0 }}>{selectedInst.name}</h3>
+              <button className="noq-icon-btn" onClick={() => setSelectedInst(null)}><X size={18} /></button>
+            </div>
+            <p><strong>Email:</strong> {selectedInst.email}</p>
+            <p><strong>Phone:</strong> {selectedInst.phone || "N/A"}</p>
+            <p><strong>Address:</strong> {selectedInst.address}</p>
+            <p><strong>Website:</strong> {selectedInst.website || "N/A"}</p>
+            <p><strong>Description:</strong> {selectedInst.description || "N/A"}</p>
+            
+            <h4 style={{ marginTop: "16px" }}>Queues under this Institution:</h4>
+            <ul>
+              {selectedInst.queues?.map((q) => (
+                <li key={q.id}>{q.name} (Limit: {q.daily_limit}, Avg Time: {q.avg_service_time}m)</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function QueuesView() {
-  const [queues, setQueues] = useState(QUEUES);
+  const [queues, setQueues] = useState([]);
   const [query, setQuery] = useState("");
 
-  const filtered = useMemo(
-    () =>
-      queues.filter((q) =>
-        (q.name + q.code + q.branch)
-          .toLowerCase()
-          .includes(query.toLowerCase()),
-      ),
-    [queues, query],
-  );
+  const fetchQueues = () => {
+    adminService
+      .getQueues(1, 20, query)
+      .then((res) => setQueues(res.items))
+      .catch((err) => console.error("Failed to load queues:", err));
+  };
 
-  function toggleStatus(id) {
-    setQueues((qs) =>
-      qs.map((q) =>
-        q.id === id
-          ? { ...q, status: q.status === "active" ? "paused" : "active" }
-          : q,
-      ),
-    );
+  useEffect(() => {
+    fetchQueues();
+  }, [query]);
+
+  async function toggleStatus(id) {
+    try {
+      await adminService.toggleQueueStatus(id);
+      fetchQueues();
+    } catch (err) {
+      alert("Failed to change queue status");
+    }
   }
 
   return (
@@ -472,12 +304,9 @@ function QueuesView() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search queues, branches..."
+            placeholder="Search queues, institutions..."
           />
         </div>
-        <button className="noq-btn-primary">
-          <Plus size={15} /> New Queue
-        </button>
       </div>
 
       <div className="noq-table-card">
@@ -486,53 +315,34 @@ function QueuesView() {
             <thead>
               <tr>
                 <th>Queue</th>
-                <th>Branch</th>
-                <th>Waiting</th>
-                <th>Avg wait</th>
+                <th>Institution</th>
+                <th>Daily Limit</th>
+                <th>Avg Wait Time</th>
                 <th>Status</th>
-                <th></th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((q) => (
+              {queues.map((q) => (
                 <tr key={q.id}>
                   <td>
                     <div className="noq-queue-name-cell">
-                      <span className="noq-code-badge">{q.code}</span>
+                      <span className="noq-code-badge">#{q.id}</span>
                       <span>{q.name}</span>
                     </div>
                   </td>
-                  <td>{q.branch}</td>
-                  <td className="noq-mono-cell">{q.waiting}</td>
-                  <td className="noq-mono-cell">{q.avgWait} min</td>
+                  <td>{q.institution_name}</td>
+                  <td className="noq-mono-cell">{q.daily_limit}</td>
+                  <td className="noq-mono-cell">{q.avg_service_time} min</td>
+                  <td><StatusPill status={q.is_active} /></td>
                   <td>
-                    <StatusPill status={q.status} />
-                  </td>
-                  <td>
-                    <div className="noq-row-actions">
-                      <button
-                        className="noq-btn-ghost"
-                        onClick={() => toggleStatus(q.id)}
-                      >
-                        {q.status === "active" ? (
-                          <Pause size={12} />
-                        ) : (
-                          <Play size={12} />
-                        )}
-                        {q.status === "active" ? "Pause" : "Resume"}
-                      </button>
-                      <button className="noq-icon-btn">
-                        <MoreHorizontal size={14} />
-                      </button>
-                    </div>
+                    <button className="noq-btn-ghost" onClick={() => toggleStatus(q.id)}>
+                      {q.is_active ? <Pause size={12} /> : <Play size={12} />}
+                      {q.is_active ? " Pause" : " Resume"}
+                    </button>
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
-                <tr className="noq-empty-row">
-                  <td colSpan={6}>No queues match “{query}”.</td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
@@ -541,196 +351,187 @@ function QueuesView() {
   );
 }
 
-function CountersView() {
+function UsersView() {
+  const [users, setUsers] = useState([]);
+  const [query, setQuery] = useState("");
+
+  const fetchUsers = () => {
+    adminService
+      .getUsers(1, 20, query)
+      .then((res) => setUsers(res.items))
+      .catch((err) => console.error("Failed to load users:", err));
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [query]);
+
+  async function toggleUserStatus(id) {
+    try {
+      await adminService.toggleUserStatus(id);
+      fetchUsers();
+    } catch (err) {
+      alert("Failed to toggle user status");
+    }
+  }
+
   return (
-    <div className="noq-counter-grid">
-      {COUNTERS.map((c) => (
-        <div key={c.id} className="noq-counter-card">
-          <div className="noq-counter-top">
-            <span className="noq-counter-label">{c.label}</span>
-            <StatusPill status={c.status} />
-          </div>
-          <div className="noq-counter-staff-row">
-            <div className="noq-staff-avatar">
-              {c.staff !== "—"
-                ? c.staff
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                : "—"}
-            </div>
-            <div>
-              <p className="noq-staff-name">{c.staff}</p>
-              <p className="noq-staff-assign">
-                {c.queue !== "—" ? `Assigned: ${c.queue}` : "Unassigned"}
-              </p>
-            </div>
-          </div>
-          <div className="noq-counter-ticket-box">
-            <div>
-              <p className="noq-ticket-box-label">Now serving</p>
-              <p className="noq-ticket-box-code">{c.ticket}</p>
-            </div>
-            <span className="noq-ticket-box-since">{c.since}</span>
-          </div>
+    <>
+      <div className="noq-toolbar">
+        <div className="noq-search">
+          <Search size={15} />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search users by name or email..."
+          />
         </div>
-      ))}
+      </div>
+
+      <div className="noq-table-card">
+        <div className="noq-table-scroll">
+          <table className="noq-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Verified</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id}>
+                  <td className="noq-mono-cell">#{u.id}</td>
+                  <td><strong>{u.name}</strong></td>
+                  <td>{u.email}</td>
+                  <td>{u.is_verified ? "Yes" : "No"}</td>
+                  <td>
+                    <button className="noq-btn-ghost" onClick={() => toggleUserStatus(u.id)}>
+                      Toggle Status
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function TokensView() {
+  const [tokens, setTokens] = useState([]);
+
+  const fetchTokens = () => {
+    adminService
+      .getTokens(1, 20)
+      .then((res) => setTokens(res.items))
+      .catch((err) => console.error("Failed to load tokens:", err));
+  };
+
+  useEffect(() => {
+    fetchTokens();
+  }, []);
+
+  async function handleCancelToken(tokenId) {
+    if (!window.confirm("Are you sure you want to cancel this token?")) return;
+    try {
+      await adminService.cancelToken(tokenId);
+      fetchTokens();
+    } catch (err) {
+      alert("Failed to cancel token");
+    }
+  }
+
+  return (
+    <div className="noq-table-card">
+      <div className="noq-table-scroll">
+        <table className="noq-table">
+          <thead>
+            <tr>
+              <th>Token #</th>
+              <th>User</th>
+              <th>Queue</th>
+              <th>Institution</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tokens.map((t) => (
+              <tr key={t.id}>
+                <td><span className="noq-code-badge">#{t.token_number}</span></td>
+                <td>{t.user_name}</td>
+                <td>{t.queue_name}</td>
+                <td>{t.institution_name}</td>
+                <td><span className={`noq-status-pill ${t.status.toLowerCase()}`}>{t.status}</span></td>
+                <td>
+                  {t.status.toLowerCase() !== "cancelled" && (
+                    <button className="noq-btn-ghost" style={{ color: "#ef4444" }} onClick={() => handleCancelToken(t.id)}>
+                      <Ban size={12} /> Cancel
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-function AnalyticsView() {
-  return (
-    <div className="noq-analytics-grid">
-      <div className="noq-card">
-        <h3 className="noq-card-title">Tickets served by hour</h3>
-        <p className="noq-card-sub">Across all branches, today</p>
-        <div style={{ height: 240 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={SERVED_BY_HOUR}
-              margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
-            >
-              <CartesianGrid stroke={CHART_COLORS.line} vertical={false} />
-              <XAxis
-                dataKey="t"
-                tick={{ fontSize: 11, fill: CHART_COLORS.muted }}
-                axisLine={{ stroke: CHART_COLORS.line }}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: CHART_COLORS.muted }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip />
-              <Bar
-                dataKey="n"
-                fill={CHART_COLORS.serving}
-                radius={[6, 6, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+function AuditLogsView() {
+  const [logs, setLogs] = useState([]);
 
-      <div className="noq-card">
-        <h3 className="noq-card-title">Queue share</h3>
-        <p className="noq-card-sub">Share of today's total tickets</p>
-        <div className="noq-pie-row">
-          <div className="noq-pie-chart">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={SHARE}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={45}
-                  outerRadius={72}
-                  paddingAngle={3}
-                >
-                  {SHARE.map((s, i) => (
-                    <Cell key={i} fill={s.color} stroke="none" />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="noq-legend">
-            {SHARE.map((s) => (
-              <div key={s.name} className="noq-legend-item">
-                <span
-                  className="noq-legend-dot"
-                  style={{ background: s.color }}
-                />
-                <span className="noq-legend-name">{s.name}</span>
-                <span className="noq-legend-value">{s.value}%</span>
-              </div>
+  useEffect(() => {
+    adminService
+      .getLogs(1, 20)
+      .then((res) => setLogs(res.items))
+      .catch((err) => console.error("Failed to load logs:", err));
+  }, []);
+
+  return (
+    <div className="noq-table-card">
+      <div className="noq-table-scroll">
+        <table className="noq-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Admin ID</th>
+              <th>Action</th>
+              <th>Target Type</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.map((log) => (
+              <tr key={log.id}>
+                <td className="noq-mono-cell">#{log.id}</td>
+                <td>Admin #{log.admin_id}</td>
+                <td><strong>{log.action}</strong></td>
+                <td>{log.target_type}</td>
+                <td>{new Date(log.created_at).toLocaleString()}</td>
+              </tr>
             ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
     </div>
   );
 }
 
 function SettingsView() {
-  const [notifs, setNotifs] = useState({
-    sms: true,
-    email: true,
-    display: false,
-  });
-  const [autoAssign, setAutoAssign] = useState(true);
-
   return (
     <div className="noq-settings">
       <div className="noq-card">
         <div className="noq-settings-header">
           <Building2 size={16} />
-          <h3 className="noq-card-title" style={{ margin: 0 }}>
-            Branch details
-          </h3>
+          <h3 className="noq-card-title" style={{ margin: 0 }}>System Settings</h3>
         </div>
-        <div className="noq-field-grid">
-          {[
-            { label: "Branch name", value: "Kathmandu Central" },
-            { label: "Contact number", value: "+977 1 400 1122" },
-            { label: "Opens", value: "09:00" },
-            { label: "Closes", value: "17:00" },
-          ].map((f) => (
-            <div key={f.label} className="noq-field">
-              <label>{f.label}</label>
-              <input defaultValue={f.value} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="noq-card">
-        <div className="noq-settings-header">
-          <Bell size={16} />
-          <h3 className="noq-card-title" style={{ margin: 0 }}>
-            Ticket notifications
-          </h3>
-        </div>
-        {[
-          { key: "sms", label: "SMS alert when a ticket is called" },
-          { key: "email", label: "Email daily summary to branch manager" },
-          { key: "display", label: "Announce on waiting-room display" },
-        ].map((row) => (
-          <div key={row.key} className="noq-toggle-row">
-            <span className="noq-toggle-label">{row.label}</span>
-            <Toggle
-              checked={notifs[row.key]}
-              onChange={(v) => setNotifs((n) => ({ ...n, [row.key]: v }))}
-            />
-          </div>
-        ))}
-      </div>
-
-      <div className="noq-card">
-        <div className="noq-settings-header">
-          <Volume2 size={16} />
-          <h3 className="noq-card-title" style={{ margin: 0 }}>
-            Queue behaviour
-          </h3>
-        </div>
-        <div className="noq-toggle-row">
-          <div>
-            <p className="noq-toggle-label">
-              Auto-assign next ticket to free counters
-            </p>
-            <p className="noq-toggle-desc">
-              When off, staff must call the next ticket manually.
-            </p>
-          </div>
-          <Toggle checked={autoAssign} onChange={setAutoAssign} />
-        </div>
-      </div>
-
-      <div className="noq-save-row">
-        <button className="noq-btn-primary">Save changes</button>
       </div>
     </div>
   );
@@ -749,12 +550,9 @@ export default function AdminApp() {
         <div className="noq-sidebar-head">
           <div className="noq-brand">
             <div className="noq-logo-mark">N</div>
-            <span className="noq-logo-text">NoQ</span>
+            <span className="noq-logo-text">NoQ Admin</span>
           </div>
-          <button
-            className="noq-sidebar-close"
-            onClick={() => setSidebarOpen(false)}
-          >
+          <button className="noq-sidebar-close" onClick={() => setSidebarOpen(false)}>
             <X size={18} color="#fff" />
           </button>
         </div>
@@ -780,26 +578,20 @@ export default function AdminApp() {
         </nav>
 
         <div className="noq-sidebar-foot">
-          <div className="noq-avatar">RS</div>
+          <div className="noq-avatar">A</div>
           <div>
-            <p className="noq-user-name">Ramesh Shah</p>
-            <p className="noq-user-role">Branch Admin</p>
+            <p className="noq-user-name">System Admin</p>
+            <p className="noq-user-role">Super Admin</p>
           </div>
         </div>
       </aside>
 
-      <div
-        className={`noq-overlay ${sidebarOpen ? "show" : ""}`}
-        onClick={() => setSidebarOpen(false)}
-      />
+      <div className={`noq-overlay ${sidebarOpen ? "show" : ""}`} onClick={() => setSidebarOpen(false)} />
 
       <div className="noq-main">
         <header className="noq-header">
           <div className="noq-header-left">
-            <button
-              className="noq-menu-btn"
-              onClick={() => setSidebarOpen(true)}
-            >
+            <button className="noq-menu-btn" onClick={() => setSidebarOpen(true)}>
               <Menu size={20} />
             </button>
             <div>
@@ -807,24 +599,15 @@ export default function AdminApp() {
               <p className="noq-subtitle">{subtitle}</p>
             </div>
           </div>
-
-          <div className="noq-header-right">
-            <button className="noq-branch-btn">
-              Kathmandu Central
-              <ChevronDown size={13} />
-            </button>
-            <button className="noq-icon-square">
-              <Bell size={15} />
-              <span className="noq-bell-dot" />
-            </button>
-          </div>
         </header>
 
         <main className="noq-content">
           {view === "dashboard" && <DashboardView />}
+          {view === "institutions" && <InstitutionsView />}
           {view === "queues" && <QueuesView />}
-          {view === "counters" && <CountersView />}
-          {view === "analytics" && <AnalyticsView />}
+          {view === "users" && <UsersView />}
+          {view === "tokens" && <TokensView />}
+          {view === "logs" && <AuditLogsView />}
           {view === "settings" && <SettingsView />}
         </main>
       </div>

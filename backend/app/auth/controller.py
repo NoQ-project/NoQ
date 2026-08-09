@@ -1,6 +1,7 @@
 from backend.app.auth.schemas import  RegisterSchema, LoginSchema, VerifyEmailSchema, EmailSchema, ResetPasswordSchema
 from sqlalchemy.orm import Session
 from backend.app.auth.models import UserModel, RefreshTokenModel, UserRole
+from backend.app.user.models import User
 from fastapi import HTTPException,Request , status, Depends, BackgroundTasks, Response
 from pwdlib import PasswordHash
 from datetime import datetime, timedelta, timezone
@@ -66,7 +67,17 @@ def verify_register(body, db: Session):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    
+
+    # Every USER-role account needs a matching profile row, since
+    # routes like /tokens/my-tokens rely on `current_user.profile`.
+    # Institution accounts get their profile row created separately
+    # (see backend/app/institutions/service.py).
+    if new_user.role == UserRole.USER:
+        profile = User(auth_user_id=new_user.id)
+        db.add(profile)
+        db.commit()
+        db.refresh(new_user)
+
     return new_user
    
 def resend_otp(body:VerifyEmailSchema, bg_tasks: BackgroundTasks):

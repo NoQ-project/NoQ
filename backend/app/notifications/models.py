@@ -112,8 +112,7 @@ class Notification(Base):
     )
 
     queue = relationship(
-        "Queue",
-        back_populates="notifications",
+        "Queue"
     )
 
     token = relationship(
@@ -139,4 +138,5 @@ class Notification(Base):
             "created_at",
         ),
     )
+    
 

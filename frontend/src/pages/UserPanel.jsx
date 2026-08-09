@@ -5,7 +5,6 @@ import {
   CheckCircle2, 
   Clock, 
   Loader2,
-  Search,
   User,
   Shield,
   Save,
@@ -13,31 +12,61 @@ import {
   History as HistoryIcon,
   ArrowLeft,
   Home as HomeIcon,
-  Bell
+  Bell,
+  Calendar
 } from 'lucide-react';
-import tokenService from '../services/tokenServices';
+import tokenService from "../services/tokenServices";
 import "../assets/css/UserPanel.css";
+
+// Inline DatePicker Component
+function InlineDatePicker({ value, onChange, minDate }) {
+  return (
+    <div style={{ marginTop: '1rem' }}>
+      <label 
+        className="form-label" 
+        style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '600' }}
+      >
+        <Calendar size={15} /> Select Booking Date
+      </label>
+      <input 
+        type="date" 
+        value={value}
+        min={minDate || new Date().toISOString().split('T')[0]}
+        onChange={(e) => onChange(e.target.value)}
+        required
+        className="form-input"
+        style={{
+          width: '100%',
+          padding: '0.6rem 0.8rem',
+          borderRadius: '6px',
+          border: '1px solid #d1d5db',
+          marginTop: '0.3rem'
+        }}
+      />
+    </div>
+  );
+}
 
 export default function UserPanel() {
   const [activeTab, setActiveTab] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   
-  // Notification toggle state
+  // Notification State
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: 'Queue Update', msg: 'Your token B-042 is now 3rd in line.', time: '2m ago', unread: true },
-    { id: 2, title: 'Booking Confirmed', msg: 'Successfully booked token for City Bank.', time: '1h ago', unread: false }
-  ]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
 
-  // --- MULTI-TOKEN ACTIVE ARRAY STATE ---
+  // Active & Historical tokens
   const [activeTokens, setActiveTokens] = useState([]);
+  const [historicalTokens, setHistoricalTokens] = useState([]);
 
-  // Selected organization for booking wizard sub-state
+  // Booking wizard state
   const [selectedOrgForBooking, setSelectedOrgForBooking] = useState(null);
   const [selectedDept, setSelectedDept] = useState('');
+  const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Profile Mutation State
+  // Profile State
   const [profile, setProfile] = useState({
     name: 'Ramesh Pandit',
     phone: '+977 9845XXXXXX',
@@ -49,11 +78,11 @@ export default function UserPanel() {
 
   const categories = ['All', 'Banking', 'Healthcare', 'Government'];
 
-  const organizations = [
-    { id: 1, name: 'City Bank', category: 'Banking', branch: 'Lazimpat', departments: ['General Banking', 'Loans & Credit', 'Account Opening'], queues: 3, waiting: 13, icon: Building2, iconClass: 'icon-indigo' },
-    { id: 2, name: 'City Hospital', category: 'Healthcare', branch: 'Baneshwor', departments: ['OPD Checkup', 'Lab Reports', 'Pharmacy'], queues: 2, waiting: 8, icon: HeartPulse, iconClass: 'icon-emerald' },
-    { id: 3, name: 'Dept. of Passports', category: 'Government', branch: 'Tripureshwor', departments: ['Biometrics', 'Passport Collection'], queues: 1, waiting: 3, icon: Building2, iconClass: 'icon-gray' },
-  ];
+  const [organizations, setOrganizations] = useState([
+    { id: 1, name: 'City Bank', category: 'Banking', branch: 'Lazimpat', departments: ['General Banking', 'Loans & Credit'], waiting: 13, icon: Building2, iconClass: 'icon-indigo' },
+    { id: 2, name: 'City Hospital', category: 'Healthcare', branch: 'Baneshwor', departments: ['OPD Checkup', 'Lab Reports'], waiting: 8, icon: HeartPulse, iconClass: 'icon-emerald' },
+    { id: 3, name: 'Dept. of Passports', category: 'Government', branch: 'Tripureshwor', departments: ['Biometrics', 'Collection'], waiting: 3, icon: Building2, iconClass: 'icon-gray' },
+  ]);
 
   const trackingSteps = [
     { label: 'Token issued successfully', status: 'done' },
@@ -62,44 +91,133 @@ export default function UserPanel() {
     { label: 'Called to counter deck room', status: 'pending' }
   ];
 
-  const [historicalTokens, setHistoricalTokens] = useState([]);
+  // --- API FETCH FUNCTIONS ---
+  const fetchNotifications = async () => {
+    try {
+      const data = await tokenService.getNotifications();
+      if (Array.isArray(data)) {
+        setNotifications(data);
+        const unread = data.filter((n) => !n.is_read).length;
+        setUnreadCount(unread);
+      }
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    }
+  };
 
-  // --- API FETCH FUNCTION FOR TOKENS ---
-  const fetchMyTokens = async () => {
+  const fetchDashboardData = async () => {
     try {
       const data = await tokenService.getMyTokens();
       
-      const mappedTokens = data.map((item) => ({
-        id: item.id,
-        number: `T-${item.token_number}`,
-        department: `Queue #${item.queue_id}`,
-        counter: item.status,
-        institution: 'Organization',
-        ahead: item.status === 'WAITING' ? 'In Line' : 'Active',
-        estWait: new Date(item.estimated_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        serving: item.status,
-        status: item.status
-      }));
+      const rawActive = Array.isArray(data.active_tokens) ? data.active_tokens : [];
+      const mappedActive = await Promise.all(
+        rawActive.map(async (item) => {
+          let positionText = 'In Queue';
+          let currentServingNumber = 'N/A';
 
-      setActiveTokens(mappedTokens.filter(t => t.status === 'WAITING' || t.status === 'IN_PROGRESS'));
-      
-      setHistoricalTokens(
-        mappedTokens.map(t => ({
-          id: `h-${t.id}`,
-          type: t.department,
-          meta: `Token #${t.number} · ${t.status}`,
-          variant: t.status,
-          badgeClass: t.status === 'WAITING' ? 'badge-indigo' : 'badge-active'
-        }))
+          try {
+            const posData = await tokenService.getWaitingPosition(item.token_id);
+            if (posData && posData.position !== undefined) {
+              positionText = `#${posData.position} in line`;
+            }
+          } catch (posErr) {
+            positionText = item.status;
+          }
+
+          try {
+            const currentData = await tokenService.getCurrentToken(item.queue_id);
+            if (currentData && currentData.token_number !== undefined) {
+              currentServingNumber = `T-${currentData.token_number}`;
+            }
+          } catch (currErr) {
+            currentServingNumber = 'None';
+          }
+
+          return {
+            id: item.token_id,
+            queueId: item.queue_id,
+            number: `T-${item.token_number}`,
+            department: item.queue_name || `Queue #${item.queue_id}`,
+            counter: item.status,
+            institution: item.queue_name || `Queue #${item.queue_id}`,
+            ahead: positionText,
+            nowServing: currentServingNumber,
+            status: item.status,
+            bookingDate: item.booking_date
+          };
+        })
       );
+      setActiveTokens(mappedActive);
+
+      const rawHistory = Array.isArray(data.booking_history) ? data.booking_history : [];
+      const mappedHistory = rawHistory.map((item) => ({
+        id: `h-${item.token_id}`,
+        type: item.queue_name || `Queue #${item.queue_id}`,
+        meta: `Token #T-${item.token_number} · Status: ${item.status} · Date: ${item.booking_date}`,
+        variant: item.status,
+        badgeClass: item.status === 'COMPLETED' ? 'badge-emerald' : 'badge-indigo'
+      }));
+      setHistoricalTokens(mappedHistory);
+
     } catch (err) {
-      console.error('Failed to fetch tokens from API:', err);
+      console.error('Failed to fetch user dashboard data:', err);
+    }
+  };
+
+  const fetchOrganizations = async () => {
+    try {
+      const data = await tokenService.getOrganizations();
+      if (Array.isArray(data) && data.length > 0) {
+        const mappedOrgs = data.map((item) => ({
+          id: item.id || item.queue_id,
+          name: item.institution_name || item.name || item.queue_name || 'Organization',
+          category: item.category || 'General',
+          branch: item.branch || 'Main Branch',
+          departments: item.departments || ['General Counter'],
+          waiting: item.waiting_count || 0,
+          icon: Building2,
+          iconClass: 'icon-indigo'
+        }));
+        setOrganizations(mappedOrgs);
+      }
+    } catch (err) {
+      console.error('Failed to fetch queues:', err);
     }
   };
 
   useEffect(() => {
-    fetchMyTokens();
+    fetchDashboardData();
+    fetchOrganizations();
+    fetchNotifications();
   }, []);
+
+  // --- NOTIFICATION HANDLERS ---
+  const handleToggleNotifications = () => {
+    setShowNotifications((prev) => !prev);
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await tokenService.markAllNotificationsRead();
+      setUnreadCount(0);
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    } catch (err) {
+      console.error('Failed to mark all notifications read:', err);
+    }
+  };
+
+  const handleMarkSingleRead = async (id, isRead) => {
+    if (isRead) return;
+    try {
+      const updatedItem = await tokenService.markNotificationRead(id);
+      setNotifications((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...updatedItem, is_read: true } : item))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error('Failed to mark notification read:', err);
+    }
+  };
 
   const filteredOrgs = organizations.filter((org) => {
     const matchesCategory = activeCategory === 'All' || org.category === activeCategory;
@@ -107,7 +225,7 @@ export default function UserPanel() {
     return matchesCategory && matchesSearch;
   });
 
-  // --- CORE INTERACTIVE MULTI-BOOKING ACTIONS ---
+  // --- ACTIONS ---
   const handleSelectOrg = (org) => {
     setSelectedOrgForBooking(org);
     setSelectedDept(org.departments[0]);
@@ -115,29 +233,30 @@ export default function UserPanel() {
 
   const handleExecuteBooking = async (e) => {
     e.preventDefault();
-    if (!selectedOrgForBooking) return;
+    if (!selectedOrgForBooking || !bookingDate) return;
 
     try {
-      const queueId = selectedOrgForBooking.id; 
-      await tokenService.bookToken(queueId);
-      
-      await fetchMyTokens();
+      await tokenService.bookToken(selectedOrgForBooking.id, bookingDate);
+      await fetchDashboardData();
+      await fetchNotifications();
       setSelectedOrgForBooking(null);
       setSearchQuery('');
       setActiveTab('track');
     } catch (err) {
       console.error('Booking API call failed:', err);
-      alert('Failed to book token. Please try again.');
+      alert('Failed to book token. Please check backend connection.');
     }
   };
 
   const handleCancelToken = async (id) => {
-    if (window.confirm('Are you sure you want to drop out of this live queue line?')) {
+    if (window.confirm('Are you sure you want to cancel this live token?')) {
       try {
         await tokenService.cancelToken(id);
-        await fetchMyTokens();
+        await fetchDashboardData();
+        await fetchNotifications();
       } catch (err) {
         console.error('Cancellation failed:', err);
+        alert('Failed to cancel token.');
       }
     }
   };
@@ -165,12 +284,10 @@ export default function UserPanel() {
     }
   };
 
-  const hasUnreadNotifications = notifications.some(n => n.unread);
-
   return (
     <div className="app-container">
       
-      {/* ─── GLOBAL HEADER (VISIBLE ON BOTH MOBILE & DESKTOP) ─── */}
+      {/* HEADER */}
       <header className="global-header">
         <div className="header-left">
           <span 
@@ -197,13 +314,13 @@ export default function UserPanel() {
           </nav>
         </div>
 
-        {/* ─── HEADER RIGHT: NOTIFICATIONS & PROFILE ─── */}
         <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem', position: 'relative' }}>
-          {/* Notification Bell Component */}
+          
+          {/* NOTIFICATION HEADER DROPDOWN */}
           <div className="notification-container" style={{ position: 'relative' }}>
             <button 
               className="notification-icon-btn"
-              onClick={() => setShowNotifications(!showNotifications)}
+              onClick={handleToggleNotifications}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -219,22 +336,25 @@ export default function UserPanel() {
               aria-label="Notifications"
             >
               <Bell size={20} />
-              {hasUnreadNotifications && (
+              {unreadCount > 0 && (
                 <span 
                   style={{
                     position: 'absolute',
-                    top: '6px',
-                    right: '6px',
-                    width: '8px',
-                    height: '8px',
+                    top: '2px',
+                    right: '2px',
                     backgroundColor: '#ef4444',
-                    borderRadius: '50%'
+                    color: '#ffffff',
+                    borderRadius: '50%',
+                    fontSize: '0.65rem',
+                    padding: '2px 5px',
+                    fontWeight: 'bold'
                   }}
-                />
+                >
+                  {unreadCount}
+                </span>
               )}
             </button>
 
-            {/* Notification Dropdown Box */}
             {showNotifications && (
               <div 
                 className="notification-dropdown"
@@ -242,35 +362,67 @@ export default function UserPanel() {
                   position: 'absolute',
                   right: 0,
                   top: '40px',
-                  width: '280px',
+                  width: '320px',
                   backgroundColor: '#ffffff',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                  borderRadius: '8px',
+                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)',
+                  borderRadius: '10px',
                   border: '1px solid #e5e7eb',
                   padding: '12px',
-                  zIndex: 50,
+                  zIndex: 100,
                   color: '#1f2937'
                 }}
               >
-                <div style={{ fontWeight: 'bold', marginBottom: '8px', borderBottom: '1px solid #f3f4f6', paddingBottom: '6px', fontSize: '0.9rem' }}>
-                  Notifications
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #f3f4f6', paddingBottom: '6px' }}>
+                  <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>Notifications</span>
+                  {unreadCount > 0 && (
+                    <button 
+                      onClick={handleMarkAllRead}
+                      style={{ fontSize: '0.75rem', color: '#4f46e5', border: 'none', background: 'none', cursor: 'pointer', fontWeight: '600' }}
+                    >
+                      Mark all as read
+                    </button>
+                  )}
                 </div>
-                {notifications.length > 0 ? (
-                  notifications.map(n => (
-                    <div key={n.id} style={{ fontSize: '0.8rem', padding: '6px 0', borderBottom: '1px solid #f9fafb' }}>
-                      <div style={{ fontWeight: '600' }}>{n.title}</div>
-                      <div style={{ color: '#4b5563' }}>{n.msg}</div>
-                      <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '2px' }}>{n.time}</div>
+
+                <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                  {notifications.length > 0 ? (
+                    notifications.map((item) => (
+                      <div 
+                        key={item.id} 
+                        onClick={() => handleMarkSingleRead(item.id, item.is_read)}
+                        style={{ 
+                          fontSize: '0.8rem', 
+                          padding: '8px 10px', 
+                          borderRadius: '6px',
+                          marginBottom: '6px',
+                          backgroundColor: item.is_read ? '#ffffff' : '#f0f9ff',
+                          borderLeft: item.is_read ? '3px solid transparent' : '3px solid #0284c7',
+                          cursor: item.is_read ? 'default' : 'pointer',
+                          borderBottom: '1px solid #f9fafb' 
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', color: '#111827' }}>
+                          <span>{item.title}</span>
+                          <span style={{ fontSize: '0.65rem', color: '#0284c7', textTransform: 'uppercase' }}>
+                            {item.type}
+                          </span>
+                        </div>
+                        <div style={{ color: '#4b5563', marginTop: '2px' }}>{item.message}</div>
+                        <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '4px' }}>
+                          {item.created_at ? new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ padding: '16px', textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem' }}>
+                      No notifications found.
                     </div>
-                  ))
-                ) : (
-                  <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>No new notifications</div>
-                )}
+                  )}
+                </div>
               </div>
             )}
           </div>
 
-          {/* User Profile Badge */}
           <div onClick={startEditing} className="user-profile-badge cursor-pointer">
             <div className="user-info sm:block">
               <div className="user-name">{profile.name}</div>
@@ -283,13 +435,12 @@ export default function UserPanel() {
         </div>
       </header>
 
-      {/* ─── SCREEN WORKSPACE CONTENT ROUTER ─── */}
+      {/* MAIN CONTENT AREA */}
       <main className="main-content">
         
-        {/* ─── HOME TAB VIEW ─── */}
+        {/* HOME TAB */}
         {activeTab === 'home' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 home-grid">
-            
             <div className="lg:col-span-7 home-left-col">
               <div className="welcome-header">
                 <h2 className="welcome-title">Welcome back, {profile.name.split(' ')[0]}</h2>
@@ -310,21 +461,21 @@ export default function UserPanel() {
                         
                         <div className="token-card-body">
                           <div className="token-number">{token.number}</div>
-                          <div className="token-dept">{token.department} &bull; {token.counter}</div>
+                          <div className="token-dept">{token.department}</div>
                         </div>
 
                         <div className="token-metrics-grid">
                           <div>
                             <div className="metric-value">{token.ahead}</div>
-                            <div className="metric-label">Ahead</div>
+                            <div className="metric-label">Position</div>
                           </div>
                           <div>
-                            <div className="metric-value wait-value">{token.estWait}</div>
-                            <div className="metric-label">Wait</div>
+                            <div className="metric-value wait-value">{token.bookingDate}</div>
+                            <div className="metric-label">Date</div>
                           </div>
                           <div>
-                            <div className="metric-value">{token.serving}</div>
-                            <div className="metric-label">Serving</div>
+                            <div className="metric-value">{token.status}</div>
+                            <div className="metric-label">Status</div>
                           </div>
                         </div>
                       </div>
@@ -360,7 +511,7 @@ export default function UserPanel() {
           </div>
         )}
 
-        {/* ─── BOOK TOKEN TAB VIEW ─── */}
+        {/* BOOK TOKEN TAB */}
         {activeTab === 'book' && (
           <div className="card-container">
             {!selectedOrgForBooking ? (
@@ -395,12 +546,12 @@ export default function UserPanel() {
                 <div className="org-list-wrapper">
                   {filteredOrgs.length > 0 ? (
                     filteredOrgs.map((org) => {
-                      const Icon = org.icon;
+                      const IconComponent = org.icon || Building2;
                       return (
                         <div key={org.id} onClick={() => handleSelectOrg(org)} className="org-item group cursor-pointer">
                           <div className="org-info">
                             <div className={`org-icon-wrapper ${org.iconClass}`}>
-                              <Icon size={16} />
+                              <IconComponent size={16} />
                             </div>
                             <div className="org-details">
                               <h4 className="org-title">{org.name} ({org.branch})</h4>
@@ -424,7 +575,7 @@ export default function UserPanel() {
                 
                 <div className="selected-org-summary">
                   <div className={`org-icon-wrapper ${selectedOrgForBooking.iconClass}`}>
-                    <selectedOrgForBooking.icon size={20} />
+                    {React.createElement(selectedOrgForBooking.icon || Building2, { size: 20 })}
                   </div>
                   <div>
                     <h4 className="summary-title">{selectedOrgForBooking.name}</h4>
@@ -448,7 +599,12 @@ export default function UserPanel() {
                     </div>
                   </div>
 
-                  <button type="submit" className="confirm-btn">
+                  <InlineDatePicker 
+                    value={bookingDate} 
+                    onChange={setBookingDate} 
+                  />
+
+                  <button type="submit" className="confirm-btn" style={{ marginTop: '1.2rem' }}>
                     Confirm & Book Token Now
                   </button>
                 </form>
@@ -457,7 +613,7 @@ export default function UserPanel() {
           </div>
         )}
 
-        {/* ─── TRACK TAB VIEW ─── */}
+        {/* TRACK TAB */}
         {activeTab === 'track' && (
           <div className="track-container card-container">
             <h3 className="track-header">Live Monitor Timelines</h3>
@@ -468,9 +624,21 @@ export default function UserPanel() {
                   <div key={token.id} className="track-card">
                     <div className="track-card-header">
                       <div className="track-info">
-                        <div className="track-number">{token.number}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                          <span className="track-number">{token.number}</span>
+                          <span style={{
+                            backgroundColor: '#e0e7ff',
+                            color: '#3730a3',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            padding: '4px 8px',
+                            borderRadius: '6px'
+                          }}>
+                            Now Serving: {token.nowServing}
+                          </span>
+                        </div>
                         <p className="track-institution">{token.institution}</p>
-                        <p className="track-dept">{token.department} &bull; {token.counter}</p>
+                        <p className="track-dept">{token.department} &bull; Status: {token.status}</p>
                       </div>
                       <button 
                         onClick={() => handleCancelToken(token.id)}
@@ -489,7 +657,7 @@ export default function UserPanel() {
                             {step.status === 'pending' && <Clock size={14} />}
                           </div>
                           <div className={`step-label ${step.status === 'active' ? 'active-step' : ''}`}>
-                            {step.label} {step.status === 'active' && `(${token.estWait} left)`}
+                            {step.label}
                           </div>
                         </div>
                       ))}
@@ -505,7 +673,7 @@ export default function UserPanel() {
           </div>
         )}
 
-        {/* ─── HISTORY TAB VIEW ─── */}
+        {/* HISTORY TAB */}
         {activeTab === 'history' && (
           <div className="card-container">
             <h3 className="history-title"><HistoryIcon size={14}/> Past Visitations Log</h3>
@@ -529,7 +697,7 @@ export default function UserPanel() {
           </div>
         )}
 
-        {/* ─── PROFILE TAB VIEW ─── */}
+        {/* PROFILE TAB */}
         {activeTab === 'profile' && (
           <div className="card-container profile-container">
             <div className="profile-header">
@@ -608,7 +776,7 @@ export default function UserPanel() {
 
       </main>
 
-      {/* ─── MOBILE BOTTOM STICKY NAVIGATION ANCHOR BAR ─── */}
+      {/* MOBILE BOTTOM NAVIGATION BAR */}
       <div className="mobile-bottom-nav md:hidden">
         {['home', 'book', 'track', 'history', 'profile'].map((tab) => (
           <button

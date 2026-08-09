@@ -84,6 +84,9 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
   // --- API HANDLERS ---
 
   // 1. LOGIN
+  // --- API HANDLERS ---
+
+  // 1. LOGIN
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
@@ -91,23 +94,29 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
     setLoading(true);
 
     try {
+      // Call login API
       const data = await authService.login(formData.email, formData.password);
       
-      // Store tokens
+      // If using localStorage-based auth (Option B):
+      // Uncomment these lines if backend returns tokens in response
+      /*
       if (data.access_token) {
         localStorage.setItem('accessToken', data.access_token);
       }
       if (data.refresh_token) {
         localStorage.setItem('refreshToken', data.refresh_token);
       }
-         // ✅ NEW LINE
-        const userRole = data.role || data.user?.role || 'user';
-        localStorage.setItem('userRole', userRole);
-        onLoginSuccess(userRole);
+      */
+      
+      // If using cookie-based auth (Option A - Recommended):
+      // Just check the response message - backend manages auth via cookies
+      
+      const userRole = data.role || data.user?.role || 'user';
+      localStorage.setItem('userRole', userRole);
 
       setSuccessMessage(data.message || 'Login successful!');
 
-     setTimeout(() => {
+      setTimeout(() => {
         if (typeof onLoginSuccess === 'function') {
           onLoginSuccess(userRole);
         }
@@ -115,13 +124,13 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
       }, 800);
 
     } catch (error) {
-      setErrorMessage(error.message);
+      console.error('Login error:', error);
+      setErrorMessage(error.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // 2. SIGNUP
   // 2. SIGNUP
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
@@ -156,6 +165,7 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
       setLoading(false);
     }
   };
+
   // 3. VERIFY OTP
   const handleVerifyOtpSubmit = async (e) => {
     e.preventDefault();
@@ -246,7 +256,7 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
                     className="border border-gray-200 rounded-xl py-2.5 px-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm text-gray-700 font-medium cursor-pointer"
                   >
                     <option value="user">User (Normal Customer)</option>
-                    <option value="organization">Organization (Business/Bank/Clinic)</option>
+                    <option value="institution">Institution (Business/Bank/Clinic)</option>
                   </select>
                 </div>
 
@@ -327,7 +337,7 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
                   disabled={loading}
                   className="btn-primary bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold py-3 px-4 rounded-xl w-full transition cursor-pointer mt-3"
                 >
-                  {loading ? 'Sending OTP...' : `Sign Up as ${role === 'user' ? 'User' : 'Organization'}`}
+                  {loading ? 'Sending OTP...' : `Sign Up as ${role === 'user' ? 'User' : 'Institution'}`}
                 </button>
 
                 <button 

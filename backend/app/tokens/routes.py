@@ -31,24 +31,22 @@ token_routes = APIRouter(
 )
 def book_token_route(
     queue_id: int,
-    current_user: UserModel = Depends(require_role(UserRole.USER)),
+    current_user: UserModel = Depends(
+        require_role(UserRole.USER)
+    ),
     db: Session = Depends(get_db),
 ):
     if not current_user.profile:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User profile not found for this account."
+            detail="User profile not found for this account.",
         )
-    return controller.book_token_controller(
+
+    return controller.book_token(
         queue_id=queue_id,
         user_id=current_user.profile.id,
         db=db,
     )
-    return controller.book_token(
-    queue_id=queue_id,
-    user_id=current_user.id,
-    db=db
-)
 
 @token_routes.get(
     "/my-tokens",

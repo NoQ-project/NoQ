@@ -162,7 +162,10 @@ def book_token(
                 detail="Queue is currently closed.",
             )
 
-        current_time = datetime.now()
+        current_time = (
+            datetime.now(timezone.utc)
+            .replace(tzinfo=None)
+        )
         current_date = current_time.date()
         day_of_week = current_date.weekday()
 
@@ -282,9 +285,8 @@ def book_token(
 
         db.add(token)
 
-        db.commit()
-
-        db.refresh(token)
+        # Send INSERT to DB without committing.
+        db.flush()
 
         update_waiting_token_estimates(
             queue_id=queue.id,
@@ -293,15 +295,16 @@ def book_token(
             start_time=current_time,
         )
 
+        # Commit booking + estimate updates together.
         db.commit()
+
+        db.refresh(token)
 
         schedule_queue_updates(
             queue_id=queue.id,
             booking_date=current_date,
             db=db,
         )
-
-        db.refresh(token)
 
         return token
 
@@ -319,9 +322,8 @@ def book_token(
 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e),
+            detail="Failed to book token.",
         )
-
 
 def get_my_tokens(
     user_id: int,

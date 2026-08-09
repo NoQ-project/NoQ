@@ -1,5 +1,9 @@
 from datetime import date, timedelta, datetime, timezone
 
+from datetime import date, timedelta
+import io
+import qrcode
+
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from backend.app.tracking.events import schedule_queue_updates
@@ -18,6 +22,8 @@ from backend.app.notifications.models import (
 )
 from backend.app.auth.models import UserModel
 from backend.app.institutions.models import Institution
+from backend.app.utils.settings import settings
+
 
 def create_queue(
     queue: QueueCreateSchema,
@@ -51,7 +57,6 @@ def update_queue(
     queue: QueueUpdateSchema,
     db: Session
 ):
-
     existing_queue = get_queue_by_id(queue_id, db)
 
     for field, value in queue.model_dump(exclude_unset=True).items():
@@ -67,7 +72,6 @@ def get_queues_by_institution(
     institution_id: int,
     db: Session
 ):
-
     queues = (
         db.query(Queue)
         .filter(
@@ -84,7 +88,6 @@ def get_queue_by_id(
     queue_id: int,
     db: Session
 ):
-
     queue = (
         db.query(Queue)
         .filter(
@@ -106,7 +109,6 @@ def delete_queue(
     queue_id: int,
     db: Session
 ):
-
     queue = (
         db.query(Queue)
         .filter(
@@ -128,13 +130,41 @@ def delete_queue(
         "message": "Queue deleted successfully."
     }
 
+
+def toggle_queue_status(
+    queue_id: int,
+    db: Session
+):
+    queue = (
+        db.query(Queue)
+        .filter(
+            Queue.id == queue_id
+        )
+        .first()
+    )
+
+    if not queue:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Queue not found."
+        )
+
+    queue.is_active = not queue.is_active
+
+    db.commit()
+    db.refresh(queue)
+
+    return queue
+
+
+
 # QUEUE DASHBOARD
+
 
 def get_queue_dashboard(
     queue_id: int,
     db: Session
 ):
-
     queue = get_queue_by_id(queue_id, db)
 
     today = date.today()
@@ -193,6 +223,8 @@ def get_queue_dashboard(
         }
     }
 
+
+
 # QUEUE DATE RANGE STATISTICS
 
 def get_queue_statistics(
@@ -201,7 +233,6 @@ def get_queue_statistics(
     end_date: date,
     db: Session
 ):
-
     queue = get_queue_by_id(queue_id, db)
 
     if start_date > end_date:
@@ -314,3 +345,39 @@ def toggle_queue_status(
         "paused_at": queue.paused_at,
         "message": message,
     }
+
+
+# QUEUE QR CODE
+
+def generate_queue_qr(
+    queue_id: int,
+    db: Session
+):
+    queue = get_queue_by_id(queue_id, db)
+
+    # Build public queue URL using FRONTEND_URL from .env
+    queue_url = f"{settings.FRONTEND_URL.rstrip('/')}/queue/{queue.id}"
+
+    # Generate QR code
+    qr = qrcode.QRCode(
+        version=1,
+        box_size=10,
+        border=4
+    )
+
+    qr.add_data(queue_url)
+    qr.make(fit=True)
+
+    qr_image = qr.make_image()
+
+    # Store QR image in memory
+    image_bytes = io.BytesIO()
+
+    qr_image.save(
+        image_bytes,
+        format="PNG"
+    )
+
+    image_bytes.seek(0)
+
+    return image_bytes

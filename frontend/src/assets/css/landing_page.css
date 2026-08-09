@@ -4,12 +4,12 @@
 :root {
   --ink: #1C1233;
   --ink-soft: #554870;
-  --violet: #7C5CFC;          /* Brighter, eye-catching violet */
+  --violet: #7C5CFC;
   --violet-deep: #1F1538;
   --paper: #F6F3FF;
   --paper-card: #FFFFFF;
   --coral: #FF6849;
-  --orange: #FF7A00;          /* Vivid Orange Token */
+  --orange: #FF7A00;
   --amber: #F5A623;
   --green: #2FA84F;
   --line: #E1DAF7;
@@ -47,8 +47,13 @@ body {
 }
 
 .noq-page h1 {
-  color: #FFFFFF; /* High Contrast White Header */
+  color: var(--violet-deep);
   letter-spacing: -0.02em;
+}
+
+.noq-subheading {
+  color: var(--violet);
+  font-family: var(--font-display);
 }
 
 .noq-page p {
@@ -72,10 +77,27 @@ body {
   outline-offset: 2px;
 }
 
-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
+/* ===== Section Titles Fix (Available Services & How It Works Title Color & Size) ===== */
+.section-title {
+  font-family: var(--font-display) !important;
+  font-size: 2.35rem !important; 
+  font-weight: 700 !important;
+  color: #0E0720 !important; 
+  letter-spacing: -0.02em !important;
+  text-shadow: none !important;
+  margin-bottom: 1.25rem;
+}
+
+/* ===== Navbar Menu Styling ===== */
+header nav ul li a {
+  font-size: 1.15rem !important; 
+  font-weight: 600 !important;   
+  color: #1F1538 !important;     
+  transition: color 0.2s ease;
+}
+
+header nav ul li a:hover {
+  color: var(--violet) !important;
 }
 
 /* ===== Hero Section ===== */
@@ -83,6 +105,7 @@ header {
   background: linear-gradient(180deg, #EFEAFD 0%, var(--paper) 100%);
   position: relative;
   overflow: hidden;
+  max-width: 1400px;
 }
 
 .noq-hero::before {
@@ -93,24 +116,6 @@ header {
   background-size: 28px 28px;
   opacity: 0.06;
   pointer-events: none;
-}
-
-.noq-hero h1 {
-  font-size: clamp(2rem, 4vw, 2.75rem);
-  font-weight: 700;
-  color: var(--violet-deep);
-}
-
-.noq-hero > div:first-child > p:nth-of-type(1) {
-  font-family: var(--font-display);
-  font-weight: 600;
-  color: var(--violet);
-  font-size: clamp(1.5rem, 3vw, 2rem);
-}
-
-.noq-hero > div:first-child > p:nth-of-type(2) {
-  color: var(--ink-soft);
-  max-width: 44ch;
 }
 
 /* Buttons */
@@ -146,44 +151,35 @@ header {
 /* ===== Ticket Card Element ===== */
 .noq-ticket-box {
   background: var(--paper-card);
-  border: none;
+  border: 1px solid var(--line);
   border-radius: 20px;
   padding: 1.75rem;
   max-width: 380px;
   width: 100%;
   margin: 0 auto;
-  box-shadow: 0 24px 48px -12px rgba(28, 18, 51, 0.25);
+  box-shadow: 0 24px 48px -12px rgba(28, 18, 51, 0.15);
   position: relative;
   transform: rotate(-1.5deg);
 }
 
-.noq-ticket-box::before {
-  content: "";
-  position: absolute;
-  left: -14px;
-  top: 42%;
-  width: 28px;
-  height: 28px;
-  background: var(--paper);
-  border-radius: 50%;
-  z-index: 2;
-}
-
+.noq-ticket-box::before,
 .noq-ticket-box::after {
   content: "";
   position: absolute;
-  right: -14px;
   top: 42%;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   background: var(--paper);
   border-radius: 50%;
   z-index: 2;
 }
 
+.noq-ticket-box::before { left: -12px; }
+.noq-ticket-box::after { right: -12px; }
+
 .noq-ticket-box .flex.justify-between {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-soft);
@@ -215,14 +211,14 @@ header {
 }
 
 .noq-ticket-box .grid.justify-center {
-  padding-top: 1.75rem;
+  padding-top: 1.5rem;
   padding-bottom: 1.5rem;
   gap: 2px;
 }
 
 .noq-ticket-box .grid.justify-center p:nth-child(1) {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-soft);
@@ -231,14 +227,13 @@ header {
 .noq-ticket-box .grid.justify-center p:nth-child(2) {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 3.25rem;
+  font-size: 3rem;
   line-height: 1;
   color: var(--violet-deep);
-  letter-spacing: 0.02em;
 }
 
 .noq-ticket-box .grid.justify-center p:nth-child(3) {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--ink-soft);
 }
 
@@ -264,7 +259,6 @@ header {
 
 .noq-button-track {
   margin-top: 1.25rem;
-  border: none;
 }
 
 .noq-button-track button {
@@ -284,38 +278,12 @@ header {
   background: #EDE7FD;
 }
 
-/* ===== Services & How It Works ===== */
+/* Sections Base */
 .noq-services, 
 .noq-how-it-works {
-  padding: 4rem 2rem;
-  max-width: 1100px;
+  padding: 3rem 1.5rem;
+  max-width: 1350px;    
   margin: 0 auto;
-}
-
-/* HIGH CONTRAST TEXT OVERLAY FIX FOR BOTH TITLES */
-.noq-services > p:first-child,
-.noq-services h2,
-.noq-services h3 {
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #FFFFFF !important; /* Pure White text for high visibility */
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); /* Subtle Shadow to pop */
-  margin-bottom: 1.25rem;
-}
-
-.noq-how-it-works > p:first-child,
-.noq-how-it-works h2,
-.noq-how-it-works h3 {
-  font-size: 2.25rem;
-  font-weight: 700;
-  font-family: var(--font-display);
-  letter-spacing: -0.01em;
-  color: #FFFFFF !important; /* Pure White text */
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); /* Extra crisp drop shadow */
-  margin-bottom: 1.25rem;
 }
 
 /* CARDS IMPROVEMENTS */
@@ -325,102 +293,100 @@ header {
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 1.75rem;
-  box-shadow: 0 4px 16px rgba(28, 18, 51, 0.08);
+  box-shadow: 0 4px 16px rgba(28, 18, 51, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
 }
 
 .noq-service-card:hover,
 .noq-step-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 28px -6px rgba(28, 18, 51, 0.15);
+  box-shadow: 0 12px 28px -6px rgba(28, 18, 51, 0.12);
 }
 
-.noq-service-card p:nth-child(2),
+.noq-service-card p:first-child,
 .noq-step-card .font-bold {
   font-family: var(--font-display);
   font-weight: 700;
-  color: var(--ink); /* Very clear dark title inside white card */
+  color: var(--ink);
   font-size: 1.2rem;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.3rem;
 }
 
-.noq-service-card p:nth-child(3),
+.noq-service-card p:last-child,
 .noq-step-card p {
   color: var(--ink-soft);
   font-size: 0.95rem;
   line-height: 1.5;
 }
 
-/* HIGH-CONTRAST VIVID ORANGE BADGES (1, 2, 3, 4) */
 .noq-service-image,
 .noq-step {
-  background: linear-gradient(135deg, #FF7A00, #FF5500); 
+  background: linear-gradient(135deg, var(--orange), #FF5500); 
   color: #FFFFFF !important; 
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 1.15rem;
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(255, 122, 0, 0.4);
-  margin-bottom: 0.5rem;
+  box-shadow: 0 4px 12px rgba(255, 122, 0, 0.3);
 }
 
 .noq-step {
   border-radius: 50%;
 }
 
-.noq-step-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 1.25rem;
-}
-
-.noq-step-card .py-5 {
-  padding: 0 !important;
-}
-
-.noq-how-it-works .noq-btn-primary {
-  margin-top: 1rem;
-}
-
 /* ===== Contact Section ===== */
 .noq-contact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 2.5rem;
-  scroll-margin-top: 24px;
-  max-width: 1100px;
-  margin: 4rem auto;
-  padding: 0 2rem;
+  max-width: 1350px; 
+  margin: 2rem auto 4rem auto;
+  padding: 0 1.5rem;
   align-items: center;
 }
 
 .noq-contact-text {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
+  color: #000;
 }
 
-.noq-contact-text .font-bold {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  color: #FFFFFF;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+.noq-contact-text h2 {
+  color: black;
+}
+
+.noq-contact-image {
+  width: 100%;
+  height: 220px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  margin-top: 0.5rem;
+}
+
+.noq-contact-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .noq-contact-form {
   display: flex;
   flex-direction: column;
   border-radius: 20px;
-  height: fit-content;
-  margin: 0;
   padding: 2rem;
-  box-sizing: border-box;
   background: linear-gradient(160deg, var(--violet-deep), var(--ink));
-  box-shadow: 0 20px 40px -12px rgba(28, 18, 51, 0.35);
+  box-shadow: 0 20px 40px -12px rgba(28, 18, 51, 0.25);
   color: #fff;
 }
 
@@ -440,13 +406,18 @@ header {
 
 .noq-contact-form input,
 .noq-contact-form textarea {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
   width: 100%;
-  margin: 0;
   padding: 0.75rem 0.85rem;
   border-radius: 10px;
+  transition: border-color 0.2s ease;
+}
+
+.noq-contact-form input:focus,
+.noq-contact-form textarea:focus {
+  border-color: var(--violet);
 }
 
 .noq-contact-form textarea {
@@ -455,7 +426,7 @@ header {
 
 .noq-contact-form input::placeholder,
 .noq-contact-form textarea::placeholder {
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .noq-send {
@@ -479,11 +450,17 @@ header {
 }
 
 /* ===== Responsive Rules ===== */
+@media (max-width: 768px) {
+  .noq-contact {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin: 2rem auto;
+  }
+}
+
 @media (max-width: 640px) {
   .noq-hero {
-    height: auto !important;
-    min-height: auto;
-    padding: 3rem 1.25rem;
+    padding: 2.5rem 1.25rem;
     gap: 2rem;
   }
 
@@ -499,11 +476,6 @@ header {
 
   .noq-services, 
   .noq-how-it-works {
-    padding: 3rem 1.25rem;
-  }
-
-  .noq-contact {
-    margin: 2.5rem auto;
-    padding: 0 1.25rem;
+    padding: 2rem 1.25rem;
   }
 }

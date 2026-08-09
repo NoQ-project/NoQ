@@ -285,6 +285,21 @@ def get_queue_by_id(
     )
 
 
+def count_queues(
+    db: Session,
+    search: str | None,
+):
+    query = db.query(Queue)
+
+    if search:
+        query = query.filter(
+            Queue.name.ilike(
+                f"%{search}%"
+            )
+        )
+
+    return query.count()
+
 # =========================
 # TOKENS
 # =========================
@@ -312,6 +327,11 @@ def get_tokens(
         .limit(limit)
         .all()
     )
+
+def count_tokens(
+    db: Session,
+):
+    return db.query(Token).count()
 
 
 def get_token_by_id(

@@ -89,3 +89,11 @@ def toggle_queue_status(
         reason=data.reason,
         db=db,
     )
+def generate_queue_qr(
+    queue_id: int,
+    db: Session
+):
+    return service.generate_queue_qr(
+        queue_id=queue_id,
+        db=db
+    )

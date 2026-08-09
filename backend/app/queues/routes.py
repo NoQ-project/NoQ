@@ -16,6 +16,8 @@ from backend.app.queues.schemas import (
 )
 from backend.app.utils.database import get_db
 from backend.app.queues.schemas import QueueStatusToggleRequest, QueueStatusResponse
+from fastapi.responses import StreamingResponse
+
 
 queue_routes = APIRouter(
     prefix="/queues",
@@ -154,4 +156,25 @@ def toggle_queue_status(
         data=data,
         db=db,
         current_user=current_user,
+    )
+
+@queue_routes.get(
+    "/qr/{queue_id}",
+    status_code=status.HTTP_200_OK
+)
+def generate_queue_qr(
+    queue_id: int,
+    db: Session = Depends(get_db)
+):
+    qr_image = controller.generate_queue_qr(
+        queue_id=queue_id,
+        db=db
+    )
+
+    return StreamingResponse(
+        qr_image,
+        media_type="image/png",
+        headers={
+            "Content-Disposition": f"inline; filename=queue_{queue_id}_qr.png"
+        }
     )

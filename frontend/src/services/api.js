@@ -19,39 +19,18 @@ const BASE_URL = getBaseURL();
 
 console.log(`🌐 API Base URL: ${BASE_URL}`);
 
-/**
- * Create Axios instance with default configuration
- */
 const API = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true,  // ✅ CRITICAL: Enable cookies for authentication
+  withCredentials: true, 
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,  // ✅ CRITICAL: Timeout after 10 seconds to prevent hanging
+  timeout: 10000, 
 });
 
 /**
- * Request Interceptor
- * Adds authorization token to requests if available in localStorage
- */
-API.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    console.error('Request interceptor error:', error);
-    return Promise.reject(error);
-  }
-);
-
-/**
  * Response Interceptor
- * Handles errors and implements retry logic for 401 responses
+ * Handles errors and implements retry logic for 401 responses using HTTP-only cookies
  */
 API.interceptors.response.use(
   (response) => {
@@ -65,27 +44,15 @@ API.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
+        console.log('🔄 Attempting to refresh token via cookie...');
         
-        if (refreshToken) {
-          console.log('🔄 Attempting to refresh token...');
-          
-          const response = await API.post('/auth/refresh', {
-            refresh_token: refreshToken
-          });
-
-          const newAccessToken = response.data.access_token;
-          localStorage.setItem('accessToken', newAccessToken);
-          
-          // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          return API(originalRequest);
-        }
+        // Backend handles refresh token automatically via cookies
+        await API.post('/auth/refresh');
+        
+        // Retry original request
+        return API(originalRequest);
       } catch (refreshError) {
         console.error('❌ Token refresh failed:', refreshError.message);
-        // Clear tokens and redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
         window.location.href = '/';
       }
     }

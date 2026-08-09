@@ -48,6 +48,7 @@ class InstitutionController:
             institution_id=institution_id,
             db=db
         )
+
     @staticmethod
     def update_institution(
         institution_id: int,
@@ -59,6 +60,7 @@ class InstitutionController:
             institution=institution,
             db=db
         )
+
     @staticmethod
     def delete_institution(
         institution_id: int,
@@ -68,7 +70,6 @@ class InstitutionController:
             institution_id=institution_id,
             db=db
         )
-
 
     @staticmethod
     def get_dashboard(

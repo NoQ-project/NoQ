@@ -2,8 +2,7 @@ from backend.app.utils.settings import settings
 import jwt
 from jwt.exceptions import InvalidTokenError, ExpiredSignatureError, PyJWTError
 from backend.app.utils.database import get_db
-from backend.app.utils.settings import settings
-from fastapi import HTTPException,Request , status, Depends
+from fastapi import HTTPException, Request, status, Depends
 from sqlalchemy.orm import Session
 from backend.app.auth.models import UserModel, UserRole
 from backend.app.tokens.models import Token 
@@ -18,20 +17,31 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
     try:
         token = request.cookies.get("access_token")
         if not token:
-            raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, 
-                                detail= "You are unauthorized")
+            print("❌ Debug: No access_token cookie found in request cookies!")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="You are unauthorized"
+            )
         
-        data = jwt.decode(token, settings.SECRET_KEY, settings.ALGORITHM )
+        # PyJWT ko lagi algorithms parameter lai list format ma keyword argument ko rup ma pass gareko
+        data = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         user_id = data.get("id")
 
-        current_user= db.query(UserModel).filter(UserModel.id == user_id).first()
+        current_user = db.query(UserModel).filter(UserModel.id == user_id).first()
         if not current_user:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
-                                    detail= "You are unauthorized")
-    except ExpiredSignatureError:
-            raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, 
-                                detail= "Access Token Expired")
-    except PyJWTError:
+            print(f"❌ Debug: User ID {user_id} from token not found in database!")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="You are unauthorized"
+            )
+    except ExpiredSignatureError as e:
+        print(f"❌ Debug: Token expired error -> {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Access Token Expired"
+        )
+    except PyJWTError as e:
+        print(f"❌ Debug: PyJWTError -> {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
@@ -40,7 +50,6 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
 
 
 def require_role(required_role: UserRole):
-
     def role_checker(
         current_user = Depends(get_current_user)
     ):
@@ -77,6 +86,7 @@ def require_owner(
 
     return resource
 
+
 def get_owned_token(
     booking_id: int,
     current_user: UserModel = Depends(get_current_user),
@@ -90,6 +100,7 @@ def get_owned_token(
         current_user=current_user,
     )
 
+
 def get_owned_queue(
     queue_id: int,
     db: Session = Depends(get_db),
@@ -98,10 +109,12 @@ def get_owned_queue(
     return require_owner(
         db=db,
         model=Queue,
-        resource_id= queue_id,
+        resource_id=queue_id,
         owner_column=Queue.institution_id,
         current_user=current_user,
     )
+
+
 def get_owned_user_profile(
     profile_id: int,
     db: Session = Depends(get_db),
@@ -145,7 +158,6 @@ def get_owned_notification(
 
 
 def create_access_token(user_id: int):
-
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXP_TIME)
     payload = {
         "id": user_id,
@@ -158,8 +170,8 @@ def create_access_token(user_id: int):
         settings.ALGORITHM
     )
 
-def create_refresh_token(user_id: int):
 
+def create_refresh_token(user_id: int):
     expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXP_TIME)
     payload = {
         "id": user_id,

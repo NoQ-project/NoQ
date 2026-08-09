@@ -60,6 +60,8 @@ def search_institutions(
         db=db,
         query=query,
     )
+
+
 @institution_routes.get(
     "/dashboard",
     response_model=InstitutionDashboardResponse,
@@ -69,9 +71,10 @@ def get_dashboard(
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user)
 ):
+    print("Current user:")
     return controller.InstitutionController.get_dashboard(
         db=db,
-         current_user=current_user,
+        current_user=current_user,
     )
 
 
@@ -88,6 +91,8 @@ def get_institution_details(
         institution_id=institution_id,
         db=db
     )
+
+
 @institution_routes.put(
     "/{institution_id}",
     response_model=InstitutionResponse,
@@ -103,6 +108,8 @@ def update_institution(
         institution=institution,
         db=db
     )
+
+
 @institution_routes.delete(
     "/{institution_id}",
     status_code=status.HTTP_200_OK

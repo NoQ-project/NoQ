@@ -144,31 +144,33 @@ def verify_password(plain_password, hash_password):
 
 def login_user(
     body: LoginSchema,
-    db: Session
+    db: Session,
 ):
-    user = db.query(UserModel).filter(
-        UserModel.email == body.email
-    ).first()
+    user = (
+        db.query(UserModel)
+        .filter(UserModel.email == body.email)
+        .first()
+    )
 
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Email"
+            detail="Invalid Email",
         )
 
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account has been suspended."
+            detail="Account has been suspended.",
         )
 
     if not verify_password(
         body.password,
-        user.password_hash
+        user.password_hash,
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Password"
+            detail="Invalid Password",
         )
 
     access_token = create_access_token(user.id)
@@ -179,11 +181,8 @@ def login_user(
         token=refresh_token,
         expires_at=datetime.now(timezone.utc) + timedelta(days=30),
         revoked=False,
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc),
     )
-    return {"access_token": access_token,
-            "refresh_token": refresh_token,
-            "role": user.role.value}
 
     db.add(refresh_token_data)
     db.commit()
@@ -191,9 +190,9 @@ def login_user(
 
     return {
         "access_token": access_token,
-        "refresh_token": refresh_token
+        "refresh_token": refresh_token,
+        "role": user.role.value,
     }
-
 
 def request_reset_password(
     body: EmailSchema,
@@ -304,7 +303,8 @@ def refresh_token(
 ):
     refresh_token_value = request.cookies.get(
         "refresh_token"
-    )
+    )   
+    print("REFRESH TOKEN FROM COOKIE:", refresh_token_value)
 
     if not refresh_token_value:
         raise HTTPException(
@@ -317,7 +317,7 @@ def refresh_token(
     ).filter(
         RefreshTokenModel.token == refresh_token_value
     ).first()
-
+    print("TOKEN FOUND IN DB:", stored_token is not None)
     if not stored_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -15,18 +15,19 @@ class InstitutionService:
     @staticmethod
     def create_institution(
         institution: InstitutionCreateSchema,
-        db: Session
+        db: Session,
+        current_user: UserModel
     ):
 
-        existing = (
-            db.query(Institution)
-            .filter(
-                Institution.auth_user_id == 1
-            )
-            .first()
-        )
+        existing_institution = (
+                    db.query(Institution)
+                    .filter(
+                        Institution.auth_user_id == current_user.id
+                    )
+                    .first()
+                )
 
-        if existing:
+        if existing_institution:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Institution profile already exists."
@@ -34,7 +35,7 @@ class InstitutionService:
 
         new_institution = Institution(
             name=institution.name,
-            auth_user_id=1,      # TODO: Replace with current logged-in user ID
+            auth_user_id=current_user.id,    
             description=institution.description,
             address=institution.address,
             phone=institution.phone,

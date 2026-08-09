@@ -24,11 +24,13 @@ institution_routes = APIRouter(
 )
 def create_institution(
     institution: InstitutionCreateSchema,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
 ):
     return controller.InstitutionController.create_institution(
         institution=institution,
-        db=db
+        db=db,
+        current_user=current_user
     )
 
 
@@ -65,7 +67,7 @@ def search_institutions(
 )
 def get_dashboard(
     db: Session = Depends(get_db),
-     current_user: UserModel = Depends(get_current_user)
+    current_user: UserModel = Depends(get_current_user)
 ):
     return controller.InstitutionController.get_dashboard(
         db=db,

@@ -19,6 +19,7 @@ class InstitutionService:
         current_user: UserModel
     ):
 
+<<<<<<< HEAD
         existing = (
             db.query(Institution)
             .filter(
@@ -26,8 +27,17 @@ class InstitutionService:
             )
             .first()
         )
+=======
+        existing_institution = (
+                    db.query(Institution)
+                    .filter(
+                        Institution.auth_user_id == current_user.id
+                    )
+                    .first()
+                )
+>>>>>>> b27fe2a11467d0f426f62c3f63815145f56648ff
 
-        if existing:
+        if existing_institution:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Institution profile already exists."
@@ -35,7 +45,11 @@ class InstitutionService:
 
         new_institution = Institution(
             name=institution.name,
+<<<<<<< HEAD
             auth_user_id=current_user.id,
+=======
+            auth_user_id=current_user.id,    
+>>>>>>> b27fe2a11467d0f426f62c3f63815145f56648ff
             description=institution.description,
             address=institution.address,
             phone=institution.phone,

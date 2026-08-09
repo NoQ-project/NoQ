@@ -172,7 +172,6 @@ function DashboardView() {
   );
 }
 
-// New Institutions View
 function InstitutionsView() {
   const [institutions, setInstitutions] = useState([]);
   const [query, setQuery] = useState("");
@@ -245,7 +244,6 @@ function InstitutionsView() {
         </div>
       </div>
 
-      {/* Modal / Panel for Institution Details */}
       {selectedInst && (
         <div className="noq-modal-backdrop" style={{ background: "rgba(0,0,0,0.5)", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }} onClick={() => setSelectedInst(null)}>
           <div className="noq-card" style={{ background: "#fff", padding: "24px", width: "500px", maxWidth: "90%", maxHeight: "80vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
@@ -287,9 +285,9 @@ function QueuesView() {
     fetchQueues();
   }, [query]);
 
-  async function toggleStatus(id) {
+  async function toggleStatus(id, currentStatus) {
     try {
-      await adminService.toggleQueueStatus(id);
+      await adminService.toggleQueueStatus(id, currentStatus);
       fetchQueues();
     } catch (err) {
       alert("Failed to change queue status");
@@ -336,7 +334,7 @@ function QueuesView() {
                   <td className="noq-mono-cell">{q.avg_service_time} min</td>
                   <td><StatusPill status={q.is_active} /></td>
                   <td>
-                    <button className="noq-btn-ghost" onClick={() => toggleStatus(q.id)}>
+                    <button className="noq-btn-ghost" onClick={() => toggleStatus(q.id, q.is_active)}>
                       {q.is_active ? <Pause size={12} /> : <Play size={12} />}
                       {q.is_active ? " Pause" : " Resume"}
                     </button>
@@ -366,9 +364,9 @@ function UsersView() {
     fetchUsers();
   }, [query]);
 
-  async function toggleUserStatus(id) {
+  async function toggleUserStatus(id, currentStatus) {
     try {
-      await adminService.toggleUserStatus(id);
+      await adminService.toggleUserStatus(id, currentStatus);
       fetchUsers();
     } catch (err) {
       alert("Failed to toggle user status");
@@ -408,7 +406,7 @@ function UsersView() {
                   <td>{u.email}</td>
                   <td>{u.is_verified ? "Yes" : "No"}</td>
                   <td>
-                    <button className="noq-btn-ghost" onClick={() => toggleUserStatus(u.id)}>
+                    <button className="noq-btn-ghost" onClick={() => toggleUserStatus(u.id, u.is_active)}>
                       Toggle Status
                     </button>
                   </td>

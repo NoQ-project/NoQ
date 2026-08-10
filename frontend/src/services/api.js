@@ -30,6 +30,29 @@ const API = axios.create({
   timeout: 10000, 
 });
 
+// ============================================
+// REQUEST INTERCEPTOR - Add token to headers
+// ============================================
+API.interceptors.request.use(
+  (config) => {
+    // Get token from localStorage
+    const token = localStorage.getItem('token') || localStorage.getItem('access_token');
+    
+    if (token) {
+      // Add Bearer token to Authorization header
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// ============================================
+// RESPONSE INTERCEPTOR - Handle 401 & refresh
+// ============================================
 API.interceptors.response.use(
   (response) => {
     return response;
@@ -37,36 +60,74 @@ API.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Prevent infinite loop if the refresh endpoint itself returns 401
-    if (originalRequest.url && originalRequest.url.includes('/auth/refresh')) {
-      return Promise.reject(error);
-    }
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Only attempt refresh if:
+    // 1. Status is 401 (Unauthorized)
+    // 2. Haven't already retried this request
+    // 3. This isn't the refresh endpoint itself (prevent infinite loop)
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      originalRequest.url &&
+      !originalRequest.url.includes('/auth/refresh')
+    ) {
       originalRequest._retry = true;
 
       try {
-        await API.post('/auth/refresh');
-        return API(originalRequest);
+        console.log('🔄 Token expired. Attempting refresh...');
+        
+        // Call refresh endpoint
+        const refreshResponse = await API.post('/auth/refresh');
+        
+        // Extract new token from response
+        const newToken = refreshResponse.data?.access_token || refreshResponse.data?.token;
+        
+        if (newToken) {
+          // Store new token
+          localStorage.setItem('token', newToken);
+          
+          // Update the failed request's Authorization header
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          
+          console.log('✅ Token refreshed successfully');
+          
+          // Retry the original request with new token
+          return API(originalRequest);
+        } else {
+          throw new Error('No token in refresh response');
+        }
+        
       } catch (refreshError) {
         console.error('❌ Token refresh failed:', refreshError.message);
-        // Clear local storage tokens if any exist
+        
+        // Clear all stored tokens
         localStorage.removeItem('token');
         localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
         
-        // Redirect to login only once
-        if (window.location.pathname !== '/') {
+        // Redirect to login (only if not already on login page)
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/login' && currentPath !== '/' && currentPath !== '/auth') {
+          console.log('🔴 Redirecting to login...');
           window.location.href = '/';
         }
+        
         return Promise.reject(refreshError);
       }
     }
 
+    // If not a 401 or refresh already attempted, extract error message
     const message =
       error.response?.data?.detail ||
       error.response?.data?.message ||
+      error.response?.data?.error ||
       error.message ||
       'An unexpected error occurred.';
+
+    console.error('API Error:', {
+      status: error.response?.status,
+      message: message,
+      url: originalRequest?.url,
+    });
 
     return Promise.reject(new Error(message));
   }

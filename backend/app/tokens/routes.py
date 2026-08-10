@@ -77,11 +77,6 @@ def get_token_details(
     current_token: Token = Depends(get_owned_token),
     db: Session = Depends(get_db),
 ):
-    if not current_user.profile:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User profile not found for this account."
-        )
     return controller.get_token_details(
         token_id=token_id,
         user_id=current_token.user_id,
@@ -96,18 +91,13 @@ def get_token_details(
 def cancel_token(
     token_id: int,
     queue_id: int,
-    current_user: UserModel = Depends(get_owned_token),
+    current_token: Token = Depends(get_owned_token),
     db: Session = Depends(get_db),
 ):
-    if not current_user.profile:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User profile not found for this account."
-        )
     return controller.cancel_token(
         queue_id=queue_id,
         token_id=token_id,
-        user_id=current_user.profile.id,
+        user_id=current_token.user_id,
         db=db,
     )
 

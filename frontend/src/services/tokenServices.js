@@ -16,13 +16,18 @@ export const tokenService = {
     const response = await API.get('/institutions/');
     return response.data;
   },
-
-  // Add this method to resolve the error
-  async bookToken(orgId, bookingDate) {
-    const response = await API.post('/tokens/book', { 
-      org_id: orgId, 
-      booking_date: bookingDate 
-    });
+  // Book token for a specific queue. Backend expects `queue_id` as a query param.
+  async bookToken(queueId, bookingDate) {
+    const response = await API.post(
+      '/tokens/book',
+      null,
+      {
+        params: {
+          queue_id: queueId,
+          booking_date: bookingDate,
+        },
+      }
+    );
     return response.data;
   }
 };

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
 import { useEffect, useState } from "react";
+import API from './services/api';
 import './index.css'; 
 
 function App() {
@@ -9,7 +10,7 @@ function App() {
 
   /**
    * Check if backend is accessible on component mount
-   * Uses environment variable VITE_API_BASE_URL or defaults to localhost:8000
+   * Uses the shared API client so auth proxy and cookies are preserved.
    */
   useEffect(() => {
     const checkBackendConnection = async () => {
@@ -17,19 +18,15 @@ function App() {
       const timeoutId = setTimeout(() => controller.abort(), 5000);  // 5 second timeout
 
       try {
-        // ✅ FIXED: Use environment variable instead of hardcoded URL
-        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-
-        const response = await fetch(`${apiBaseUrl}/`, {
+        const response = await API.get('/', {
           signal: controller.signal,
           headers: {
             'Accept': 'application/json',
           }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log("✅ Backend Connected:", data);
+        if (response.status === 200) {
+          console.log("✅ Backend Connected:", response.data);
           setBackendStatus('connected');
           setBackendError(null);
         } else {

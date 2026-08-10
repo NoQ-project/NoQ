@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, status, Request, BackgroundTasks, HTTPException, Response
 from sqlalchemy.orm import Session
 from backend.app.auth import controller
-from backend.app.auth.models import UserRole
-from backend.app.auth.schemas import UserResponseSchema, RegisterSchema, LoginSchema, VerifyEmailSchema, EmailSchema, ResetPasswordSchema
+from backend.app.auth.models import UserModel, UserRole
+from backend.app.auth.schemas import UserResponseSchema, RegisterSchema, LoginSchema, VerifyEmailSchema, VerifyRegistrationSchema, EmailSchema, ResetPasswordSchema
 from backend.app.utils.database import get_db
 from backend.app.auth.dependencies import get_current_user
 from backend.app.auth.dependencies import require_role 
@@ -23,7 +23,7 @@ def register(body:RegisterSchema,
 @auth_routes.post("/verify_register",
                   response_model=UserResponseSchema, 
                   status_code=status.HTTP_201_CREATED)
-def verify_register(body: VerifyEmailSchema, 
+def verify_register(body: VerifyRegistrationSchema, 
                     db:Session=Depends(get_db)):
     return controller.verify_register(body,db)
 
@@ -47,7 +47,8 @@ def login(body: LoginSchema,
         httponly=True,
         secure=False,
         samesite="lax",
-        max_age=15 * 60
+        path='/',
+        max_age=15 * 60,
     )
     response.set_cookie(
         key="refresh_token",
@@ -55,9 +56,27 @@ def login(body: LoginSchema,
         httponly=True,
         secure=False,
         samesite="lax",
-        max_age=30 * 24 * 60 * 60
+        path='/',
+        max_age=30 * 24 * 60 * 60,
     )
-    return {"message": "Login successful"}
+    return {
+        "message": "Login successful",
+        "user": {
+            "id": tokens["user"]["id"],
+            "name": tokens["user"]["name"],
+            "email": tokens["user"]["email"],
+            "role": tokens["user"]["role"],
+        },
+    }
+
+
+@auth_routes.get(
+    "/me",
+    response_model=UserResponseSchema,
+    status_code=status.HTTP_200_OK
+)
+def get_me(current_user: UserModel = Depends(get_current_user)):
+    return current_user
 
 
 @auth_routes.post("/request_reset_password", 

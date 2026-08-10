@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-const API_BASE_URL = 'http://localhost:8000/auth'; // Point to your FastAPI backend
+import API from '../../services/api';
 
 function VerifyOtpModal({ isOpen, email, onClose, onSuccess }) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -55,24 +54,14 @@ function VerifyOtpModal({ isOpen, email, onClose, onSuccess }) {
 
     try {
       // Matches VerifyEmailSchema: { email, otp }
-      const response = await fetch(`${API_BASE_URL}/verify_register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          otp: fullOtp,
-        }),
+      const response = await API.post('/auth/verify_register', {
+        email,
+        otp: fullOtp,
       });
+      const data = response.data;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errorDetail = typeof data.detail === 'string' 
-          ? data.detail 
-          : data.detail?.[0]?.msg || 'OTP Verification failed.';
-        throw new Error(errorDetail);
+      if (!data) {
+        throw new Error('OTP Verification failed.');
       }
 
       // Backend returns UserResponseSchema on success (201 CREATED)
@@ -94,18 +83,10 @@ function VerifyOtpModal({ isOpen, email, onClose, onSuccess }) {
 
     try {
       // Matches EmailSchema: { email }
-      const response = await fetch(`${API_BASE_URL}/resend_otp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || 'Failed to resend code.');
+      const response = await API.post('/auth/resend_otp', { email });
+      const data = response.data;
+      if (!data) {
+        throw new Error('Failed to resend code.');
       }
 
       setResendStatus('A new code has been sent to your email.');

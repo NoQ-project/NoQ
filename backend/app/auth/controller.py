@@ -2,6 +2,7 @@ from backend.app.auth.schemas import  RegisterSchema, LoginSchema, VerifyEmailSc
 from sqlalchemy.orm import Session
 from backend.app.auth.models import UserModel, RefreshTokenModel, UserRole
 from backend.app.user.models import User
+from backend.app.institutions.models import Institution
 from fastapi import HTTPException,Request , status, Depends, BackgroundTasks, Response
 from pwdlib import PasswordHash
 from datetime import datetime, timedelta, timezone
@@ -13,7 +14,7 @@ import redis
 from redis import Redis
 import secrets
 from backend.app.utils.mail import send_verification_email
-from backend.app.config.redis_client import redis_client, save_pending_registration, verify_registration, store_and_send_otp, check_cooldown, start_cooldown, check_rate_limit, verified_user
+from backend.app.config.redis_client import _redis_action, redis_client, save_pending_registration, verify_registration, store_and_send_otp, check_cooldown, start_cooldown, check_rate_limit, verified_user
 from backend.app.auth.dependencies import create_access_token, create_refresh_token
 
 password_hash = PasswordHash.recommended()
@@ -55,11 +56,11 @@ def verify_register(body, db: Session):
 
     # Create the user model with exact column names matching usertable
     new_user = UserModel(
-        first_name=data.get("first_name", ""),
-        last_name=data.get("last_name", ""),
+        first_name=data.get("username", ""),
+        last_name="",
         email=data["email"],
         password_hash=hashed_pwd,
-        role=data.get("role") if data.get("role") else UserRole.USER,
+        role=UserRole(data.get("role")) if data.get("role") else UserRole.USER,
         is_verified=True,
         is_active=True
     )
@@ -68,27 +69,39 @@ def verify_register(body, db: Session):
     db.commit()
     db.refresh(new_user)
 
-    # Every USER-role account needs a matching profile row, since
-    # routes like /tokens/my-tokens rely on `current_user.profile`.
-    # Institution accounts get their profile row created separately
-    # (see backend/app/institutions/service.py).
     if new_user.role == UserRole.USER:
-        profile = User(auth_user_id=new_user.id)
+        profile = User(
+            auth_user_id=new_user.id,
+            address=body.address,
+            phone=body.phone,
+        )
         db.add(profile)
         db.commit()
-        db.refresh(new_user)
 
+    elif new_user.role == UserRole.INSTITUTION:
+        institution_profile = Institution(
+            name=body.institution_name or data.get("username", ""),
+            auth_user_id=new_user.id,
+            description=body.description,
+            address=body.address or "",
+            phone=body.phone,
+            website=body.website,
+        )
+        db.add(institution_profile)
+        db.commit()
+
+    db.refresh(new_user)
     return new_user
    
 def resend_otp(body:VerifyEmailSchema, bg_tasks: BackgroundTasks):
-    if not redis_client.exists(f"register:{body.email}"):
+    if not _redis_action(redis_client.exists, f"register:{body.email}"):
         raise HTTPException(status_code=400, detail="Registration has expired. Please register again")
     
     check_cooldown(f"cooldown:resend_otp:{body.email}")
 
-    check_rate_limit(f"rate_limit:resesnd_otp:{body.email}", 5, 60)
+    check_rate_limit(f"rate_limit:resend_otp:{body.email}", 5, 60)
 
-    store_and_send_otp("register", body.email, bg_tasks)
+    store_and_send_otp("register", bg_tasks, body.email)
 
     start_cooldown(f"cooldown:resend_otp:{body.email}", 120)
 
@@ -144,29 +157,52 @@ def login_user(body: LoginSchema, db: Session):
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "role": user.role.value,
+        },
     }
 
 
-    
+def logout(request: Request, response: Response, db: Session):
+    refresh_token = request.cookies.get("refresh_token")
+
+    if refresh_token:
+        stored_token = (
+            db.query(RefreshTokenModel)
+            .filter(RefreshTokenModel.token == refresh_token)
+            .first()
+        )
+        if stored_token:
+            stored_token.revoked = True
+            db.commit()
+
+    response.delete_cookie("access_token", path="/")
+    response.delete_cookie("refresh_token", path="/")
+    return {"message": "Logged out"}
+
+
 def request_reset_password(body:EmailSchema, 
-                           db:Session, 
-                           bg_tasks: BackgroundTasks):
+                           bg_tasks: BackgroundTasks,
+                           db:Session):
     is_user = db.query(UserModel).filter(UserModel.email == body.email).first()
 
     if not is_user:
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Email doesnot exist")
-    store_and_send_otp("reset_password", body.email, bg_tasks)
+    store_and_send_otp("reset_password", bg_tasks, body.email)
 
 
 def verify_reset_password(body: VerifyEmailSchema):
-    stored_otp= redis_client.get(f"reset_password_otp:{body.email}")
+    stored_otp = _redis_action(redis_client.get, f"reset_password_otp:{body.email}")
 
     if stored_otp is None:
-        raise HTTPException(status_code=400,detail="OTP expired.")
+        raise HTTPException(status_code=400, detail="OTP expired.")
     
-    if  body.otp != stored_otp:
+    if body.otp != stored_otp:
         raise HTTPException(status_code=401, detail="Incorrect OTP")
-    redis_client.delete(f"reset_password_otp:{body.email}")
+    _redis_action(redis_client.delete, f"reset_password_otp:{body.email}")
     verified_user("reset_password", body.email)
 
 
@@ -176,7 +212,7 @@ def reset_password(body:ResetPasswordSchema, db:Session):
     if not user:
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail="Email doesnot exist")
     
-    verified = redis_client.get(f"reset_password_verified:{body.email}")
+    verified = _redis_action(redis_client.get, f"reset_password_verified:{body.email}")
 
     if verified is None:
         raise HTTPException(status_code=400, detail="OTP not verified")
@@ -184,7 +220,7 @@ def reset_password(body:ResetPasswordSchema, db:Session):
     user.password_hash = get_password_hash(body.new_password)
     db.commit()
     db.refresh(user)
-    redis_client.delete(f"reset_password_verified:{body.email}")
+    _redis_action(redis_client.delete, f"reset_password_verified:{body.email}")
     return {"message":"Password Reset"}
 
 def refresh_token(
@@ -237,6 +273,7 @@ def refresh_token(
         httponly=True,
         secure=False,      # True in production with HTTPS
         samesite="lax",
+        path='/',
         max_age=15 * 60,
     )
 

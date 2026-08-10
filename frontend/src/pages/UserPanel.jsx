@@ -16,6 +16,7 @@ import {
   Calendar
 } from 'lucide-react';
 import tokenService from "../services/tokenServices";
+import queueServices from '../services/queueServices';
 import "../assets/css/UserPanel.css";
 
 // Inline DatePicker Component
@@ -63,7 +64,7 @@ export default function UserPanel() {
 
   // Booking wizard state
   const [selectedOrgForBooking, setSelectedOrgForBooking] = useState(null);
-  const [selectedDept, setSelectedDept] = useState('');
+  const [selectedQueueId, setSelectedQueueId] = useState(null);
   const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Profile State
@@ -227,19 +228,33 @@ export default function UserPanel() {
 
   // --- ACTIONS ---
   const handleSelectOrg = (org) => {
-    setSelectedOrgForBooking(org);
-    setSelectedDept(org.departments[0]);
+    // Fetch queues for this institution and let user pick a specific queue
+    (async () => {
+      try {
+        const queues = await queueServices.getQueuesByInstitution(org.id);
+        setSelectedOrgForBooking({ ...org, queues });
+        setSelectedQueueId(queues && queues.length > 0 ? queues[0].id : null);
+      } catch (err) {
+        console.error('Failed to load queues for institution:', err);
+        setSelectedOrgForBooking({ ...org, queues: [] });
+        setSelectedQueueId(null);
+      }
+    })();
   };
 
   const handleExecuteBooking = async (e) => {
     e.preventDefault();
-    if (!selectedOrgForBooking || !bookingDate) return;
+    if (!selectedOrgForBooking || !bookingDate || !selectedQueueId) {
+      alert('Please select a queue and booking date.');
+      return;
+    }
 
     try {
-      await tokenService.bookToken(selectedOrgForBooking.id, bookingDate);
+      await tokenService.bookToken(selectedQueueId, bookingDate);
       await fetchDashboardData();
       await fetchNotifications();
       setSelectedOrgForBooking(null);
+      setSelectedQueueId(null);
       setSearchQuery('');
       setActiveTab('track');
     } catch (err) {
@@ -569,7 +584,7 @@ export default function UserPanel() {
               </>
             ) : (
               <div className="booking-wizard space-y-4">
-                <button onClick={() => setSelectedOrgForBooking(null)} className="back-btn">
+                <button onClick={() => { setSelectedOrgForBooking(null); setSelectedQueueId(null); }} className="back-btn">
                   <ArrowLeft size={14}/> Back to list
                 </button>
                 
@@ -585,17 +600,21 @@ export default function UserPanel() {
 
                 <form onSubmit={handleExecuteBooking} className="booking-form">
                   <div>
-                    <label className="form-label">Select Service Department</label>
+                    <label className="form-label">Select Queue</label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 dept-grid">
-                      {selectedOrgForBooking.departments.map((dept) => (
-                        <div 
-                          key={dept}
-                          onClick={() => setSelectedDept(dept)}
-                          className={`dept-option ${selectedDept === dept ? 'selected' : ''}`}
-                        >
-                          {dept}
-                        </div>
-                      ))}
+                      {selectedOrgForBooking.queues && selectedOrgForBooking.queues.length > 0 ? (
+                        selectedOrgForBooking.queues.map((q) => (
+                          <div
+                            key={q.id}
+                            onClick={() => setSelectedQueueId(q.id)}
+                            className={`dept-option ${selectedQueueId === q.id ? 'selected' : ''}`}
+                          >
+                            {q.name}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-sm text-[#8A968E]">No queues available for this institution.</div>
+                      )}
                     </div>
                   </div>
 

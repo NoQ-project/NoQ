@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
-from backend.app.auth.models import UserModel
-from backend.app.auth.dependencies import get_current_user
+from backend.app.auth.models import UserModel, UserRole
+from backend.app.auth.dependencies import get_current_user, require_role
+from backend.app.queues import controller as queue_controller
+from backend.app.queues.schemas import QueueCreateSchema, QueueResponseSchema, QueueDetailSchema
 from backend.app.utils.database import get_db
 from backend.app.institutions.schemas import (
     InstitutionDashboardResponse,
@@ -75,6 +77,77 @@ def get_dashboard(
     return controller.InstitutionController.get_dashboard(
         db=db,
         current_user=current_user,
+    )
+
+
+@institution_routes.get(
+    "/queues",
+    response_model=list[QueueResponseSchema],
+    status_code=status.HTTP_200_OK
+)
+def get_institution_queues(
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(require_role(UserRole.INSTITUTION))
+):
+    if not current_user.institution:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Institution profile not found."
+        )
+
+    return queue_controller.get_institution_queues(
+        institution_id=current_user.institution.id,
+        db=db,
+    )
+
+
+@institution_routes.post(
+    "/queues",
+    response_model=QueueDetailSchema,
+    status_code=status.HTTP_201_CREATED
+)
+def create_institution_queue(
+    queue: QueueCreateSchema,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(require_role(UserRole.INSTITUTION))
+):
+    return queue_controller.create_queue(
+        queue=queue,
+        db=db,
+        current_user=current_user,
+    )
+
+
+@institution_routes.delete(
+    "/queues/{queue_id}",
+    status_code=status.HTTP_204_NO_CONTENT
+)
+def delete_institution_queue(
+    queue_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(require_role(UserRole.INSTITUTION))
+):
+    return queue_controller.delete_queue(
+        queue_id=queue_id,
+        db=db,
+    )
+
+
+@institution_routes.patch(
+    "/queues/{queue_id}/limits",
+    response_model=QueueDetailSchema,
+    status_code=status.HTTP_200_OK
+)
+def update_institution_queue_limits(
+    queue_id: int,
+    queue: QueueCreateSchema,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(require_role(UserRole.INSTITUTION))
+):
+    return queue_controller.update_queue(
+        queue_id=queue_id,
+        queue=queue,
+        db=db,
     )
 
 

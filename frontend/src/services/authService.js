@@ -6,8 +6,8 @@ export const authService = {
     return response.data;
   },
 
-  verifyRegister: async (email, otp) => {
-    const response = await API.post('/auth/verify_register', { email, otp });
+  verifyRegister: async (payload) => {
+    const response = await API.post('/auth/verify_register', payload);
     return response.data;
   },
 
@@ -50,6 +50,7 @@ export const authService = {
   logout: async () => {
     const response = await API.post('/auth/logout');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('username');
     return response.data;
   }
 };

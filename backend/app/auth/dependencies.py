@@ -56,14 +56,14 @@ def require_role(required_role: UserRole):
 def require_owner (db: Session,
                     model, 
                     resource_id: int, 
-                    owner_id, 
+                    owner_column, 
                     current_user= Depends(get_current_user)):
 
     resource = (
         db.query(model)
         .filter(
             model.id == resource_id,
-            owner_id == current_user.id
+            owner_column == current_user.id
         )
         .first()
     )

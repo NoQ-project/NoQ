@@ -3,9 +3,20 @@ import axios from 'axios';
 const getBaseURL = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (envUrl) {
+    if (
+      envUrl.startsWith('http://localhost:8000') ||
+      envUrl.startsWith('http://127.0.0.1:8000') ||
+      envUrl.startsWith('https://localhost:8000') ||
+      envUrl.startsWith('https://127.0.0.1:8000')
+    ) {
+      return '/api';
+    }
     return envUrl;
   }
-  return 'http://localhost:8000';
+
+  // Use the Vite dev proxy in development so cookies are sent correctly
+  // from the same origin and backend auth cookies can be stored.
+  return '/api';
 };
 
 const BASE_URL = getBaseURL();

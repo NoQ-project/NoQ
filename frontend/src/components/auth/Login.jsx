@@ -10,11 +10,15 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
   const [role, setRole] = useState('user');
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    address: '',
+    phone: '',
+    institution_name: '',
+    description: '',
+    website: ''
   });
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -40,8 +44,7 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
 
   const resetForm = () => {
     setFormData({
-      firstName: '',
-      lastName: '',
+      username: '',
       email: '',
       password: '',
       confirmPassword: ''
@@ -117,8 +120,12 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
       const data = await authService.login(formData.email, formData.password);
       
       // Safely check and extract role from response
-      const userRole = (data?.role || data?.user?.role || localStorage.getItem('userRole') || 'user').toLowerCase();
+      const userRole = (data?.user?.role || data?.role || localStorage.getItem('userRole') || 'user').toLowerCase();
+      const username = data?.user?.name || '';
       localStorage.setItem('userRole', userRole);
+      if (username) {
+        localStorage.setItem('username', username);
+      }
 
       setSuccessMessage(data?.message || 'Login successful!');
 
@@ -167,8 +174,7 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
 
     try {
       const data = await authService.register({
-        first_name: formData.firstName.trim(),
-        last_name: formData.lastName.trim(),
+        username: formData.username.trim(),
         role: role.toLowerCase(),
         email: formData.email,
         password: formData.password
@@ -198,9 +204,45 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
     setErrorMessage('');
 
     try {
-      await authService.verifyRegister(formData.email, fullOtp);
-      setSuccessMessage('Account verified successfully! Redirecting to login...');
-      setTimeout(() => switchView('login'), 1200);
+      const data = await authService.verifyRegister({
+        email: formData.email,
+        otp: fullOtp,
+        address: formData.address || undefined,
+        phone: formData.phone || undefined,
+        institution_name: formData.institution_name || undefined,
+        description: formData.description || undefined,
+        website: formData.website || undefined,
+      });
+
+      const verifiedRole = (data?.role || role || 'user').toLowerCase();
+      const verifiedName = data?.name || formData.username;
+      localStorage.setItem('userRole', verifiedRole);
+      if (verifiedName) {
+        localStorage.setItem('username', verifiedName);
+      }
+
+      setSuccessMessage('Account verified successfully! Redirecting...');
+
+      setTimeout(() => {
+        if (typeof onLoginSuccess === 'function') {
+          onLoginSuccess(verifiedRole);
+        } else {
+          switch (verifiedRole) {
+            case 'admin':
+              navigate('/admin');
+              break;
+            case 'institution':
+            case 'org':
+              navigate('/org');
+              break;
+            case 'user':
+            default:
+              navigate('/user');
+              break;
+          }
+        }
+        handleCloseModal();
+      }, 1200);
 
     } catch (error) {
       setErrorMessage(error.response?.data?.detail || error.message);
@@ -331,15 +373,9 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
                   </select>
                 </div>
 
-                <div className="flex gap-2">
-                  <div className="input-group w-1/2">
-                    <label htmlFor="firstName" className="block text-xs font-bold uppercase text-gray-400 mb-1">First Name:</label>
-                    <input className="border border-gray-200 rounded-xl py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} placeholder="First Name" required />
-                  </div>
-                  <div className="input-group w-1/2">
-                    <label htmlFor="lastName" className="block text-xs font-bold uppercase text-gray-400 mb-1">Last Name:</label>
-                    <input className="border border-gray-200 rounded-xl py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} placeholder="Last Name" required />
-                  </div>
+                <div className="input-group">
+                  <label htmlFor="username" className="block text-xs font-bold uppercase text-gray-400 mb-1">Username:</label>
+                  <input className="border border-gray-200 rounded-xl py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" type="text" id="username" name="username" value={formData.username} onChange={handleInputChange} placeholder="Enter your username" required />
                 </div>
 
                 <div className="input-group">
@@ -390,6 +426,98 @@ function NoqLogin({ isOpen, onClose, initialView = "login", onLoginSuccess }) {
                   />
                 ))}
               </div>
+
+              {role === 'user' && (
+                <div className="space-y-4 mb-4 text-left">
+                  <div className="input-group">
+                    <label htmlFor="address" className="block text-xs font-bold uppercase text-gray-400 mb-1">Address</label>
+                    <input
+                      id="address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      placeholder="Enter your address"
+                      className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor="phone" className="block text-xs font-bold uppercase text-gray-400 mb-1">Phone</label>
+                    <input
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      placeholder="Enter your phone number"
+                      className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              {role === 'institution' && (
+                <div className="space-y-4 mb-4 text-left">
+                  <div className="input-group">
+                    <label htmlFor="institution_name" className="block text-xs font-bold uppercase text-gray-400 mb-1">Institution Name</label>
+                    <input
+                      id="institution_name"
+                      name="institution_name"
+                      value={formData.institution_name}
+                      onChange={handleInputChange}
+                      placeholder="Enter institution or business name"
+                      className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor="address" className="block text-xs font-bold uppercase text-gray-400 mb-1">Address</label>
+                    <input
+                      id="address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      placeholder="Enter institution address"
+                      className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                      required
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor="phone" className="block text-xs font-bold uppercase text-gray-400 mb-1">Phone</label>
+                    <input
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      placeholder="Enter contact phone number"
+                      className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor="website" className="block text-xs font-bold uppercase text-gray-400 mb-1">Website</label>
+                    <input
+                      id="website"
+                      name="website"
+                      value={formData.website}
+                      onChange={handleInputChange}
+                      placeholder="Enter website URL"
+                      className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor="description" className="block text-xs font-bold uppercase text-gray-400 mb-1">Description</label>
+                    <textarea
+                      id="description"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      placeholder="Short description of your institution"
+                      className="border border-gray-200 rounded-xl py-2 px-4 w-full focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              )}
 
               <button type="submit" disabled={loading} className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold py-3 px-4 rounded-xl w-full transition cursor-pointer mb-3">
                 {loading ? 'Verifying...' : 'Verify OTP'}

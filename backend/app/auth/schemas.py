@@ -9,8 +9,7 @@ PasswordStr = Annotated[
 ]
 
 class RegisterSchema(BaseModel): 
-    first_name: str
-    last_name: str
+    username: str
     role: UserRole = UserRole.USER
     email: EmailStr
     password: PasswordStr
@@ -22,6 +21,9 @@ class UserResponseSchema(BaseModel):
     role: UserRole
     email: EmailStr
 
+    class Config:
+        orm_mode = True
+
 class LoginSchema(BaseModel): 
     email: EmailStr
     password: PasswordStr
@@ -29,6 +31,15 @@ class LoginSchema(BaseModel):
 class VerifyEmailSchema(BaseModel):
     email: EmailStr
     otp: str
+
+class VerifyRegistrationSchema(BaseModel):
+    email: EmailStr
+    otp: str
+    address: str | None = None
+    phone: str | None = None
+    institution_name: str | None = None
+    description: str | None = None
+    website: str | None = None
 
 class EmailSchema(BaseModel):
     email: EmailStr

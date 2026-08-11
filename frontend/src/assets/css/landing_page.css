@@ -104,7 +104,6 @@ header nav ul li a:hover {
 .noq-hero {
   background: linear-gradient(180deg, #EFEAFD 0%, var(--paper) 100%);
   position: relative;
-  overflow: hidden;
   max-width: 1400px;
 }
 
@@ -116,6 +115,8 @@ header nav ul li a:hover {
   background-size: 28px 28px;
   opacity: 0.06;
   pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
 }
 
 /* Buttons */
@@ -160,6 +161,8 @@ header nav ul li a:hover {
   box-shadow: 0 24px 48px -12px rgba(28, 18, 51, 0.15);
   position: relative;
   transform: rotate(-1.5deg);
+  overflow: visible;
+  z-index: 1;
 }
 
 .noq-ticket-box::before,
@@ -462,11 +465,17 @@ header nav ul li a:hover {
   .noq-hero {
     padding: 2.5rem 1.25rem;
     gap: 2rem;
+    min-height: auto;
+    padding-bottom: 3rem;
   }
 
   .noq-ticket-box {
     transform: none;
     max-width: 100%;
+    margin-top: 1rem;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   .noq-ticket-box::before,

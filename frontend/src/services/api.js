@@ -63,12 +63,26 @@ API.interceptors.response.use(
     // Only attempt refresh if:
     // 1. Status is 401 (Unauthorized)
     // 2. Haven't already retried this request
-    // 3. This isn't the refresh endpoint itself (prevent infinite loop)
+    // 3. This isn't an auth endpoint itself (login/register/refresh/etc - prevent infinite loop
+    //    and prevent bad-credential 401s from being misread as expired-session 401s)
+    const isAuthEndpoint =
+      originalRequest.url &&
+      [
+        '/auth/refresh',
+        '/auth/login',
+        '/auth/register',
+        '/auth/verify_register',
+        '/auth/resend_otp',
+        '/auth/request_reset_password',
+        '/auth/verify_reset_password',
+        '/auth/reset_password',
+      ].some((path) => originalRequest.url.includes(path));
+
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
       originalRequest.url &&
-      !originalRequest.url.includes('/auth/refresh')
+      !isAuthEndpoint
     ) {
       originalRequest._retry = true;
 

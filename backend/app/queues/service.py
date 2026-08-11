@@ -7,10 +7,11 @@ import qrcode
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from backend.app.tracking.events import schedule_queue_updates
-from backend.app.queues.models import Queue
+from backend.app.queues.models import Queue, QueueWorkingHour
 from backend.app.queues.schemas import (
     QueueCreateSchema,
-    QueueUpdateSchema
+    QueueUpdateSchema,
+    WorkingHourUpdate
 )
 from backend.app.tokens.models import Token, TokenStatus
 from backend.app.notifications.models import NotificationType
@@ -31,12 +32,12 @@ def create_queue(
     current_user: UserModel
 ):
     institution = (
-    db.query(Institution)
-    .filter(
-        Institution.auth_user_id == current_user.id
+        db.query(Institution)
+        .filter(
+            Institution.auth_user_id == current_user.id
+        )
+        .first()
     )
-    .first()
-)
     new_queue = Queue(
         institution_id=institution.id, 
         name=queue.name,
@@ -46,6 +47,20 @@ def create_queue(
     )
 
     db.add(new_queue)
+    db.flush()
+
+    # Create default saved working hours (Mon-Sun 09:00 - 17:00) so they remain active until unchecked
+    from datetime import time
+    default_hours = [
+        QueueWorkingHour(
+            queue_id=new_queue.id,
+            day_of_week=day,
+            opening_time=time(9, 0),
+            closing_time=time(17, 0)
+        )
+        for day in range(7)
+    ]
+    db.add_all(default_hours)
     db.commit()
     db.refresh(new_queue)
 
@@ -258,6 +273,201 @@ def get_queue_statistics(
 
         total_tokens = len(tokens)
 
+    db.refresh(existing_queue)
+
+    return existing_queue
+
+
+def get_queues_by_institution(
+    institution_id: int,
+    db: Session
+):
+    queues = (
+        db.query(Queue)
+        .filter(
+            Queue.institution_id == institution_id,
+            Queue.is_active == True
+        )
+        .all()
+    )
+
+    return queues
+
+
+def get_queue_by_id(
+    queue_id: int,
+    db: Session
+):
+    queue = (
+        db.query(Queue)
+        .filter(
+            Queue.id == queue_id
+        )
+        .first()
+    )
+
+    if not queue:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Queue not found."
+        )
+
+    return queue
+
+
+def delete_queue(
+    queue_id: int,
+    db: Session
+):
+    queue = (
+        db.query(Queue)
+        .filter(
+            Queue.id == queue_id
+        )
+        .first()
+    )
+
+    if not queue:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Queue not found."
+        )
+
+    db.delete(queue)
+    db.commit()
+
+    return {
+        "message": "Queue deleted successfully."
+    }
+
+
+def toggle_queue_status(
+    queue_id: int,
+    db: Session
+):
+    queue = (
+        db.query(Queue)
+        .filter(
+            Queue.id == queue_id
+        )
+        .first()
+    )
+
+    if not queue:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Queue not found."
+        )
+
+    queue.is_active = not queue.is_active
+
+    db.commit()
+    db.refresh(queue)
+
+    return queue
+
+
+
+# QUEUE DASHBOARD
+
+
+def get_queue_dashboard(
+    queue_id: int,
+    db: Session
+):
+    queue = get_queue_by_id(queue_id, db)
+
+    today = date.today()
+
+    tokens = (
+        db.query(Token)
+        .filter(
+            Token.queue_id == queue_id,
+            Token.booking_date == today
+        )
+        .all()
+    )
+
+    total_tokens = len(tokens)
+
+    waiting = sum(
+        1 for token in tokens
+        if token.status == TokenStatus.WAITING
+    )
+
+    currently_serving = sum(
+        1 for token in tokens
+        if token.status == TokenStatus.CALLED
+    )
+
+    served = sum(
+        1 for token in tokens
+        if token.status == TokenStatus.SERVED
+    )
+
+    missed = sum(
+        1 for token in tokens
+        if token.status == TokenStatus.MISSED
+    )
+
+    cancelled = sum(
+        1 for token in tokens
+        if token.status == TokenStatus.CANCELLED
+    )
+
+    return {
+        "queue_id": queue.id,
+        "queue_name": queue.name,
+        "description": queue.description,
+        "daily_limit": queue.daily_limit,
+        "avg_service_time": queue.avg_service_time,
+        "is_active": queue.is_active,
+
+        "statistics": {
+            "total_tokens": total_tokens,
+            "waiting": waiting,
+            "currently_serving": currently_serving,
+            "served": served,
+            "missed": missed,
+            "cancelled": cancelled
+        }
+    }
+
+
+
+# QUEUE DATE RANGE STATISTICS
+
+def get_queue_statistics(
+    queue_id: int,
+    start_date: date,
+    end_date: date,
+    db: Session
+):
+    queue = get_queue_by_id(queue_id, db)
+
+    if start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Start date cannot be after end date."
+        )
+
+    daily_statistics = []
+
+    current_date = start_date
+
+    while current_date <= end_date:
+
+        tokens = (
+            db.query(Token)
+            .filter(
+                Token.queue_id == queue_id,
+                Token.booking_date == current_date
+            )
+            .all()
+        )
+
+        total_tokens = len(tokens)
+
         waiting = sum(
             1 for token in tokens
             if token.status == TokenStatus.WAITING
@@ -270,7 +480,7 @@ def get_queue_statistics(
 
         served = sum(
             1 for token in tokens
-            if token.status == TokenStatus.SERVED
+            if token.status == TokenStatus.COMPLETED
         )
 
         missed = sum(
@@ -309,15 +519,11 @@ def toggle_queue_status(
     db: Session,
 ):
     if queue.is_active:
-
-        if reason is None or not reason.strip():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Pause reason is required.",
-            )
+        if reason is None or not str(reason).strip():
+            reason = "Closed by organization"
 
         queue.is_active = False
-        queue.pause_reason = reason.strip()
+        queue.pause_reason = str(reason).strip()
         queue.paused_at = datetime.now(timezone.utc)
         message = "Queue paused successfully."
     else:
@@ -331,12 +537,6 @@ def toggle_queue_status(
         booking_date=date.today(),
         db=db,
     )
-    schedule_queue_notification(
-        queue_id=queue.id,
-        booking_date=date.today(),
-        notification_type=NotificationType,
-        db=db,
-    )
     db.refresh(queue)
     return {
         "queue_id": queue.id,
@@ -345,9 +545,6 @@ def toggle_queue_status(
         "paused_at": queue.paused_at,
         "message": message,
     }
-
-
-# QUEUE QR CODE
 
 def generate_queue_qr(
     queue_id: int,
@@ -379,5 +576,38 @@ def generate_queue_qr(
     )
 
     image_bytes.seek(0)
-
     return image_bytes
+
+def get_working_hours(
+    queue_id: int,
+    db: Session
+):
+    queue = get_queue_by_id(queue_id, db)
+    return db.query(QueueWorkingHour).filter(QueueWorkingHour.queue_id == queue.id).all()
+
+def update_working_hours(
+    queue_id: int,
+    hours_data: WorkingHourUpdate,
+    db: Session
+):
+    queue = get_queue_by_id(queue_id, db)
+    
+    # Delete existing working hours
+    db.query(QueueWorkingHour).filter(QueueWorkingHour.queue_id == queue.id).delete()
+    
+    # Add new working hours
+    new_hours = []
+    for h in hours_data.hours:
+        wh = QueueWorkingHour(
+            queue_id=queue.id,
+            day_of_week=h.day_of_week,
+            opening_time=h.opening_time,
+            closing_time=h.closing_time
+        )
+        new_hours.append(wh)
+        
+    if new_hours:
+        db.add_all(new_hours)
+        
+    db.commit()
+    return db.query(QueueWorkingHour).filter(QueueWorkingHour.queue_id == queue.id).all()

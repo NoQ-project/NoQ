@@ -27,6 +27,7 @@ class NotificationType(str, enum.Enum):
     TOKEN_MISSED = "TOKEN_MISSED"
 
     TOKEN_CANCELLED = "TOKEN_CANCELLED"
+    TOKEN_BOOKED = "TOKEN_BOOKED"
 
 class NotificationStatus(enum.Enum):
     PENDING = "pending"

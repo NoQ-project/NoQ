@@ -52,32 +52,34 @@ function LandingPage() {
             </div>
           </div>
 
-          <div className="noq-ticket-box" id="ticket-box">
-            <div className="flex justify-between">
-              <p>City Bank Kathmandu</p>
-              <p>Live</p>
-            </div>
+          <div className="flex items-center justify-center w-full">
+            <div className="noq-ticket-box" id="ticket-box">
+              <div className="flex justify-between">
+                <p>City Bank Kathmandu</p>
+                <p>Live</p>
+              </div>
 
-            <div className="grid justify-center text-center py-6">
-              <p>Now Serving</p>
-              <p>B-039</p>
-              <p>General Banking - Counter 3</p>
-            </div>
+              <div className="grid justify-center text-center py-6">
+                <p>Now Serving</p>
+                <p>B-039</p>
+                <p>General Banking - Counter 3</p>
+              </div>
 
-            <div className="grid grid-cols-3 text-center">
-              <p>22</p>
-              <p>~14 min</p>
-              <p>4</p>
+              <div className="grid grid-cols-3 text-center">
+                <p>22</p>
+                <p>~14 min</p>
+                <p>4</p>
 
-              <p>In Queue</p>
-              <p>Avg Wait</p>
-              <p>Counter Open</p>
-            </div>
+                <p>In Queue</p>
+                <p>Avg Wait</p>
+                <p>Counter Open</p>
+              </div>
 
-            <div className="noq-button-track">
-              <button onClick={() => openAuth("login")}>
-                Enter a token number to track
-              </button>
+              <div className="noq-button-track">
+                <button onClick={() => openAuth("login")}>
+                  Enter a token number to track
+                </button>
+              </div>
             </div>
           </div>
         </section>

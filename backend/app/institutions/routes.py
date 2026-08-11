@@ -152,6 +152,71 @@ def update_institution_queue_limits(
 
 
 @institution_routes.get(
+    "/me",
+    response_model=InstitutionResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_my_institution(
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(require_role(UserRole.INSTITUTION)),
+):
+    if not current_user.institution:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Institution profile not found.",
+        )
+    inst = current_user.institution
+    return {
+        "id": inst.id,
+        "name": inst.name,
+        "description": inst.description,
+        "address": inst.address,
+        "phone": inst.phone,
+        "email": current_user.email,
+        "website": inst.website,
+    }
+
+
+@institution_routes.patch(
+    "/me",
+    response_model=InstitutionResponse,
+    status_code=status.HTTP_200_OK,
+)
+def update_my_institution(
+    body: InstitutionUpdateSchema,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(require_role(UserRole.INSTITUTION)),
+):
+    if not current_user.institution:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Institution profile not found.",
+        )
+    inst = current_user.institution
+    if body.name is not None:
+        inst.name = body.name
+    if body.description is not None:
+        inst.description = body.description
+    if body.address is not None:
+        inst.address = body.address
+    if body.phone is not None:
+        inst.phone = body.phone
+    if body.website is not None:
+        inst.website = body.website
+    db.commit()
+    db.refresh(inst)
+    return {
+        "id": inst.id,
+        "name": inst.name,
+        "description": inst.description,
+        "address": inst.address,
+        "phone": inst.phone,
+        "email": current_user.email,
+        "website": inst.website,
+    }
+
+
+@institution_routes.get(
     "/{institution_id}",
     response_model=InstitutionResponse,
     status_code=status.HTTP_200_OK

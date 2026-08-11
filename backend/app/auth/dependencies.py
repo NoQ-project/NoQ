@@ -57,13 +57,17 @@ def require_owner (db: Session,
                     model, 
                     resource_id: int, 
                     owner_column, 
+                    owner_id: int | None = None,
                     current_user= Depends(get_current_user)):
+
+    if owner_id is None:
+        owner_id = current_user.id
 
     resource = (
         db.query(model)
         .filter(
             model.id == resource_id,
-            owner_column == current_user.id
+            owner_column == owner_id
         )
         .first()
     )
@@ -76,15 +80,24 @@ def require_owner (db: Session,
     return resource
 
 def get_owned_token(
-    booking_id: int,
+    token_id: int,
     current_user: UserModel = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    if not current_user.profile:
+        from backend.app.user.models import User as UserProfile
+        profile = UserProfile(auth_user_id=current_user.id)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+        current_user.profile = profile
+
     return require_owner(
         db=db,
         model=Token,
-        resource_id=booking_id,
+        resource_id=token_id,
         owner_column=Token.user_id,
+        owner_id=current_user.profile.id,
         current_user=current_user,
     )
 
@@ -93,13 +106,33 @@ def get_owned_queue(
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user)
 ):
-    return require_owner(
-        db=db,
-        model=Queue,
-        resource_id= queue_id,
-        owner_column=Queue.institution_id,
-        current_user=current_user,
+    queue = db.query(Queue).filter(Queue.id == queue_id).first()
+
+    if queue is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Queue not found.",
+        )
+
+    # Admins can manage any queue.
+    if current_user.role == UserRole.ADMIN:
+        return queue
+
+    # Otherwise, the queue must belong to an institution owned by this user.
+    institution = (
+        db.query(Institution)
+        .filter(Institution.id == queue.institution_id)
+        .first()
     )
+
+    if institution is None or institution.auth_user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Queue not found.",
+        )
+
+    return queue
+
 def get_owned_user_profile(
     profile_id: int,
     db: Session = Depends(get_db),
@@ -109,7 +142,7 @@ def get_owned_user_profile(
         db=db,
         model=User,
         resource_id=profile_id,
-        owner_column=User.user_id,
+        owner_column=User.auth_user_id,
         current_user=current_user,
     )
 
@@ -123,7 +156,7 @@ def get_owned_institution_profile(
         db=db,
         model=Institution,
         resource_id=profile_id,
-        owner_column=Institution.institution_id,
+        owner_column=Institution.auth_user_id,
         current_user=current_user,
     )
 
@@ -133,11 +166,17 @@ def get_owned_notification(
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
 ):
+    if not current_user.profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User profile not found."
+        )
     return require_owner(
         db=db,
         model=Notification,
         resource_id=notification_id,
         owner_column=Notification.user_id,
+        owner_id=current_user.profile.id,
         current_user=current_user,
     )
 

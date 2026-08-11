@@ -7,11 +7,13 @@ from backend.app.tokens.models import TokenStatus
 def book_token(
     queue_id: int,
     user_id: int,
+    booking_date,
     db: Session
 ):
     return service.book_token(
         queue_id=queue_id,
         user_id=user_id,
+        booking_date=booking_date,
         db=db
     )
 
@@ -87,6 +89,15 @@ def get_waiting_tokens(
 ):
 
     return service.get_waiting_tokens(
+        queue_id=queue_id,
+        db=db
+    )
+
+def close_day(
+    queue_id: int,
+    db: Session
+):
+    return service.close_day(
         queue_id=queue_id,
         db=db
     )

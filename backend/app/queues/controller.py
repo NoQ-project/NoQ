@@ -113,3 +113,23 @@ def generate_queue_qr(
         queue_id=queue_id,
         db=db
     )
+
+def get_working_hours(
+    queue_id: int,
+    db: Session
+):
+    return service.get_working_hours(
+        queue_id=queue_id,
+        db=db
+    )
+
+def update_working_hours(
+    queue_id: int,
+    hours_data,
+    db: Session
+):
+    return service.update_working_hours(
+        queue_id=queue_id,
+        hours_data=hours_data,
+        db=db
+    )

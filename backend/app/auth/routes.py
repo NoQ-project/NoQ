@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, Request, BackgroundTasks, HTTPEx
 from sqlalchemy.orm import Session
 from backend.app.auth import controller
 from backend.app.auth.models import UserModel, UserRole
-from backend.app.auth.schemas import UserResponseSchema, RegisterSchema, LoginSchema, VerifyEmailSchema, VerifyRegistrationSchema, EmailSchema, ResetPasswordSchema
+from backend.app.auth.schemas import UserResponseSchema, RegisterSchema, LoginSchema, VerifyEmailSchema, VerifyRegistrationSchema, EmailSchema, ResetPasswordSchema, UpdateProfileSchema
 from backend.app.utils.database import get_db
 from backend.app.auth.dependencies import get_current_user
 from backend.app.auth.dependencies import require_role 
@@ -76,7 +76,21 @@ def login(body: LoginSchema,
     status_code=status.HTTP_200_OK
 )
 def get_me(current_user: UserModel = Depends(get_current_user)):
-    return current_user
+    return UserResponseSchema.from_user_model(current_user)
+
+
+@auth_routes.patch(
+    "/me",
+    response_model=UserResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+def update_me(
+    body: UpdateProfileSchema,
+    current_user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    updated_user = controller.update_profile(body, current_user, db)
+    return UserResponseSchema.from_user_model(updated_user)
 
 
 @auth_routes.post("/request_reset_password", 

@@ -15,14 +15,27 @@ class RegisterSchema(BaseModel):
     password: PasswordStr
 
 
-class UserResponseSchema(BaseModel): 
+class UserResponseSchema(BaseModel):
     name: str
     id: int
     role: UserRole
     email: EmailStr
+    phone: str | None = None
+    address: str | None = None
+
+    @classmethod
+    def from_user_model(cls, user):
+        return cls(
+            name=user.name,
+            id=user.id,
+            role=user.role,
+            email=user.email,
+            phone=user.profile.phone if user.profile else None,
+            address=user.profile.address if user.profile else None,
+        )
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class LoginSchema(BaseModel): 
     email: EmailStr
@@ -47,3 +60,9 @@ class EmailSchema(BaseModel):
 class ResetPasswordSchema(BaseModel): 
     email: EmailStr
     new_password: PasswordStr
+
+
+class UpdateProfileSchema(BaseModel):
+    name: str | None = None
+    phone: str | None = None
+    address: str | None = None

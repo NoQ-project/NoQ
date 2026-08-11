@@ -21,6 +21,17 @@ notification_routes = APIRouter(
     tags=["Notifications"],
 )
 
+from backend.app.user.models import User as UserProfile
+
+def get_profile_id(user: UserModel, db: Session) -> int:
+    if user.profile:
+        return user.profile.id
+    profile = UserProfile(auth_user_id=user.id)
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+    return profile.id
+
 @notification_routes.get(
     "",
     response_model=list[NotificationResponse],
@@ -30,13 +41,9 @@ def get_notifications(
     current_user: UserModel = Depends(require_role(UserRole.USER)),
     db: Session = Depends(get_db),
 ):
-    if not current_user.profile:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User profile not found for this account."
-        )
+    profile_id = get_profile_id(current_user, db)
     return controller.get_notifications_controller(
-        user_id=current_user.profile.id,
+        user_id=profile_id,
         db=db,
     )
 
@@ -50,16 +57,12 @@ def mark_notification_read(
     current_user: UserModel = Depends(require_role(UserRole.USER)),
     db: Session = Depends(get_db),
 ):
-    if not current_user.profile:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User profile not found for this account."
-        )
+    profile_id = get_profile_id(current_user, db)
     return (
         controller
         .mark_notification_read_controller(
             notification_id=notification_id,
-            user_id=current_user.profile.id,
+            user_id=profile_id,
             db=db,
         )
     )
@@ -73,15 +76,11 @@ def mark_all_notifications_read(
     current_user: UserModel = Depends(require_role(UserRole.USER)),
     db: Session = Depends(get_db),
 ):
-    if not current_user.profile:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User profile not found for this account."
-        )
+    profile_id = get_profile_id(current_user, db)
     return (
         controller
         .mark_all_notifications_read_controller(
-            user_id=current_user.profile.id,
+            user_id=profile_id,
             db=db,
         )
     )

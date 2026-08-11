@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
-from datetime import datetime, date
+from datetime import datetime, date, time
 from backend.app.queues.models import QueueStatus
+from typing import List
 
 
 class QueueCreateSchema(BaseModel):
@@ -44,6 +45,20 @@ class QueueDetailSchema(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class WorkingHourBase(BaseModel):
+    day_of_week: int
+    opening_time: time
+    closing_time: time
+
+class WorkingHourSchema(WorkingHourBase):
+    id: int
+    queue_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+class WorkingHourUpdate(BaseModel):
+    hours: List[WorkingHourBase]
 
 # Queue Dashboard Schemas
 

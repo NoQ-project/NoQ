@@ -12,7 +12,9 @@ from backend.app.queues.schemas import (
     QueueResponseSchema,
     QueueDetailSchema,
     QueueDashboardSchema,
-    QueueStatisticsRangeSchema
+    QueueStatisticsRangeSchema,
+    WorkingHourSchema,
+    WorkingHourUpdate
 )
 from backend.app.utils.database import get_db
 from backend.app.queues.schemas import QueueStatusToggleRequest, QueueStatusResponse
@@ -177,4 +179,35 @@ def generate_queue_qr(
         headers={
             "Content-Disposition": f"inline; filename=queue_{queue_id}_qr.png"
         }
+    )
+
+@queue_routes.get(
+    "/{queue_id}/working-hours",
+    response_model=List[WorkingHourSchema],
+    status_code=status.HTTP_200_OK
+)
+def get_working_hours(
+    queue_id: int,
+    db: Session = Depends(get_db)
+):
+    return controller.get_working_hours(
+        queue_id=queue_id,
+        db=db
+    )
+
+@queue_routes.put(
+    "/{queue_id}/working-hours",
+    response_model=List[WorkingHourSchema],
+    status_code=status.HTTP_200_OK
+)
+def update_working_hours(
+    queue_id: int,
+    hours_data: WorkingHourUpdate,
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(require_role(UserRole.INSTITUTION))
+):
+    return controller.update_working_hours(
+        queue_id=queue_id,
+        hours_data=hours_data,
+        db=db
     )

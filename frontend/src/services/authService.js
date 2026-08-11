@@ -27,6 +27,12 @@ export const authService = {
     return response.data;
   },
 
+  // 👈 Update current user profile (name, phone, address)
+  updateProfile: async ({ name, phone, address }) => {
+    const response = await API.patch('/auth/me', { name, phone, address });
+    return response.data;
+  },
+
   requestResetPassword: async (email) => {
     const response = await API.post('/auth/request_reset_password', { email });
     return response.data;

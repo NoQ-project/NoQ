@@ -1,4 +1,4 @@
-from backend.app.auth.schemas import  RegisterSchema, LoginSchema, VerifyEmailSchema, EmailSchema, ResetPasswordSchema
+from backend.app.auth.schemas import  RegisterSchema, LoginSchema, VerifyEmailSchema, EmailSchema, ResetPasswordSchema, UpdateProfileSchema
 from sqlalchemy.orm import Session
 from backend.app.auth.models import UserModel, RefreshTokenModel, UserRole
 from backend.app.user.models import User
@@ -222,6 +222,43 @@ def reset_password(body:ResetPasswordSchema, db:Session):
     db.refresh(user)
     _redis_action(redis_client.delete, f"reset_password_verified:{body.email}")
     return {"message":"Password Reset"}
+
+
+def update_profile(body: UpdateProfileSchema, current_user: UserModel, db: Session):
+    # Update first_name / last_name from combined name string
+    if body.name is not None:
+        parts = body.name.strip().split(" ", 1)
+        current_user.first_name = parts[0]
+        current_user.last_name = parts[1] if len(parts) > 1 else ""
+
+    # Update profile table (phone & address)
+    if current_user.profile is None:
+        profile = User(auth_user_id=current_user.id)
+        db.add(profile)
+        db.flush()
+        current_user.profile = profile
+
+    if body.phone is not None:
+        # Check phone uniqueness (exclude current user)
+        existing = (
+            db.query(User)
+            .filter(User.phone == body.phone, User.auth_user_id != current_user.id)
+            .first()
+        )
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Phone number already in use by another account.",
+            )
+        current_user.profile.phone = body.phone
+
+    if body.address is not None:
+        current_user.profile.address = body.address
+
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
 
 def refresh_token(
     request: Request,

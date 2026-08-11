@@ -49,7 +49,7 @@ class Queue(Base):
     status = Column(
         Enum(QueueStatus),
         nullable=False,
-        default=QueueStatus.CLOSED,
+        default=QueueStatus.OPEN,
         index=True
     )
     pause_reason = Column(

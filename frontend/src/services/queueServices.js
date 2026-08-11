@@ -44,8 +44,20 @@ export const queueServices = {
   },
 
   // PATCH /queues/{queue_id}/toggle-status (Toggle Active/Pause State)
-  async toggleQueueStatus(queueId) {
-    const response = await API.patch(`/queues/${queueId}/toggle-status`);
+  async toggleQueueStatus(queueId, reason = 'Closed by organization') {
+    const response = await API.patch(`/queues/${queueId}/toggle-status`, { reason });
+    return response.data;
+  },
+
+  // GET /queues/{queue_id}/working-hours
+  async getWorkingHours(queueId) {
+    const response = await API.get(`/queues/${queueId}/working-hours`);
+    return response.data;
+  },
+
+  // PUT /queues/{queue_id}/working-hours
+  async updateWorkingHours(queueId, hoursData) {
+    const response = await API.put(`/queues/${queueId}/working-hours`, hoursData);
     return response.data;
   },
 };

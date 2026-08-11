@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Building2, 
-  HeartPulse, 
   CheckCircle2, 
   Clock, 
   Loader2,
@@ -17,6 +16,7 @@ import {
 } from 'lucide-react';
 import tokenService from "../services/tokenServices";
 import queueServices from '../services/queueServices';
+import { authService } from '../services/authService';
 import "../assets/css/UserPanel.css";
 
 // Inline DatePicker Component
@@ -48,15 +48,36 @@ function InlineDatePicker({ value, onChange, minDate }) {
   );
 }
 
+// Helper to format estimated datetime to a readable time string
+function formatExpectedTime(timeStr) {
+  if (!timeStr) return 'N/A';
+  const dateObj = new Date(timeStr);
+  if (isNaN(dateObj.getTime())) return timeStr;
+  return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
 export default function UserPanel() {
   const [activeTab, setActiveTab] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   
-  // Notification State
+  // Local notification system (same as OrgPanel)
   const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
+  const notifIdRef = useRef(0);
+
+  const addNotification = useCallback((type, title, message) => {
+    const id = ++notifIdRef.current;
+    setNotifications(prev => [
+      { id, type, title, message, timestamp: new Date(), read: false },
+      ...prev
+    ]);
+  }, []);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const clearAll = () => setNotifications([]);
+  const dismissNotification = (id) => setNotifications(prev => prev.filter(n => n.id !== id));
 
   // Active & Historical tokens
   const [activeTokens, setActiveTokens] = useState([]);
@@ -67,23 +88,35 @@ export default function UserPanel() {
   const [selectedQueueId, setSelectedQueueId] = useState(null);
   const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Profile State
+  // Profile State — loaded from /auth/me on mount
   const [profile, setProfile] = useState({
-    name: 'Ramesh Pandit',
-    phone: '+977 9845XXXXXX',
-    email: 'ramesh.pandit@email.com',
-    address: 'Kathmandu, Nepal',
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
   });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [tempProfile, setTempProfile] = useState({ ...profile });
+  const [profileSaveStatus, setProfileSaveStatus] = useState(null); // null | 'saving' | 'success' | 'error'
+  const [profileSaveError, setProfileSaveError] = useState('');
+
+  // Sync tempProfile whenever real profile loads
+  useEffect(() => {
+    setTempProfile({ ...profile });
+  }, [profile]);
+
+  // Returns greeting based on current hour
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
 
   const categories = ['All', 'Banking', 'Healthcare', 'Government'];
 
-  const [organizations, setOrganizations] = useState([
-    { id: 1, name: 'City Bank', category: 'Banking', branch: 'Lazimpat', departments: ['General Banking', 'Loans & Credit'], waiting: 13, icon: Building2, iconClass: 'icon-indigo' },
-    { id: 2, name: 'City Hospital', category: 'Healthcare', branch: 'Baneshwor', departments: ['OPD Checkup', 'Lab Reports'], waiting: 8, icon: HeartPulse, iconClass: 'icon-emerald' },
-    { id: 3, name: 'Dept. of Passports', category: 'Government', branch: 'Tripureshwor', departments: ['Biometrics', 'Collection'], waiting: 3, icon: Building2, iconClass: 'icon-gray' },
-  ]);
+  const [organizations, setOrganizations] = useState([]);
+
 
   const trackingSteps = [
     { label: 'Token issued successfully', status: 'done' },
@@ -93,66 +126,87 @@ export default function UserPanel() {
   ];
 
   // --- API FETCH FUNCTIONS ---
-  const fetchNotifications = async () => {
-    try {
-      const data = await tokenService.getNotifications();
-      if (Array.isArray(data)) {
-        setNotifications(data);
-        const unread = data.filter((n) => !n.is_read).length;
-        setUnreadCount(unread);
-      }
-    } catch (err) {
-      console.error('Failed to fetch notifications:', err);
-    }
-  };
 
   const fetchDashboardData = async () => {
     try {
+      // Backend returns a flat array of all user tokens
       const data = await tokenService.getMyTokens();
-      
-      const rawActive = Array.isArray(data.active_tokens) ? data.active_tokens : [];
+      const allTokens = Array.isArray(data) ? data : [];
+
+      // Active statuses from the backend TokenStatus enum (SERVING maps to 'CALLED')
+      const activeStatuses = ['WAITING', 'SERVING', 'CALLED'];
+      const rawActive = allTokens.filter((t) => activeStatuses.includes(t.status));
+      const rawHistory = allTokens.filter((t) => !activeStatuses.includes(t.status));
+
       const mappedActive = await Promise.all(
         rawActive.map(async (item) => {
-          let positionText = 'In Queue';
-          let currentServingNumber = 'N/A';
-
           try {
-            const posData = await tokenService.getWaitingPosition(item.token_id);
-            if (posData && posData.position !== undefined) {
-              positionText = `#${posData.position} in line`;
-            }
-          } catch (posErr) {
-            positionText = item.status;
-          }
+            let positionText = 'Pending';
+            let currentServingNumber = 'N/A';
 
-          try {
-            const currentData = await tokenService.getCurrentToken(item.queue_id);
-            if (currentData && currentData.token_number !== undefined) {
-              currentServingNumber = `T-${currentData.token_number}`;
+            if (item.status === 'CALLED' || item.status === 'SERVING') {
+              positionText = 'Serving';
+            } else {
+              try {
+                const posData = await tokenService.getWaitingPosition(item.id);
+                if (posData && posData.waiting_position !== undefined) {
+                  positionText = `${posData.waiting_position}`;
+                }
+              } catch (posErr) {
+                positionText = 'Pending';
+              }
             }
-          } catch (currErr) {
-            currentServingNumber = 'None';
-          }
 
-          return {
-            id: item.token_id,
-            queueId: item.queue_id,
-            number: `T-${item.token_number}`,
-            department: item.queue_name || `Queue #${item.queue_id}`,
-            counter: item.status,
-            institution: item.queue_name || `Queue #${item.queue_id}`,
-            ahead: positionText,
-            nowServing: currentServingNumber,
-            status: item.status,
-            bookingDate: item.booking_date
-          };
+            try {
+              const currentData = await tokenService.getCurrentToken(item.queue_id);
+              if (currentData && currentData.token_number !== undefined) {
+                currentServingNumber = `T-${currentData.token_number}`;
+              }
+            } catch (currErr) {
+              currentServingNumber = 'None';
+            }
+
+            let statusText = 'Pending';
+            if (item.status === 'CALLED' || item.status === 'SERVING') {
+              statusText = 'Serving';
+            } else if (item.status === 'WAITING') {
+              statusText = 'Pending';
+            }
+
+            return {
+              id: item.id,
+              queueId: item.queue_id,
+              number: `T-${item.token_number}`,
+              department: item.queue_name || `Queue #${item.queue_id}`,
+              counter: item.status,
+              institution: item.queue_name || `Queue #${item.queue_id}`,
+              ahead: positionText,
+              nowServing: currentServingNumber,
+              status: statusText,
+              bookingDate: item.booking_date,
+              estimatedTime: item.estimated_time
+            };
+          } catch (itemErr) {
+            return {
+              id: item.id,
+              queueId: item.queue_id,
+              number: `T-${item.token_number}`,
+              department: item.queue_name || `Queue #${item.queue_id}`,
+              counter: item.status,
+              institution: item.queue_name || `Queue #${item.queue_id}`,
+              ahead: 'Pending',
+              nowServing: 'None',
+              status: item.status === 'WAITING' ? 'Pending' : 'Serving',
+              bookingDate: item.booking_date,
+              estimatedTime: item.estimated_time
+            };
+          }
         })
       );
       setActiveTokens(mappedActive);
 
-      const rawHistory = Array.isArray(data.booking_history) ? data.booking_history : [];
       const mappedHistory = rawHistory.map((item) => ({
-        id: `h-${item.token_id}`,
+        id: `h-${item.id}`,
         type: item.queue_name || `Queue #${item.queue_id}`,
         meta: `Token #T-${item.token_number} · Status: ${item.status} · Date: ${item.booking_date}`,
         variant: item.status,
@@ -186,38 +240,35 @@ export default function UserPanel() {
     }
   };
 
+  const fetchUserProfile = async () => {
+    try {
+      const data = await authService.getMe();
+      setProfile({
+        name: data.name || '',
+        email: data.email || '',
+        phone: data.phone || '',
+        address: data.address || '',
+      });
+    } catch (err) {
+      console.error('Failed to fetch user profile:', err);
+    }
+  };
+
   useEffect(() => {
+    fetchUserProfile();
     fetchDashboardData();
     fetchOrganizations();
-    fetchNotifications();
+
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 8000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // --- NOTIFICATION HANDLERS ---
   const handleToggleNotifications = () => {
     setShowNotifications((prev) => !prev);
-  };
-
-  const handleMarkAllRead = async () => {
-    try {
-      await tokenService.markAllNotificationsRead();
-      setUnreadCount(0);
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    } catch (err) {
-      console.error('Failed to mark all notifications read:', err);
-    }
-  };
-
-  const handleMarkSingleRead = async (id, isRead) => {
-    if (isRead) return;
-    try {
-      const updatedItem = await tokenService.markNotificationRead(id);
-      setNotifications((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, ...updatedItem, is_read: true } : item))
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (err) {
-      console.error('Failed to mark notification read:', err);
-    }
   };
 
   const filteredOrgs = organizations.filter((org) => {
@@ -245,41 +296,70 @@ export default function UserPanel() {
   const handleExecuteBooking = async (e) => {
     e.preventDefault();
     if (!selectedOrgForBooking || !bookingDate || !selectedQueueId) {
-      alert('Please select a queue and booking date.');
+      addNotification('error', 'Booking Failed', 'Please select a queue and booking date.');
       return;
     }
 
     try {
-      await tokenService.bookToken(selectedQueueId, bookingDate);
+      const booked = await tokenService.bookToken(selectedQueueId, bookingDate);
+      addNotification(
+        'success',
+        'Token Booked Successfully',
+        `Token #T-${booked.token_number} booked at ${selectedOrgForBooking.name} for ${bookingDate}.`
+      );
       await fetchDashboardData();
-      await fetchNotifications();
       setSelectedOrgForBooking(null);
       setSelectedQueueId(null);
       setSearchQuery('');
       setActiveTab('track');
     } catch (err) {
       console.error('Booking API call failed:', err);
-      alert('Failed to book token. Please check backend connection.');
+      addNotification('error', 'Booking Failed', err.message || 'Failed to book token. Please try again.');
     }
   };
 
   const handleCancelToken = async (id) => {
     if (window.confirm('Are you sure you want to cancel this live token?')) {
       try {
-        await tokenService.cancelToken(id);
+        const token = activeTokens.find((t) => t.id === id);
+        await tokenService.cancelToken(id, token?.queueId);
+        addNotification(
+          'info',
+          'Token Cancelled',
+          `Your token at ${token?.institution || 'the queue'} has been cancelled.`
+        );
         await fetchDashboardData();
-        await fetchNotifications();
       } catch (err) {
         console.error('Cancellation failed:', err);
-        alert('Failed to cancel token.');
+        addNotification('error', 'Cancellation Failed', err.message || 'Failed to cancel token.');
       }
     }
   };
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    setProfile({ ...tempProfile });
-    setIsEditingProfile(false);
+    setProfileSaveStatus('saving');
+    setProfileSaveError('');
+    try {
+      const updated = await authService.updateProfile({
+        name: tempProfile.name,
+        phone: tempProfile.phone,
+        address: tempProfile.address,
+      });
+      // Sync local state from server response
+      setProfile({
+        name: updated.name || '',
+        email: updated.email || profile.email,
+        phone: updated.phone || '',
+        address: updated.address || '',
+      });
+      setIsEditingProfile(false);
+      setProfileSaveStatus('success');
+      setTimeout(() => setProfileSaveStatus(null), 3000);
+    } catch (err) {
+      setProfileSaveStatus('error');
+      setProfileSaveError(err.message || 'Failed to save profile.');
+    }
   };
 
   const startEditing = () => {
@@ -371,66 +451,99 @@ export default function UserPanel() {
             </button>
 
             {showNotifications && (
-              <div 
+              <div
                 className="notification-dropdown"
                 style={{
                   position: 'absolute',
                   right: 0,
-                  top: '40px',
-                  width: '320px',
+                  top: '44px',
+                  width: '340px',
                   backgroundColor: '#ffffff',
-                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)',
-                  borderRadius: '10px',
+                  boxShadow: '0 12px 30px -5px rgba(0,0,0,0.18)',
+                  borderRadius: '12px',
                   border: '1px solid #e5e7eb',
-                  padding: '12px',
-                  zIndex: 100,
-                  color: '#1f2937'
+                  zIndex: 200,
+                  color: '#1f2937',
+                  overflow: 'hidden'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #f3f4f6', paddingBottom: '6px' }}>
-                  <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>Notifications</span>
-                  {unreadCount > 0 && (
-                    <button 
-                      onClick={handleMarkAllRead}
-                      style={{ fontSize: '0.75rem', color: '#4f46e5', border: 'none', background: 'none', cursor: 'pointer', fontWeight: '600' }}
-                    >
-                      Mark all as read
-                    </button>
-                  )}
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderBottom: '1px solid #f3f4f6', background: '#fafafa' }}>
+                  <span style={{ fontWeight: '700', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Bell size={14} /> Notifications
+                    {unreadCount > 0 && (
+                      <span style={{ background: '#ef4444', color: '#fff', borderRadius: '20px', fontSize: '0.6rem', padding: '1px 6px', fontWeight: 'bold' }}>
+                        {unreadCount}
+                      </span>
+                    )}
+                  </span>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {unreadCount > 0 && (
+                      <button onClick={markAllRead} style={{ fontSize: '0.72rem', color: '#4f46e5', border: 'none', background: 'none', cursor: 'pointer', fontWeight: '600' }}>
+                        Mark all read
+                      </button>
+                    )}
+                    {notifications.length > 0 && (
+                      <button onClick={clearAll} style={{ fontSize: '0.72rem', color: '#6b7280', border: 'none', background: 'none', cursor: 'pointer' }}>
+                        Clear all
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                {/* List */}
+                <div style={{ maxHeight: '340px', overflowY: 'auto' }}>
                   {notifications.length > 0 ? (
-                    notifications.map((item) => (
-                      <div 
-                        key={item.id} 
-                        onClick={() => handleMarkSingleRead(item.id, item.is_read)}
-                        style={{ 
-                          fontSize: '0.8rem', 
-                          padding: '8px 10px', 
-                          borderRadius: '6px',
-                          marginBottom: '6px',
-                          backgroundColor: item.is_read ? '#ffffff' : '#f0f9ff',
-                          borderLeft: item.is_read ? '3px solid transparent' : '3px solid #0284c7',
-                          cursor: item.is_read ? 'default' : 'pointer',
-                          borderBottom: '1px solid #f9fafb' 
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', color: '#111827' }}>
-                          <span>{item.title}</span>
-                          <span style={{ fontSize: '0.65rem', color: '#0284c7', textTransform: 'uppercase' }}>
-                            {item.type}
-                          </span>
+                    notifications.map((item) => {
+                      const colors = {
+                        success: { bg: '#f0fdf4', border: '#22c55e', icon: '#16a34a', badge: '#dcfce7', badgeText: '#15803d' },
+                        error:   { bg: '#fef2f2', border: '#ef4444', icon: '#dc2626', badge: '#fee2e2', badgeText: '#b91c1c' },
+                        info:    { bg: '#eff6ff', border: '#3b82f6', icon: '#2563eb', badge: '#dbeafe', badgeText: '#1d4ed8' },
+                        warning: { bg: '#fffbeb', border: '#f59e0b', icon: '#d97706', badge: '#fef3c7', badgeText: '#92400e' },
+                      };
+                      const c = colors[item.type] || colors.info;
+                      return (
+                        <div
+                          key={item.id}
+                          style={{
+                            padding: '10px 14px',
+                            borderLeft: `3px solid ${item.read ? '#e5e7eb' : c.border}`,
+                            background: item.read ? '#fff' : c.bg,
+                            borderBottom: '1px solid #f3f4f6',
+                            display: 'flex',
+                            gap: '10px',
+                            alignItems: 'flex-start',
+                            transition: 'background 0.2s'
+                          }}
+                        >
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <span style={{ fontWeight: '700', fontSize: '0.82rem', color: item.read ? '#6b7280' : '#111827' }}>
+                                {item.title}
+                              </span>
+                              <span style={{ fontSize: '0.68rem', color: c.icon, background: c.badge, color: c.badgeText, borderRadius: '6px', padding: '1px 6px', fontWeight: '600', marginLeft: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                {item.type}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: item.read ? '#9ca3af' : '#374151', lineHeight: 1.4 }}>{item.message}</div>
+                            <div style={{ fontSize: '0.68rem', color: '#9ca3af', marginTop: '4px' }}>
+                              {item.timestamp ? item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => dismissNotification(item.id)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: '0', fontSize: '14px', flexShrink: 0, lineHeight: 1 }}
+                            aria-label="Dismiss"
+                          >
+                            ✕
+                          </button>
                         </div>
-                        <div style={{ color: '#4b5563', marginTop: '2px' }}>{item.message}</div>
-                        <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '4px' }}>
-                          {item.created_at ? new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
-                    <div style={{ padding: '16px', textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem' }}>
-                      No notifications found.
+                    <div style={{ padding: '28px 16px', textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem' }}>
+                      <Bell size={28} style={{ opacity: 0.25, display: 'block', margin: '0 auto 8px' }} />
+                      No notifications yet
                     </div>
                   )}
                 </div>
@@ -470,7 +583,9 @@ export default function UserPanel() {
                     {activeTokens.map((token) => (
                       <div key={token.id} className="token-card">
                         <div className="token-card-header">
-                          <div className="token-institution">{token.institution}</div>
+                          <div className="token-institution">
+                            {token.institution} &bull; {token.bookingDate ? new Date(token.bookingDate).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                          </div>
                           <span className="live-badge">Live</span>
                         </div>
                         
@@ -485,8 +600,8 @@ export default function UserPanel() {
                             <div className="metric-label">Position</div>
                           </div>
                           <div>
-                            <div className="metric-value wait-value">{token.bookingDate}</div>
-                            <div className="metric-label">Date</div>
+                            <div className="metric-value wait-value">{formatExpectedTime(token.estimatedTime)}</div>
+                            <div className="metric-label">Expected Time</div>
                           </div>
                           <div>
                             <div className="metric-value">{token.status}</div>
@@ -782,13 +897,27 @@ export default function UserPanel() {
 
                 {isEditingProfile ? (
                   <div className="btn-group">
-                    <button type="button" onClick={() => setIsEditingProfile(false)} className="cancel-edit-btn">Cancel</button>
-                    <button type="submit" className="save-btn"><Save size={13}/> Save</button>
+                    <button type="button" onClick={() => { setIsEditingProfile(false); setProfileSaveStatus(null); }} className="cancel-edit-btn">Cancel</button>
+                    <button type="submit" className="save-btn" disabled={profileSaveStatus === 'saving'}>
+                      {profileSaveStatus === 'saving' ? <Loader2 size={13} className="spin-icon" /> : <Save size={13}/>} Save
+                    </button>
                   </div>
                 ) : (
                   <button type="button" onClick={() => setIsEditingProfile(true)} className="edit-btn"><User size={13}/> Edit Details</button>
                 )}
               </div>
+
+              {/* Save feedback messages */}
+              {profileSaveStatus === 'success' && (
+                <div className="profile-save-feedback profile-save-success">
+                  <CheckCircle2 size={14} /> Profile updated successfully!
+                </div>
+              )}
+              {profileSaveStatus === 'error' && (
+                <div className="profile-save-feedback profile-save-error">
+                  {profileSaveError || 'Failed to save profile. Please try again.'}
+                </div>
+              )}
             </form>
           </div>
         )}

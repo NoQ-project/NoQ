@@ -37,7 +37,12 @@ def schedule_notification(
             )
         )
     except RuntimeError:
-        return
+        asyncio.run(
+            process_notification(
+                token_id=token_id,
+                notification_type=notification_type,
+            )
+        )
 
 
 async def process_notification(
@@ -70,7 +75,7 @@ async def process_notification(
                 queue_id=token.queue_id,
                 token_id=token.id,
                 notification_type=notification_type,
-                title="Your turn",
+                title="Your turn now!",
                 message=(
                     f"It is now your turn at "
                     f"{queue.name}."
@@ -129,6 +134,24 @@ async def process_notification(
                 message=(
                     f"Your token at "
                     f"{queue.name} has been cancelled."
+                ),
+                db=db,
+            )
+
+        elif (
+            notification_type
+            == NotificationType.TOKEN_BOOKED
+        ):
+
+            await create_and_send_notification(
+                user_id=token.user_id,
+                queue_id=token.queue_id,
+                token_id=token.id,
+                notification_type=notification_type,
+                title="Token booked",
+                message=(
+                    f"Your token #{token.token_number} at "
+                    f"{queue.name} has been booked successfully."
                 ),
                 db=db,
             )
@@ -227,7 +250,12 @@ def schedule_threshold_notification(
             )
         )
     except RuntimeError:
-        return
+        asyncio.run(
+            process_threshold_notification(
+                token_id=token_id,
+                threshold=threshold,
+            )
+        )
 
 
 async def process_threshold_notification(

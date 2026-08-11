@@ -11,6 +11,16 @@ export const institutionsService = {
     return response.data;
   },
 
+  async getMyProfile() {
+    const response = await API.get('/institutions/me');
+    return response.data;
+  },
+
+  async updateMyProfile(data) {
+    const response = await API.patch('/institutions/me', data);
+    return response.data;
+  },
+
   async updateInstitution(institutionId, data) {
     const response = await API.put(`/institutions/${institutionId}`, data);
     return response.data;

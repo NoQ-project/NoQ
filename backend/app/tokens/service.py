@@ -79,8 +79,22 @@ def update_waiting_token_estimates(
     if not queue:
         return
 
-    if start_time is None:
-        start_time = datetime.now()
+    day_of_week = booking_date.weekday()
+    working_hour = (
+        db.query(QueueWorkingHour)
+        .filter(
+            QueueWorkingHour.queue_id == queue_id,
+            QueueWorkingHour.day_of_week == day_of_week,
+        )
+        .first()
+    )
+
+    if working_hour:
+        from datetime import time
+        opening_datetime = datetime.combine(booking_date, working_hour.opening_time)
+    else:
+        from datetime import time
+        opening_datetime = datetime.combine(booking_date, time(9, 0))
 
     service_time = get_effective_service_time(
         queue_id=queue_id,
@@ -88,36 +102,22 @@ def update_waiting_token_estimates(
         db=db,
     )
 
-    waiting_tokens = (
+    active_tokens = (
         db.query(Token)
         .filter(
             Token.queue_id == queue_id,
             Token.booking_date == booking_date,
-            Token.status == TokenStatus.WAITING,
+            Token.status.in_([TokenStatus.WAITING, TokenStatus.SERVING]),
         )
         .order_by(Token.token_number.asc())
         .all()
     )
 
-    current_serving_token = (
-        db.query(Token)
-        .filter(
-            Token.queue_id == queue_id,
-            Token.booking_date == booking_date,
-            Token.status == TokenStatus.SERVING,
-        )
-        .first()
-    )
-
-    waiting_offset = 1 if current_serving_token else 0
-
-    for index, token in enumerate(waiting_tokens):
-        position = index + waiting_offset
-
+    for index, token in enumerate(active_tokens):
         token.estimated_time = (
-            start_time
+            opening_datetime
             + timedelta(
-                minutes=position * service_time
+                minutes=index * service_time
             )
         )
 
@@ -127,6 +127,7 @@ def update_waiting_token_estimates(
 def book_token(
     queue_id: int,
     user_id: int,
+    booking_date,
     db: Session,
 ):
     try:
@@ -162,12 +163,19 @@ def book_token(
                 detail="Queue is currently closed.",
             )
 
-        current_time = (
-            datetime.now(timezone.utc)
-            .replace(tzinfo=None)
-        )
+        current_time = datetime.now()
         current_date = current_time.date()
-        day_of_week = current_date.weekday()
+        
+        if booking_date is None:
+            booking_date = current_date
+            
+        if booking_date < current_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot book a token for a past date.",
+            )
+
+        day_of_week = booking_date.weekday()
 
         working_hour = (
             db.query(QueueWorkingHour)
@@ -181,27 +189,23 @@ def book_token(
         if not working_hour:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Queue is not available today.",
+                detail="Queue is not available on this date.",
             )
 
-        current_time_only = current_time.time()
-
-        if not (
-            working_hour.opening_time
-            <= current_time_only
-            <= working_hour.closing_time
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Queue is currently outside its working hours.",
-            )
+        if booking_date == current_date:
+            current_time_only = current_time.time()
+            if current_time_only > working_hour.closing_time:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Today's operating hours have ended for this queue. Please book for tomorrow or a future date.",
+                )
 
         active_token = (
             db.query(Token)
             .filter(
                 Token.user_id == user_id,
                 Token.queue_id == queue.id,
-                Token.booking_date == current_date,
+                Token.booking_date == booking_date,
                 Token.status.in_(
                     [
                         TokenStatus.WAITING,
@@ -215,14 +219,14 @@ def book_token(
         if active_token:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You already have an active token for this queue.",
+                detail="You already have an active token for this queue on this date.",
             )
 
         today_count = (
             db.query(Token)
             .filter(
                 Token.queue_id == queue.id,
-                Token.booking_date == current_date,
+                Token.booking_date == booking_date,
             )
             .count()
         )
@@ -230,14 +234,14 @@ def book_token(
         if today_count >= queue.daily_limit:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Queue is full for today.",
+                detail="Queue is full for this date.",
             )
 
         last_token = (
             db.query(Token.token_number)
             .filter(
                 Token.queue_id == queue.id,
-                Token.booking_date == current_date,
+                Token.booking_date == booking_date,
             )
             .order_by(Token.token_number.desc())
             .first()
@@ -249,11 +253,27 @@ def book_token(
             else 1
         )
 
+        day_of_week = booking_date.weekday()
+        working_hour = (
+            db.query(QueueWorkingHour)
+            .filter(
+                QueueWorkingHour.queue_id == queue.id,
+                QueueWorkingHour.day_of_week == day_of_week,
+            )
+            .first()
+        )
+        if working_hour:
+            from datetime import time
+            opening_datetime = datetime.combine(booking_date, working_hour.opening_time)
+        else:
+            from datetime import time
+            opening_datetime = datetime.combine(booking_date, time(9, 0))
+
         people_ahead = (
             db.query(Token)
             .filter(
                 Token.queue_id == queue.id,
-                Token.booking_date == current_date,
+                Token.booking_date == booking_date,
                 Token.status.in_(
                     [
                         TokenStatus.WAITING,
@@ -265,7 +285,7 @@ def book_token(
         )
 
         estimated_time = (
-            current_time
+            opening_datetime
             + timedelta(
                 minutes=(
                     people_ahead
@@ -274,23 +294,23 @@ def book_token(
             )
         )
 
-        token = Token(
-            user_id=user_id,
+        new_token = Token(
             queue_id=queue.id,
+            user_id=user_id,
             token_number=token_number,
-            status=TokenStatus.WAITING,
-            booking_date=current_date,
+            booking_date=booking_date,
             estimated_time=estimated_time,
+            status=TokenStatus.WAITING,
         )
 
-        db.add(token)
+        db.add(new_token)
 
         # Send INSERT to DB without committing.
         db.flush()
 
         update_waiting_token_estimates(
             queue_id=queue.id,
-            booking_date=current_date,
+            booking_date=booking_date,
             db=db,
             start_time=current_time,
         )
@@ -298,15 +318,20 @@ def book_token(
         # Commit booking + estimate updates together.
         db.commit()
 
-        db.refresh(token)
+        db.refresh(new_token)
 
         schedule_queue_updates(
             queue_id=queue.id,
-            booking_date=current_date,
+            booking_date=booking_date,
             db=db,
         )
 
-        return token
+        schedule_notification(
+            token_id=new_token.id,
+            notification_type=NotificationType.TOKEN_BOOKED,
+        )
+
+        return new_token
 
     except HTTPException:
         db.rollback()
@@ -478,10 +503,10 @@ def get_waiting_position(
             detail="Token not found.",
         )
 
-    if token.status != TokenStatus.WAITING:
+    if token.status not in [TokenStatus.WAITING, TokenStatus.SERVING]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Token is not in waiting state.",
+            detail="Token is not in waiting or serving state.",
         )
 
     queue = (
@@ -497,6 +522,14 @@ def get_waiting_position(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Queue not found.",
         )
+
+    if token.status == TokenStatus.SERVING:
+        return {
+            "token_number": token.token_number,
+            "waiting_position": 0,
+            "estimated_waiting_time": 0,
+            "estimated_service_time": token.estimated_time,
+        }
 
     waiting_count = (
         db.query(Token)
@@ -593,35 +626,31 @@ def advance_queue(
                     Token.id == queue.current_serving_token_id,
                     Token.queue_id == queue.id,
                 )
-                .with_for_update()
                 .first()
             )
 
-            if not current_token:
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="Queue state is inconsistent.",
-                )
-
-            if current_token.status != TokenStatus.SERVING:
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="Current serving token is not in SERVING state.",
-                )
+            if not current_token or current_token.status != TokenStatus.SERVING:
+                queue.current_serving_token_id = None
+                current_token = None
 
         next_token = (
             db.query(Token)
             .filter(
                 Token.queue_id == queue.id,
-                Token.booking_date == current_date,
                 Token.status == TokenStatus.WAITING,
             )
             .order_by(
+                Token.booking_date.asc(),
                 Token.token_number.asc(),
             )
-            .with_for_update()
             .first()
         )
+
+        if not current_token and not next_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No active or waiting tokens found for this queue.",
+            )
 
         if current_token:
             current_token.status = result
@@ -787,3 +816,51 @@ def get_waiting_tokens(
     )
 
     return tokens
+
+
+def close_day(
+    queue_id: int,
+    db: Session,
+):
+    """Cancel all remaining WAITING tokens for today, notify users, reset serving state."""
+    from datetime import date as date_type
+    today = datetime.now().date()
+
+    # Cancel currently serving token too if any
+    queue = db.query(Queue).filter(Queue.id == queue_id).first()
+    if not queue:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Queue not found.",
+        )
+
+    waiting_tokens = (
+        db.query(Token)
+        .filter(
+            Token.queue_id == queue_id,
+            Token.booking_date == today,
+            Token.status == TokenStatus.WAITING,
+        )
+        .all()
+    )
+
+    cancelled_count = 0
+    for token in waiting_tokens:
+        token.status = TokenStatus.CANCELLED
+        token.cancelled_at = datetime.now()
+        db.flush()
+        schedule_notification(
+            token_id=token.id,
+            notification_type=NotificationType.TOKEN_CANCELLED,
+        )
+        cancelled_count += 1
+
+    # Reset the queue's current serving pointer
+    queue.current_serving_token_id = None
+
+    db.commit()
+
+    return {
+        "message": f"Day closed. {cancelled_count} waiting token(s) cancelled.",
+        "cancelled_count": cancelled_count,
+    }

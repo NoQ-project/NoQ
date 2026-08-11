@@ -9,9 +9,9 @@ class InstitutionCreateSchema(BaseModel):
     website: str | None = None
 
 class InstitutionUpdateSchema(BaseModel):
-    name: str
+    name: str | None = None
     description: str | None = None
-    address: str
+    address: str | None = None
     phone: str | None = None
     website: str | None = None
 

@@ -97,6 +97,10 @@ class Token(Base):
         back_populates="token"
     )
 
+    @property
+    def queue_name(self) -> str:
+        return self.queue.name if self.queue else f"Queue #{self.queue_id}"
+
     __table_args__ = (
         UniqueConstraint(
             "queue_id",

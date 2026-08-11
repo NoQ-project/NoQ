@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date
 
 from backend.app.tokens.models import TokenStatus
 
@@ -12,9 +12,10 @@ class TokenResponseSchema(BaseModel):
     id: int
     user_id: int
     queue_id: int
+    queue_name: str | None = None
     token_number: int
     status: TokenStatus
-    booking_date: datetime
+    booking_date: date | datetime
     estimated_time: datetime | None = None
 
     class Config:
@@ -25,9 +26,10 @@ class TokenDetailSchema(BaseModel):
     id: int
     user_id: int
     queue_id: int
+    queue_name: str | None = None
     token_number: int
     status: TokenStatus
-    booking_date: datetime
+    booking_date: date | datetime
     estimated_time: datetime | None = None
     created_at: datetime
     cancelled_at: datetime | None = None
@@ -36,10 +38,10 @@ class TokenDetailSchema(BaseModel):
         from_attributes = True
 
 class WaitingPositionSchema(BaseModel):
-
     token_number: int
     waiting_position: int
     estimated_waiting_time: int
+    estimated_service_time: datetime | None = None
 
     class Config:
         from_attributes = True
@@ -54,6 +56,15 @@ class CurrentTokenSchema(BaseModel):
 class WaitingTokensSchema(BaseModel):
     token_number: int
     status: TokenStatus
+
+    class Config:
+        from_attributes = True
+
+
+class AdvanceQueueResponseSchema(BaseModel):
+    message: str
+    completed_token: TokenDetailSchema | None = None
+    serving_token: TokenDetailSchema | None = None
 
     class Config:
         from_attributes = True

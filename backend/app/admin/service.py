@@ -412,7 +412,7 @@ def get_tokens(
                 user_phone=t.user.phone,
                 queue_name=t.queue.name,
                 institution_name=t.queue.institution.name,
-                status=t.status.value,
+                status=str(t.status.value if hasattr(t.status, 'value') else t.status),
                 booking_date=t.booking_date,
                 created_at=t.created_at,
             )
@@ -447,7 +447,7 @@ def get_token(
         user_phone=token.user.phone,
         queue_name=token.queue.name,
         institution_name=token.queue.institution.name,
-        status=token.status.value,
+        status=str(token.status.value if hasattr(token.status, 'value') else token.status),
         booking_date=token.booking_date,
         estimated_time=token.estimated_time,
         created_at=token.created_at,

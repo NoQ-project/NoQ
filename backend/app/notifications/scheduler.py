@@ -277,7 +277,7 @@ async def process_threshold_notification(
         if not token:
             return
 
-        from app.tracking.service import (
+        from backend.app.tracking.service import (
             get_token_tracking,
         )
 
@@ -343,7 +343,7 @@ def schedule_queue_threshold_notifications(
         .all()
     )
 
-    from app.tracking.service import (
+    from backend.app.tracking.service import (
         get_token_tracking,
     )
 

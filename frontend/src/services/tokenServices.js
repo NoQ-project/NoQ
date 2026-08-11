@@ -62,8 +62,15 @@ export const tokenService = {
 
   // Get currently serving token for a queue. Backend: GET /tokens/current-token/{queue_id}
   async getCurrentToken(queueId) {
-    const response = await API.get(`/tokens/current-token/${queueId}`);
-    return response.data; // returns { token_number, status }
+    try {
+      const response = await API.get(`/tokens/current-token/${queueId}`);
+      return response.data; // returns { token_number, status }
+    } catch (err) {
+      if (err.status === 404 || err.message?.includes('404') || err.message?.includes('No current token')) {
+        return null;
+      }
+      throw err;
+    }
   },
 
   // Get all waiting tokens for a queue. Backend: GET /tokens/waiting-tokens/{queue_id}

@@ -132,147 +132,86 @@ def delete_queue(
         .first()
     )
 
-    if not queue:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Queue not found."
-        )
+from datetime import date, timedelta, datetime, timezone
 
-    db.delete(queue)
-    db.commit()
+from datetime import date, timedelta
+import io
+import qrcode
 
-    return {
-        "message": "Queue deleted successfully."
-    }
+from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
+from backend.app.tracking.events import schedule_queue_updates
+from backend.app.queues.models import Queue, QueueWorkingHour
+from backend.app.queues.schemas import (
+    QueueCreateSchema,
+    QueueUpdateSchema,
+    WorkingHourUpdate
+)
+from backend.app.tokens.models import Token, TokenStatus
+from backend.app.notifications.models import NotificationType
+from backend.app.notifications.scheduler import (
+    schedule_queue_notification,
+)
+from backend.app.notifications.models import (
+    NotificationType,
+)
+from backend.app.auth.models import UserModel
+from backend.app.institutions.models import Institution
+from backend.app.utils.settings import settings
 
 
-def toggle_queue_status(
-    queue_id: int,
-    db: Session
+def create_queue(
+    queue: QueueCreateSchema,
+    db: Session,
+    current_user: UserModel
 ):
-    queue = (
-        db.query(Queue)
+    institution = (
+        db.query(Institution)
         .filter(
-            Queue.id == queue_id
+            Institution.auth_user_id == current_user.id
         )
         .first()
     )
+    new_queue = Queue(
+        institution_id=institution.id, 
+        name=queue.name,
+        description=queue.description,
+        daily_limit=queue.daily_limit,
+        avg_service_time=queue.avg_service_time
+    )
 
-    if not queue:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Queue not found."
+    db.add(new_queue)
+    db.flush()
+
+    # Create default saved working hours (Mon-Sun 09:00 - 17:00) so they remain active until unchecked
+    from datetime import time
+    default_hours = [
+        QueueWorkingHour(
+            queue_id=new_queue.id,
+            day_of_week=day,
+            opening_time=time(9, 0),
+            closing_time=time(17, 0)
         )
+        for day in range(7)
+    ]
+    db.add_all(default_hours)
+    db.commit()
+    db.refresh(new_queue)
 
-    queue.is_active = not queue.is_active
+    return new_queue
+
+
+def update_queue(
+    queue_id: int,
+    queue: QueueUpdateSchema,
+    db: Session
+):
+    existing_queue = get_queue_by_id(queue_id, db)
+
+    for field, value in queue.model_dump(exclude_unset=True).items():
+        setattr(existing_queue, field, value)
 
     db.commit()
-    db.refresh(queue)
-
-    return queue
-
-
-
-# QUEUE DASHBOARD
-
-
-def get_queue_dashboard(
-    queue_id: int,
-    db: Session
-):
-    queue = get_queue_by_id(queue_id, db)
-
-    today = date.today()
-
-    tokens = (
-        db.query(Token)
-        .filter(
-            Token.queue_id == queue_id,
-            Token.booking_date == today
-        )
-        .all()
-    )
-
-    total_tokens = len(tokens)
-
-    waiting = sum(
-        1 for token in tokens
-        if token.status == TokenStatus.WAITING
-    )
-
-    currently_serving = sum(
-        1 for token in tokens
-        if token.status == TokenStatus.CALLED
-    )
-
-    served = sum(
-        1 for token in tokens
-        if token.status == TokenStatus.SERVED
-    )
-
-    missed = sum(
-        1 for token in tokens
-        if token.status == TokenStatus.MISSED
-    )
-
-    cancelled = sum(
-        1 for token in tokens
-        if token.status == TokenStatus.CANCELLED
-    )
-
-    return {
-        "queue_id": queue.id,
-        "queue_name": queue.name,
-        "description": queue.description,
-        "daily_limit": queue.daily_limit,
-        "avg_service_time": queue.avg_service_time,
-        "is_active": queue.is_active,
-
-        "statistics": {
-            "total_tokens": total_tokens,
-            "waiting": waiting,
-            "currently_serving": currently_serving,
-            "served": served,
-            "missed": missed,
-            "cancelled": cancelled
-        }
-    }
-
-
-
-# QUEUE DATE RANGE STATISTICS
-
-def get_queue_statistics(
-    queue_id: int,
-    start_date: date,
-    end_date: date,
-    db: Session
-):
-    queue = get_queue_by_id(queue_id, db)
-
-    if start_date > end_date:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Start date cannot be after end date."
-        )
-
-    daily_statistics = []
-
-    current_date = start_date
-
-    while current_date <= end_date:
-
-        tokens = (
-            db.query(Token)
-            .filter(
-                Token.queue_id == queue_id,
-                Token.booking_date == current_date
-            )
-            .all()
-        )
-
-        total_tokens = len(tokens)
-
     db.refresh(existing_queue)
 
     return existing_queue
@@ -333,6 +272,11 @@ def delete_queue(
             detail="Queue not found."
         )
 
+    # Delete associated notifications and tokens explicitly to ensure clean deletion
+    from backend.app.notifications.models import Notification
+    db.query(Notification).filter(Notification.queue_id == queue_id).delete(synchronize_session=False)
+    db.query(Token).filter(Token.queue_id == queue_id).delete(synchronize_session=False)
+
     db.delete(queue)
     db.commit()
 
@@ -397,12 +341,12 @@ def get_queue_dashboard(
 
     currently_serving = sum(
         1 for token in tokens
-        if token.status == TokenStatus.CALLED
+        if token.status == TokenStatus.SERVING
     )
 
     served = sum(
         1 for token in tokens
-        if token.status == TokenStatus.SERVED
+        if token.status in [TokenStatus.COMPLETED, "SERVED"]
     )
 
     missed = sum(
@@ -475,12 +419,12 @@ def get_queue_statistics(
 
         currently_serving = sum(
             1 for token in tokens
-            if token.status == TokenStatus.CALLED
+            if token.status == TokenStatus.SERVING
         )
 
         served = sum(
             1 for token in tokens
-            if token.status == TokenStatus.COMPLETED
+            if token.status in [TokenStatus.COMPLETED, "SERVED"]
         )
 
         missed = sum(

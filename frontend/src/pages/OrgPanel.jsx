@@ -254,6 +254,15 @@ export default function OrgPanel() {
     }
   }, [activeQueueId, fetchActiveQueueTokenData]);
 
+  // Auto-refresh live token data every 12 seconds when on dashboard
+  useEffect(() => {
+    if (!activeQueueId) return;
+    const interval = setInterval(() => {
+      fetchActiveQueueTokenData(activeQueueId);
+    }, 12000);
+    return () => clearInterval(interval);
+  }, [activeQueueId, fetchActiveQueueTokenData]);
+
   // 1. Quota input modifications
   const handleQuotaChange = async (queue, newLimit) => {
     const updatedLimit = parseInt(newLimit) || 0;
@@ -1012,8 +1021,9 @@ export default function OrgPanel() {
               {/* Close Day */}
               <button
                 onClick={handleCloseDay}
-                disabled={!activeQueueId}
-                className="w-full bg-white border border-[#FADCD9] text-[#C93B2B] hover:bg-[#FDF2F1] active:scale-[0.99] disabled:opacity-50 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+                disabled={!activeQueueId || waitingTokens.length === 0}
+                title={waitingTokens.length === 0 ? 'No waiting tokens to cancel' : 'Cancel all remaining waiting tokens and close the day'}
+                className="w-full bg-white border border-[#FADCD9] text-[#C93B2B] hover:bg-[#FDF2F1] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 Close Day &amp; Cancel Remaining

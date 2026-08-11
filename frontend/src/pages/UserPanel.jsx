@@ -90,6 +90,7 @@ export default function UserPanel() {
 
   // Profile State — loaded from /auth/me on mount
   const [profile, setProfile] = useState({
+    id: null,
     name: '',
     phone: '',
     email: '',
@@ -118,12 +119,28 @@ export default function UserPanel() {
   const [organizations, setOrganizations] = useState([]);
 
 
-  const trackingSteps = [
-    { label: 'Token issued successfully', status: 'done' },
-    { label: 'Queue joined position updated', status: 'done' },
-    { label: 'Almost your turn at the window', status: 'active' },
-    { label: 'Called to counter deck room', status: 'pending' }
-  ];
+  // Generates tracking timeline steps dynamically from real token status
+  const getTrackingSteps = (status) => {
+    const s = (status || '').toUpperCase();
+    return [
+      {
+        label: 'Token issued successfully',
+        status: 'done'
+      },
+      {
+        label: 'In queue — waiting for your turn',
+        status: s === 'WAITING' ? 'active' : 'done'
+      },
+      {
+        label: 'Almost your turn',
+        status: s === 'WAITING' ? 'pending' : (s === 'SERVING' || s === 'CALLED') ? 'active' : 'done'
+      },
+      {
+        label: 'Called to counter — you are being served',
+        status: (s === 'SERVING' || s === 'CALLED') ? 'active' : 'pending'
+      }
+    ];
+  };
 
   // --- API FETCH FUNCTIONS ---
 
@@ -224,19 +241,22 @@ export default function UserPanel() {
       const data = await tokenService.getOrganizations();
       if (Array.isArray(data) && data.length > 0) {
         const mappedOrgs = data.map((item) => ({
-          id: item.id || item.queue_id,
-          name: item.institution_name || item.name || item.queue_name || 'Organization',
-          category: item.category || 'General',
-          branch: item.branch || 'Main Branch',
-          departments: item.departments || ['General Counter'],
-          waiting: item.waiting_count || 0,
+          id: item.id,
+          name: item.name || 'Organization',
+          // description doubles as category info; show it or fall back
+          category: item.description ? item.description.slice(0, 20) : 'General',
+          // backend has no 'branch' field — use address as location label
+          branch: item.address || 'Main Branch',
+          departments: ['General Counter'],
+          // waiting count is not in InstitutionResponse — show 0 cleanly
+          waiting: 0,
           icon: Building2,
           iconClass: 'icon-indigo'
         }));
         setOrganizations(mappedOrgs);
       }
     } catch (err) {
-      console.error('Failed to fetch queues:', err);
+      console.error('Failed to fetch organizations:', err);
     }
   };
 
@@ -244,6 +264,7 @@ export default function UserPanel() {
     try {
       const data = await authService.getMe();
       setProfile({
+        id: data.id || null,
         name: data.name || '',
         email: data.email || '',
         phone: data.phone || '',
@@ -279,7 +300,6 @@ export default function UserPanel() {
 
   // --- ACTIONS ---
   const handleSelectOrg = (org) => {
-    // Fetch queues for this institution and let user pick a specific queue
     (async () => {
       try {
         const queues = await queueServices.getQueuesByInstitution(org.id);
@@ -287,6 +307,7 @@ export default function UserPanel() {
         setSelectedQueueId(queues && queues.length > 0 ? queues[0].id : null);
       } catch (err) {
         console.error('Failed to load queues for institution:', err);
+        addNotification('error', 'Failed to Load Queues', err.message || `Could not load queues for ${org.name}. Please try again.`);
         setSelectedOrgForBooking({ ...org, queues: [] });
         setSelectedQueueId(null);
       }
@@ -346,19 +367,21 @@ export default function UserPanel() {
         phone: tempProfile.phone,
         address: tempProfile.address,
       });
-      // Sync local state from server response
-      setProfile({
+      setProfile(prev => ({
+        ...prev,
         name: updated.name || '',
-        email: updated.email || profile.email,
+        email: updated.email || prev.email,
         phone: updated.phone || '',
         address: updated.address || '',
-      });
+      }));
       setIsEditingProfile(false);
       setProfileSaveStatus('success');
+      addNotification('success', 'Profile Updated', 'Your profile has been saved successfully.');
       setTimeout(() => setProfileSaveStatus(null), 3000);
     } catch (err) {
       setProfileSaveStatus('error');
       setProfileSaveError(err.message || 'Failed to save profile.');
+      addNotification('error', 'Profile Save Failed', err.message || 'Could not save your profile. Please try again.');
     }
   };
 
@@ -754,7 +777,9 @@ export default function UserPanel() {
             
             {activeTokens.length > 0 ? (
               <div className="track-list">
-                {activeTokens.map((token) => (
+                {activeTokens.map((token) => {
+                  const steps = getTrackingSteps(token.counter);
+                  return (
                   <div key={token.id} className="track-card">
                     <div className="track-card-header">
                       <div className="track-info">
@@ -783,7 +808,7 @@ export default function UserPanel() {
                     </div>
                     
                     <div className="tracking-timeline">
-                      {trackingSteps.map((step, index) => (
+                      {steps.map((step, index) => (
                         <div key={index} className="timeline-step">
                           <div className={`step-indicator ${step.status}`}>
                             {step.status === 'done' && <CheckCircle2 size={14} />}
@@ -797,7 +822,8 @@ export default function UserPanel() {
                       ))}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="empty-state-card">
@@ -840,7 +866,7 @@ export default function UserPanel() {
               </div>
               <div>
                 <h3 className="profile-name-title">{profile.name}</h3>
-                <p className="profile-account-id">Client ID Account: #NQ-98452-CP</p>
+                <p className="profile-account-id">Client ID: #{profile.id ? `NQ-${String(profile.id).padStart(5, '0')}` : 'Loading...'}</p>
               </div>
             </div>
 

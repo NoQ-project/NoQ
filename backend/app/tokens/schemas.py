@@ -1,7 +1,14 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from datetime import datetime, date
 
 from backend.app.tokens.models import TokenStatus
+
+
+def _clean_status(v):
+    valid_values = {e.value for e in TokenStatus}
+    if not v or v not in valid_values:
+        return TokenStatus.CANCELLED
+    return v
 
 
 class BookTokenSchema(BaseModel):
@@ -17,6 +24,11 @@ class TokenResponseSchema(BaseModel):
     status: TokenStatus
     booking_date: date | datetime
     estimated_time: datetime | None = None
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def validate_status(cls, v):
+        return _clean_status(v)
 
     class Config:
         from_attributes = True
@@ -34,6 +46,11 @@ class TokenDetailSchema(BaseModel):
     created_at: datetime
     cancelled_at: datetime | None = None
 
+    @field_validator('status', mode='before')
+    @classmethod
+    def validate_status(cls, v):
+        return _clean_status(v)
+
     class Config:
         from_attributes = True
 
@@ -50,12 +67,22 @@ class CurrentTokenSchema(BaseModel):
     token_number: int
     status: TokenStatus
 
+    @field_validator('status', mode='before')
+    @classmethod
+    def validate_status(cls, v):
+        return _clean_status(v)
+
     class Config:
         from_attributes = True
 
 class WaitingTokensSchema(BaseModel):
     token_number: int
     status: TokenStatus
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def validate_status(cls, v):
+        return _clean_status(v)
 
     class Config:
         from_attributes = True

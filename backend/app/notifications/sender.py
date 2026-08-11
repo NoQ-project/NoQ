@@ -60,7 +60,7 @@ async def create_and_send_notification(
         "user_id": notification.user_id,
         "queue_id": notification.queue_id,
         "token_id": notification.token_id,
-        "type": notification.type.value,
+        "type": notification.type.value if hasattr(notification.type, "value") else str(notification.type),
         "title": notification.title,
         "message": notification.message,
         "is_read": notification.is_read,

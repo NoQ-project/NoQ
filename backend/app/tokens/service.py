@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from backend.app.tokens.models import Token, TokenStatus
 from backend.app.queues.models import (
@@ -320,6 +320,14 @@ def book_token(
 
         db.refresh(new_token)
 
+        # Re-fetch with queue loaded so queue_name @property works in Pydantic serialization
+        new_token = (
+            db.query(Token)
+            .options(joinedload(Token.queue))
+            .filter(Token.id == new_token.id)
+            .first()
+        )
+
         schedule_queue_updates(
             queue_id=queue.id,
             booking_date=booking_date,
@@ -356,6 +364,7 @@ def get_my_tokens(
 ):
     return (
         db.query(Token)
+        .options(joinedload(Token.queue))
         .filter(
             Token.user_id == user_id,
         )
@@ -373,6 +382,7 @@ def get_token_by_id(
 ):
     token = (
         db.query(Token)
+        .options(joinedload(Token.queue))
         .filter(
             Token.id == token_id,
             Token.user_id == user_id,
@@ -398,6 +408,7 @@ def cancel_token(
     try:
         token = (
             db.query(Token)
+            .options(joinedload(Token.queue))
             .filter(
                 Token.id == token_id,
                 Token.user_id == user_id,
@@ -462,6 +473,14 @@ def cancel_token(
         )
 
         db.refresh(token)
+
+        # Re-fetch with queue loaded so queue_name @property works in Pydantic serialization
+        token = (
+            db.query(Token)
+            .options(joinedload(Token.queue))
+            .filter(Token.id == token.id)
+            .first()
+        )
 
         return token
 
@@ -684,6 +703,12 @@ def advance_queue(
                     )
 
                 db.refresh(current_token)
+                current_token = (
+                    db.query(Token)
+                    .options(joinedload(Token.queue))
+                    .filter(Token.id == current_token.id)
+                    .first()
+                )
 
             return {
                 "message": (
@@ -747,8 +772,20 @@ def advance_queue(
 
         if current_token:
             db.refresh(current_token)
+            current_token = (
+                db.query(Token)
+                .options(joinedload(Token.queue))
+                .filter(Token.id == current_token.id)
+                .first()
+            )
 
         db.refresh(next_token)
+        next_token = (
+            db.query(Token)
+            .options(joinedload(Token.queue))
+            .filter(Token.id == next_token.id)
+            .first()
+        )
 
         return {
             "message": "Queue advanced successfully.",

@@ -130,6 +130,7 @@ API.interceptors.response.use(
     }
 
     // If not a 401 or refresh already attempted, extract error message
+    const status = error.response?.status;
     const message =
       error.response?.data?.detail ||
       error.response?.data?.message ||
@@ -137,13 +138,19 @@ API.interceptors.response.use(
       error.message ||
       'An unexpected error occurred.';
 
-    console.error('API Error:', {
-      status: error.response?.status,
-      message: message,
-      url: originalRequest?.url,
-    });
+    const isExpected404 = status === 404 && originalRequest?.url?.includes('/tokens/current-token/');
 
-    return Promise.reject(new Error(message));
+    if (!isExpected404) {
+      console.error('API Error:', {
+        status: status,
+        message: message,
+        url: originalRequest?.url,
+      });
+    }
+
+    const errObj = new Error(message);
+    errObj.status = status;
+    return Promise.reject(errObj);
   }
 );
 

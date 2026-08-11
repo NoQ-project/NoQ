@@ -90,8 +90,9 @@ class Queue(Base):
     )
 
     notifications = relationship(
-    "Notification",
-    back_populates="queue"
+        "Notification",
+        back_populates="queue",
+        cascade="all, delete"
     )
 
 class QueueWorkingHour(Base):

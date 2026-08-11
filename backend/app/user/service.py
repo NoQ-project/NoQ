@@ -62,7 +62,7 @@ def get_dashboard(
             {
                 "token_id": token.id,
                 "token_number": token.token_number,
-                "status": token.status.value,
+                "status": str(token.status.value if hasattr(token.status, 'value') else token.status),
                 "queue_id": token.queue.id,
                 "queue_name": token.queue.name,
                 "booking_date": token.booking_date,
@@ -73,7 +73,7 @@ def get_dashboard(
             {
                 "token_id": token.id,
                 "token_number": token.token_number,
-                "status": token.status.value,
+                "status": str(token.status.value if hasattr(token.status, 'value') else token.status),
                 "queue_id": token.queue.id,
                 "queue_name": token.queue.name,
                 "booking_date": token.booking_date,
